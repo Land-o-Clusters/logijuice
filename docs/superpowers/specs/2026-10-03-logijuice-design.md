@@ -111,6 +111,7 @@ by everyone.
 **Events, no polling:** subscribe to receiver connection notifications (device wake/link up) and
 battery status broadcast events. On link-up, re-read battery. One low-frequency safety re-read
 (every 30 min; see docs/bringup-notes.md) covers missed events and receivers whose notification flags are off.
+Amended 2026-10-03 (owner): while a device charges it is re-read every 60 s, so the gauge fills as it charges.
 
 **Timeouts:** 2 s per request. A sleeping device does not answer; that is normal and not an error.
 The request is dropped and retried on the next link-up event. No request ever blocks the main thread.
@@ -234,6 +235,7 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
   battery gauge: the solid shape dimmed for "empty", solid up to the level (tall glyphs fill bottom→top, wide ones
   left→right). A battery glyph was rejected because it reads as the Mac's own battery. Red when any fired level has
   `tintsIcon`. The level appears as text beside it while the lowest device is alerting, and a bolt while it charges.
+  While charging, the fill and the bolt are green (amended 2026-10-03, owner).
 - Dropdown: one row per device (kind glyph, nickname, level, forecast, "seen 3h ago" when not live,
   charging bolt), then **Settings…**, **Open Logi Options+** (if installed), **Quit**.
 - With mode Never, or Auto while hidden, opening the app from Spotlight/Finder opens Settings, so the

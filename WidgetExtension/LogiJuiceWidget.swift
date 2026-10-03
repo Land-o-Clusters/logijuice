@@ -64,6 +64,7 @@ struct SmallBatteryView: View {
         Ring(fraction: Double(device.level?.equivalentPercent ?? 0) / 100, tint: device.tint)
         VStack(spacing: 2) {
           Image(systemName: device.charging ? "bolt.fill" : device.kind.symbolName).font(.caption)
+            .foregroundStyle(device.charging ? Color.green : Color.primary)
           Text(device.level.map(Format.level) ?? "—").font(.title3.bold()).monospacedDigit()
         }
       }
@@ -90,7 +91,7 @@ struct MediumBatteryView: View {
             Text(Format.subtitle(d, now: now)).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
           }
           Spacer()
-          if d.charging { Image(systemName: "bolt.fill").foregroundStyle(.yellow) }
+          if d.charging { Image(systemName: "bolt.fill").foregroundStyle(.green) }
           Text(d.level.map(Format.level) ?? "—")
             .font(.title3.bold()).monospacedDigit()
             .foregroundStyle(d.tint.color ?? Color.primary)

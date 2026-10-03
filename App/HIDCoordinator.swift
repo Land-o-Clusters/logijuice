@@ -16,6 +16,8 @@ final class HIDCoordinator {
   private var slots: [UInt8: SlotInfo] = [:]
   private var eventTask: Task<Void, Never>?
   private var safetyTimer: Timer?
+  private var chargeWatch = ChargeWatch<UInt8>()
+  private var chargeTimer: Timer?
 
   func start() {
     monitor.onArrive = { [weak self] channel in MainActor.assumeIsolated { self?.attach(channel) } }
@@ -52,6 +54,8 @@ final class HIDCoordinator {
     broker = nil
     session = nil
     slots = [:]
+    chargeWatch.reset()
+    updateChargeTimer()
     onReceiverChange?(false)
   }
 
@@ -72,7 +76,31 @@ final class HIDCoordinator {
   }
 
   private func emit(_ report: BatteryReport, _ info: SlotInfo) {
+    chargeWatch.observe(info.slot, charging: report.charging)
+    updateChargeTimer()
     onReading?(Reading(device: info.info.id, level: report.level, charging: report.charging, observedAt: Date()), info.info)
+  }
+
+  /// Re-reads charging devices every minute so the gauge fills while they charge; stops when none is charging.
+  private func updateChargeTimer() {
+    if chargeWatch.isActive, chargeTimer == nil {
+      log.info("charging: re-reading every \(Int(ChargeWatch<UInt8>.interval), privacy: .public) s")
+      chargeTimer = Timer.scheduledTimer(withTimeInterval: ChargeWatch<UInt8>.interval, repeats: true) { [weak self] _ in
+        MainActor.assumeIsolated { self?.refreshCharging() }
+      }
+    } else if !chargeWatch.isActive, let timer = chargeTimer {
+      log.info("charging: stopped re-reading")
+      timer.invalidate()
+      chargeTimer = nil
+    }
+  }
+
+  private func refreshCharging() {
+    Task {
+      for slot in chargeWatch.charging.sorted() {
+        if let info = slots[slot] { await read(info) }
+      }
+    }
   }
 
   private func handle(_ frame: HIDPPFrame) async {
@@ -82,7 +110,10 @@ final class HIDCoordinator {
     case .linkUp(let slot)?:
       if slots[slot] == nil, let session, let info = await session.identify(slot: slot) { slots[slot] = info }
       if let info = slots[slot] { await read(info) }
-    case .linkDown?, nil:
+    case .linkDown(let slot)?:
+      chargeWatch.observe(slot, charging: false)
+      updateChargeTimer()
+    case nil:
       break
     }
   }

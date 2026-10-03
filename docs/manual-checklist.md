@@ -10,8 +10,8 @@ Results so far come from the 2026-10-03 owner runs. Rows marked _pending_ still 
 | 3 | Quit Options+ | LogiJuice keeps reading (wake a device → updates) | Not testable: Options+ is a `KeepAlive` launchd agent (see `bringup-notes.md`) |
 | 4 | Hub switched away | Dropdown says "Receiver not connected to this Mac"; "seen …" times; pending Low nudge delivered as "Leaving this desk?" | _pending_ (scheduled Mon 2026-10-05) |
 | 5 | Hub switched back | Readings resume without relaunching | _pending_ (scheduled Mon 2026-10-05) |
-| 6 | Sleep / wake the Mac | No crash; readings resume after wake; pending nudge delivered on sleep | _pending_ |
-| 7 | Charging cable plugged into the mouse | Menu bar icon appears (Auto) with a bolt; pending nudges dropped | _pending_ |
+| 6 | Sleep / wake the Mac | No crash; readings resume after wake; pending nudge delivered on sleep | _pending_ (moved to Mon 2026-10-05, with the hub) |
+| 7 | Charging cable plugged into the mouse | Menu bar icon appears (Auto) with a bolt; pending nudges dropped | Pass (2026-10-03), mouse and keyboard. Follow-up: green charging fill and bolt, and a 60 s re-read so the fill rises while charging (re-check on the next real charge) |
 | 8 | Charge to full | "Fully charged" notification once | _pending_ (next full charge) |
 | 9 | Debug simulate 18% → lock screen | Low nudge arrives at lock, not before | Pass (2026-10-03) |
 | 10 | Debug simulate 8% | Immediate Very low notification; red icon; widget ring red | Pass (2026-10-03) |

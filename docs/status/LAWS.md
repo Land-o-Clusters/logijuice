@@ -18,6 +18,10 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **Menu bar pins are per Mac** and not synced (menu bar space differs per Mac).
 - **Alert colors are per level** (none/yellow/red; defaults Low yellow, Very low and Critical red). Only the fill and
   the percentage take the color; the empty part stays neutral.
+- **Charging is green** (owner, 2026-10-03): a charging device's fill and bolt are green (pale on a dark menu bar,
+  deeper on a light one, so the fill never reads lighter than the empty part); the widget's bolts are green too.
+- **A charging device is re-read every 60 s** so the gauge fills while it charges (devices don't reliably send each
+  step on the cable). The re-read stops when nothing is charging or the device's link drops.
 - **Battery health is an estimate and says so.** It's inferred from runs and charge gains, because the protocol reports
   no capacity or cycles. It's shown only after 3 full charges; the trend only after 6. The drain alert is opt-in and
   off by default.

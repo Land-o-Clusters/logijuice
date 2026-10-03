@@ -3,6 +3,7 @@ import AppKit
 /// Draws each device's own silhouette as a battery gauge, so the icon can't be mistaken for the Mac's battery.
 /// Wide glyphs (keyboard) fill left→right; tall glyphs (mouse) fill bottom→top. Several gauges sit side by side.
 /// Only the filled part and the percentage take an alert color; the empty part stays the menu bar's own color.
+/// While a device charges, its fill and bolt are green instead (charging re-arms its alerts, so nothing is lost).
 enum MenuBarIcon {
   struct Gauge: Hashable {
     var outline: String
@@ -18,6 +19,14 @@ enum MenuBarIcon {
   static let gaugeSpacing: CGFloat = 7
   static let minimumVisibleFill = 0.15
 
+  /// Pale green on a dark menu bar. A light bar needs a deeper green, because a pale fill would read lighter than the
+  /// dimmed empty part and the gauge would look inverted.
+  static let chargingColor = NSColor(name: "logijuice.charging") { appearance in
+    appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+      ? NSColor(srgbRed: 0.62, green: 0.92, blue: 0.66, alpha: 1)
+      : NSColor(srgbRed: 0.16, green: 0.62, blue: 0.30, alpha: 1)
+  }
+
   private struct Prepared {
     var gauge: Gauge
     var outline: NSImage
@@ -29,7 +38,7 @@ enum MenuBarIcon {
 
   static func render(_ gauges: [Gauge], pointSize: CGFloat = glyphPointSize) -> NSImage {
     let scale = pointSize / glyphPointSize
-    let anyTint = gauges.contains { $0.tint != nil }
+    let anyTint = gauges.contains { $0.tint != nil || $0.charging }
     // Template images are recolored by the menu bar (light/dark, wallpaper-adaptive). Once anything is tinted the
     // image can't be template, so the neutral parts use labelColor, which resolves in the status item's appearance.
     let neutral: NSColor = anyTint ? .labelColor : .black
@@ -69,13 +78,14 @@ enum MenuBarIcon {
           let clip = glyph.width > glyph.height
             ? NSRect(x: glyphRect.minX, y: glyphRect.minY, width: glyphRect.width * level, height: glyphRect.height)
             : NSRect(x: glyphRect.minX, y: glyphRect.minY, width: glyphRect.width, height: glyphRect.height * level)
-          drawSymbol(solid, in: glyphRect, color: p.gauge.tint ?? neutral, alpha: 1, clip: clip)
+          let color = p.gauge.charging ? chargingColor : p.gauge.tint ?? neutral
+          drawSymbol(solid, in: glyphRect, color: color, alpha: 1, clip: clip)
         }
         x = glyphRect.maxX
         if let bolt = p.bolt {
           let boltRect = NSRect(x: x + 1, y: (rect.height - bolt.size.height) / 2, width: bolt.size.width,
                                 height: bolt.size.height)
-          drawSymbol(bolt, in: boltRect, color: neutral, alpha: 1, clip: nil)
+          drawSymbol(bolt, in: boltRect, color: chargingColor, alpha: 1, clip: nil)
           x = boltRect.maxX
         }
         if let label = p.label {

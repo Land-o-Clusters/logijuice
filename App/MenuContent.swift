@@ -68,7 +68,7 @@ struct DeviceRow: View {
         if !sub.isEmpty { Text(sub).font(.caption).foregroundStyle(.secondary) }
       }
       Spacer()
-      if device.charging { Image(systemName: "bolt.fill").foregroundStyle(.yellow) }
+      if device.charging { Image(systemName: "bolt.fill").foregroundStyle(Color(nsColor: MenuBarIcon.chargingColor)) }
       Text(device.level.map(Format.level) ?? "—")
         .monospacedDigit()
         .foregroundStyle(device.tint.color ?? Color.primary)
