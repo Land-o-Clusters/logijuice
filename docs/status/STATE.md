@@ -4,43 +4,29 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** implementation. Tasks 0–17 are done on `main`. The settings window works since `9b47058` (checked by
-juice-arch via the snapshot hook). The owner has verified the menu bar redesign (three gauges, hover highlight).
+**Phase:** feature-complete for v1 except the owner-run checks. Tasks 0–18 done; Task 19 Steps 1–2 done.
 
 **Done (verified):**
-- Spec `0f2a347` (§7 amended at `9826453`: device-silhouette gauge), plan `9286109` + fixes, bring-up `ed186d4`.
-- Tasks 1–13: `5d06b82` … `10386a7` (core, store, CLI, HID++ codec/broker/session, IOHID + `debug capture` + replay).
-- Task 14 app `69a2e2a`. Owner-verified 2026-10-03: first-run window, notification permission granted, Auto hides the
-  icon when healthy, Options+ unaffected, dropdown correct, simulated 8 % → one `debug:test-mouse.veryLow` notification
-  (usernoted log) and a red icon.
-- Gauge `9826453`: the owner rejected the battery glyph (it reads as the Mac's battery). Renders checked by
-  juice-arch at 6×.
-- Codex delivered Task 17 widget `fe1d865` and Task 19 README/cask `32f8acf` in worktree `../logijuice-codex`. Gated
-  by juice-arch: files byte-identical to the plan, widget build rc 0, 109/109. Merged at `4831c17` (Package.swift
-  conflict resolved to the union).
-- Redesign `b06c3ae` (114 tests green): per-level tint, per-Mac pins, contrast fix (renders checked dark and light),
-  hover/press highlight. Sync + settings `607649c`: this Mac's iCloud file `BA292111-…json` holds only the 2 real
-  devices. The legacy `always` setting migrated to both pinned. Installed to /Applications at `607649c`.
-- Settings clipping fixed `9b47058`: the grouped Form needs ~744pt on macOS 27 (window now 760 min), and alert-row
-  controls use `.labelsHidden()` with explicit labels. Red tint softened to 85% (owner: "a bit high").
-- Widget crash fixed `d1a3fab`: the extension now links `-e _NSExtensionMain` and build-app.sh guards it (red then
-  green). Owner saw both sizes in Edit Widgets 2026-10-03; 0 crash reports since. Check C (lock-screen nudge) passed.
-- At `4831c17`: `swift test` **111 passed, 0 failed**, widget build rc 0, `build-app.sh` rc 0 (universal, ad-hoc,
-  app group). Installed to `/Applications/LogiJuice.app`; pluginkit lists `com.penguinspecz.logijuice.widget`.
+- Spec `0f2a347` (§7 amended: device-silhouette gauge, per-Mac pins, per-level tints), plan `9286109` + fixes, bring-up
+  `ed186d4`. Tasks 1–13 `5d06b82`…`10386a7`; app `69a2e2a`; widget fix `d1a3fab` (owner saw it in the gallery);
+  redesign `b06c3ae`; sync + settings `607649c`; settings clipping fix `9b47058`; settings polish `06b27d5` (alert bar,
+  device gauge rows); app icon `bee399c`; Shortcuts `63cba5f` (App Intents metadata built by build-app.sh outside Xcode).
+- `swift test` at `63cba5f`: **120 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
+  + icon). Installed to /Applications at `63cba5f`.
+- Owner-verified on hardware: receiver + both devices, notifications, Low nudge waits for lock, the widget in the
+  gallery, three menu bar gauges, hover feedback, settings layout (pre-polish).
+- **GitHub:** `Land-o-Clusters/logijuice` created **private** 2026-10-03 (owner: "all of it"); `main` pushed and tracking.
 
 **In flight:**
-- `main` at the commit adding this banner. Working tree clean. Branches `codex/logijuice-tasks-1-9` and
-  `codex/widget-docs` are fully merged; worktree `../logijuice-codex` can be removed.
-- **Test settings on the owner's Mac (revert after Task 14):** `defaults write com.penguinspecz.logijuice debugMenu
-  -bool true`; `settings.json` `menuBarMode: always`; a "Test Mouse" (`debug:test-mouse`) is in `state.json`. Revert
-  with `defaults delete com.penguinspecz.logijuice debugMenu`, mode back to auto, and "Debug: forget Test Mouse".
-- **Background job:** `/usr/bin/log stream` for subsystem `com.penguinspecz.logijuice` → `/tmp/lj-app-log.txt` (session
-  job; dies at the clear; needed only for Task 14 checks).
-- No `origin` remote, so every commit is local-only.
+- `main` at the commit adding this banner, pushed. Working tree clean. Merged branches `codex/logijuice-tasks-1-9` and
+  `codex/widget-docs` are local only; worktree `../logijuice-codex` (Codex's, idle) can be removed.
+- **Test settings still on (owner's Mac):** `defaults … debugMenu -bool true` and a "Test Mouse" (`debug:test-mouse`).
+  Revert after the checklist: `defaults delete com.penguinspecz.logijuice debugMenu`, then "Debug: forget Test Mouse".
+- No background jobs (the log stream hit its time limit and is not needed).
 
-**Next action:** owner looks at the settings window. Then check D (hub switch), revert the test settings
-(`defaults delete com.penguinspecz.logijuice debugMenu`, "Debug: forget Test Mouse"), Task 18 Shortcuts, Task 19
-Step 3 checklist. Polish: an app icon (blank in notifications); the nickname field doesn't look editable.
+**Next action:** owner checks the Shortcuts actions, the polished settings window and the icon. Then check D (hub
+switch) and the Task 19 Step 3 manual checklist (`docs/manual-checklist.md`) with the owner, then revert the test
+settings.
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
@@ -49,7 +35,7 @@ Step 3 checklist. Polish: an app icon (blank in notifications); the nickname fie
   re-read (decided; in the plan, Task 14).
 - Repo creation and visibility, and when to buy the Apple Developer membership: both deferred to the owner.
 - Puddle has the same widget crash. A task chip was offered to the owner (the Puddle repo isn't touched from here).
-- **Before the repo goes public:** the device serials and unit IDs in `docs/bringup-notes.md`, this file and
+- **Before the repo goes public (it is private now):** the device serials and unit IDs in `docs/bringup-notes.md`, this file and
   `Tests/JuiceHIDTests/Fixtures/owner-mouse.json` are the owner's. Decide whether to scrub them (owner-tier).
 
 ## Reading List
