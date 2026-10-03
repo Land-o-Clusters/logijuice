@@ -32,11 +32,12 @@ extension View {
 struct WindowBackdrop: NSViewRepresentable {
   func makeNSView(context: Context) -> NSVisualEffectView {
     let v = NSVisualEffectView()
-    v.material = .underWindowBackground
+    // Full-strength blur with a lighter tint than .underWindowBackground: the desktop shows through as frosted
+    // color, never as legible content. (Lowering alphaValue instead cuts holes in the blur — don't.)
+    v.material = .popover
     v.blendingMode = .behindWindow
     v.state = .active
-    // Lighter than the stock material: more of the desktop shows through; the glass panels keep text legible.
-    v.alphaValue = 0.62
+    v.alphaValue = 0.97  // owner-tuned; beyond ~5% the unblurred desktop starts to read through
     return v
   }
 
