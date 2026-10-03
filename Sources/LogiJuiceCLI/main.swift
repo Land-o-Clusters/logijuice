@@ -3,6 +3,9 @@ import JuiceCLIKit
 import JuiceStore
 
 let args = Array(CommandLine.arguments.dropFirst())
+if args.starts(with: ["debug", "capture"]) {
+  exit(DebugCapture.run(arguments: Array(args.dropFirst(2))))
+}
 let code = CLI.run(
   args, snapshotURL: JuicePaths.standard().cliSnapshotURL,
   out: { print($0) },
