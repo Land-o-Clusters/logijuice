@@ -10,12 +10,17 @@ final class SettingsWindowController {
   func show() {
     if window == nil {
       let model = AppModel.shared
-      let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 760, height: 720),
-                       styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+      let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 780),
+                       styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+                       backing: .buffered, defer: false)
       w.contentView = NSHostingView(rootView: SettingsView(model: model, notifier: model.notifier))
-      // macOS 27's grouped Form needs ~744pt (≈640pt column + 52pt margins); narrower clips both edges.
-      w.contentMinSize = NSSize(width: 760, height: 520)
+      w.contentMinSize = NSSize(width: 640, height: 560)
       w.title = "LogiJuice"
+      w.titleVisibility = .hidden
+      w.titlebarAppearsTransparent = true
+      w.isMovableByWindowBackground = true
+      w.isOpaque = false
+      w.backgroundColor = .clear
       w.isReleasedWhenClosed = false
       w.center()
       window = w
@@ -28,6 +33,7 @@ final class SettingsWindowController {
 
   /// Debug aid: `defaults write com.penguinspecz.logijuice debugSettingsSnapshotPath /tmp/x.png` makes the window
   /// write a PNG of itself a second after opening, so layout can be checked without screen-recording rights.
+  /// (Layout only: behind-window blur and glass don't render into this capture.)
   private func snapshotForDebugIfRequested() {
     guard let path = UserDefaults.standard.string(forKey: "debugSettingsSnapshotPath"), !path.isEmpty else { return }
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
@@ -36,9 +42,7 @@ final class SettingsWindowController {
       else { return }
       view.cacheDisplay(in: view.bounds, to: rep)
       try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
-      let metrics = "window \(self?.window?.frame.size ?? .zero) content \(view.bounds.size) "
-        + "fitting \(view.fittingSize) intrinsic \(view.intrinsicContentSize) "
-        + "subviews \(view.subviews.map { "\(type(of: $0)) \($0.frame)" })"
+      let metrics = "window \(self?.window?.frame.size ?? .zero) content \(view.bounds.size) fitting \(view.fittingSize)"
       try? metrics.write(toFile: path + ".txt", atomically: true, encoding: .utf8)
     }
   }
@@ -63,64 +67,152 @@ struct SettingsView: View {
       })
   }
 
-  /// Debug aid for layout bisection: section names listed in `debugSettingsHide` are omitted.
-  private var hidden: [String] { UserDefaults.standard.stringArray(forKey: "debugSettingsHide") ?? [] }
+  private var devices: [SnapshotDevice] { model.snapshot.devices }
 
   var body: some View {
-    Form {
-      if !hidden.contains("devices") { Section("Devices") {
-        if model.snapshot.devices.isEmpty {
-          Text("No devices yet. Plug in your Logi Bolt receiver and wake your devices.").foregroundStyle(.secondary)
+    ZStack {
+      WindowBackdrop().ignoresSafeArea()
+      ScrollView {
+        VStack(alignment: .leading, spacing: 24) {
+          hero
+          devicesSection
+          menuBarSection
+          alertsSection
+          generalSection
         }
-        ForEach(model.snapshot.devices) { device in
-          DeviceSettingsRow(model: model, device: device)
+        .padding(.horizontal, 26)
+        .padding(.top, 6)
+        .padding(.bottom, 26)
+      }
+    }
+    .frame(minWidth: 640, idealWidth: 700, maxWidth: .infinity, minHeight: 560, idealHeight: 780, maxHeight: .infinity)
+  }
+
+  // MARK: Hero — the window opens on your batteries.
+
+  private var hero: some View {
+    HStack(alignment: .bottom, spacing: 34) {
+      if devices.isEmpty {
+        Text("Plug in your Logi Bolt receiver and wake a device.")
+          .font(.system(.title3, design: .rounded))
+          .foregroundStyle(.secondary)
+      }
+      ForEach(devices) { d in
+        VStack(spacing: 6) {
+          Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: d, text: nil)], pointSize: 40))
+            .foregroundStyle(.primary)
+          Text(d.level.map(Format.level) ?? "—")
+            .font(.system(size: 26, weight: .semibold, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(d.tint.color ?? Color.primary)
+          Text(d.displayName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
-      } }
-      if !hidden.contains("menubar") { Section("Menu bar") {
+        .accessibilityElement(children: .combine)
+      }
+      Spacer(minLength: 0)
+    }
+    .padding(.top, 28)
+    .padding(.horizontal, 6)
+  }
+
+  // MARK: Sections
+
+  private var devicesSection: some View {
+    GlassSection(title: "Devices") {
+      if devices.isEmpty {
+        Text("No devices yet.").foregroundStyle(.secondary)
+      }
+      ForEach(Array(devices.enumerated()), id: \.element.id) { index, device in
+        if index > 0 { GlassDivider() }
+        DeviceSettingsRow(model: model, device: device)
+      }
+    }
+  }
+
+  private var menuBarSection: some View {
+    GlassSection(title: "Menu bar") {
+      GlassRow(label: "Also show devices that are low or charging") {
         Toggle("Also show devices that are low or charging", isOn: $model.settings.showAlertingInMenuBar)
-        Picker("Show percentage", selection: $model.settings.percentDisplay) {
-          Text("When low").tag(PercentDisplay.whenLow)
-          Text("Always").tag(PercentDisplay.always)
+          .labelsHidden()
+          .toggleStyle(.switch)
+      }
+      GlassDivider()
+      GlassRow(label: "Show percentage") {
+        GlassDropdown(selection: $model.settings.percentDisplay,
+                      options: [(.whenLow, "When low"), (.always, "Always")],
+                      accessibilityName: "Show percentage")
+      }
+      if !model.menuBarVisible {
+        Text("Nothing is in the menu bar right now. Reopen LogiJuice from Spotlight or Finder to get back here.")
+          .font(.caption).foregroundStyle(.secondary)
+      }
+    }
+  }
+
+  private var alertsSection: some View {
+    GlassSection(title: "Alerts") {
+      ThresholdBar(profile: $model.settings.profile, devices: devices)
+      ForEach($model.settings.profile.levels) { $level in
+        GlassDivider()
+        LevelRow(level: $level, showAdvanced: showAdvanced)
+      }
+      GlassDivider()
+      DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+        VStack(alignment: .leading, spacing: 12) {
+          GlassRow(label: "Hold a waiting alert at most") {
+            Stepper("\(model.settings.maxWaitHours) h", value: $model.settings.maxWaitHours, in: 1...24)
+              .monospacedDigit()
+          }
+          GlassRow(label: "End of day") {
+            DatePicker("End of day", selection: endOfDay, displayedComponents: .hourAndMinute).labelsHidden()
+          }
+          GlassRow(label: "Notify when fully charged") {
+            Toggle("Notify when fully charged", isOn: $model.settings.fullyChargedEnabled)
+              .labelsHidden().toggleStyle(.switch)
+          }
         }
-        if !model.menuBarVisible {
-          Text("Nothing is shown right now. Reopen LogiJuice (Spotlight or Finder) to get back here.")
-            .font(.caption).foregroundStyle(.secondary)
-        }
-      } }
-      if !hidden.contains("alerts") { Section("Alerts") {
-        LevelList(profile: $model.settings.profile, showAdvanced: showAdvanced, devices: model.snapshot.devices)
-        DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
-          Stepper("Hold nudges at most \(model.settings.maxWaitHours) h",
-                  value: $model.settings.maxWaitHours, in: 1...24)
-          DatePicker("End of day", selection: endOfDay, displayedComponents: .hourAndMinute)
-          Toggle("Notify when fully charged", isOn: $model.settings.fullyChargedEnabled)
-        }
-      } }
-      if !hidden.contains("general") { Section("General") {
+        .padding(.top, 10)
+      }
+    }
+  }
+
+  private var generalSection: some View {
+    GlassSection(title: "General") {
+      GlassRow(label: "Launch at login") {
         Toggle("Launch at login", isOn: $launchAtLogin)
+          .labelsHidden().toggleStyle(.switch)
           .onChange(of: launchAtLogin) { _, on in
             LoginItem.set(on)
             launchAtLogin = LoginItem.isEnabled
           }
-        Toggle("Sync across Macs (iCloud Drive)", isOn: $model.settings.syncEnabled)
+      }
+      GlassDivider()
+      GlassRow(label: "Sync across Macs with iCloud Drive") {
+        Toggle("Sync across Macs", isOn: $model.settings.syncEnabled)
+          .labelsHidden().toggleStyle(.switch)
           .disabled(!model.syncAvailable)
-        if !model.syncAvailable {
-          Text("Sync off: iCloud Drive not enabled").font(.caption).foregroundStyle(.secondary)
-        }
-        if !notifier.authorized {
-          HStack {
-            Text("Notifications are off for LogiJuice.").foregroundStyle(.red)
-            Button("Open Notification Settings") {
-              NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!)
-            }
+      }
+      if !model.syncAvailable {
+        Text("Sync is off because iCloud Drive isn't enabled on this Mac.").font(.caption).foregroundStyle(.secondary)
+      }
+      if !notifier.authorized {
+        GlassDivider()
+        GlassRow(label: "Notifications are off for LogiJuice") {
+          Button("Open Notification Settings") {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!)
           }
         }
-        if OptionsPlus.isInstalled { Button("Open Logi Options+") { OptionsPlus.open() } }
-      } }
+      }
+      if OptionsPlus.isInstalled {
+        GlassDivider()
+        GlassRow(label: "Button remapping and pairing") {
+          Button("Open Logi Options+") { OptionsPlus.open() }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .glassCapsule()
+        }
+      }
     }
-    .formStyle(.grouped)
-    .frame(minWidth: 760, idealWidth: 760, maxWidth: .infinity, minHeight: 520, idealHeight: 720,
-           maxHeight: .infinity)
   }
 }
 
@@ -155,17 +247,17 @@ struct DeviceSettingsRow: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 12) {
-        Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 24))
+        Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 22))
           .foregroundStyle(.primary)
-          .frame(width: 34, alignment: .center)
+          .frame(width: 30)
         VStack(alignment: .leading, spacing: 2) {
           HStack(spacing: 4) {
             TextField("Name", text: $nickname, prompt: Text(device.name))
               .labelsHidden()
               .textFieldStyle(.plain)
-              .font(.headline)
+              .font(.system(.headline, design: .rounded))
               .focused($editingName)
               .fixedSize()
               .onSubmit(commitName)
@@ -181,25 +273,23 @@ struct DeviceSettingsRow: View {
             Text(detail).font(.caption).foregroundStyle(.secondary)
           }
         }
-        Spacer()
-        Text(device.level.map(Format.level) ?? "—")
-          .font(.system(size: 22, weight: .semibold, design: .rounded))
-          .monospacedDigit()
-          .foregroundStyle(device.tint.color ?? Color.primary)
+        Spacer(minLength: 8)
+        Toggle("In menu bar", isOn: pinned).toggleStyle(ChipToggleStyle())
+        Toggle("Custom alerts", isOn: custom).toggleStyle(ChipToggleStyle())
       }
-      HStack(spacing: 20) {
-        Toggle("Show in menu bar", isOn: pinned).toggleStyle(.checkbox)
-        Toggle("Custom alerts", isOn: custom).toggleStyle(.checkbox)
-      }
-      .font(.callout)
-      .padding(.leading, 46)
       if let override = model.alertOverride(for: device.id) {
-        LevelList(profile: Binding(get: { override }, set: { model.setAlertOverride($0, for: device.id) }),
-                  showAdvanced: false, devices: [device])
-          .padding(.leading, 46)
+        VStack(alignment: .leading, spacing: 10) {
+          ThresholdBar(profile: Binding(get: { override }, set: { model.setAlertOverride($0, for: device.id) }),
+                       devices: [device])
+          ForEach(Binding(get: { override }, set: { model.setAlertOverride($0, for: device.id) }).levels) { $level in
+            LevelRow(level: $level, showAdvanced: false)
+          }
+        }
+        .padding(12)
+        .glassPanel(cornerRadius: 14)
+        .padding(.leading, 42)
       }
     }
-    .padding(.vertical, 2)
     .onAppear { nickname = device.displayName }
     .onChange(of: editingName) { _, editing in if !editing { commitName() } }
   }

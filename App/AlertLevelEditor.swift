@@ -1,117 +1,81 @@
 import JuiceCore
 import SwiftUI
 
-struct LevelList: View {
-  @Binding var profile: AlertProfile
-  let showAdvanced: Bool
-  var devices: [SnapshotDevice] = []
-  var showsBar = true
-
-  var body: some View {
-    if showsBar {
-      ThresholdBar(profile: $profile, devices: devices)
-    }
-    ForEach($profile.levels) { $level in
-      LevelRow(level: $level, showAdvanced: showAdvanced)
-    }
-  }
-}
-
-/// One line per level; percent thresholds are edited on the alert bar, "days left" ones here.
+/// One line per level: on/off, color, name, timing, threshold. Percent thresholds are dragged on the alert bar;
+/// "days left" thresholds use the stepper here.
 struct LevelRow: View {
   @Binding var level: AlertLevel
   let showAdvanced: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
+    VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 10) {
-        Toggle("Enabled", isOn: $level.enabled).labelsHidden()
-        TintPicker(tint: $level.tint)
+        Toggle("\(level.name) enabled", isOn: $level.enabled)
+          .labelsHidden()
+          .toggleStyle(.switch)
+          .controlSize(.small)
+        GlassDropdown(selection: $level.tint,
+                      options: [(.none, "No color"), (.yellow, "Yellow"), (.red, "Red")],
+                      swatch: { $0.color ?? Color.secondary.opacity(0.25) },
+                      accessibilityName: "\(level.name) icon color")
         TextField("Name", text: $level.name)
           .labelsHidden()
-          .textFieldStyle(.roundedBorder)
-          .frame(width: 104)
-        Picker("When", selection: $level.timing) {
-          Text("alert right away").tag(Timing.now)
-          Text("wait for a natural moment").tag(Timing.nextMoment)
-        }
-        .labelsHidden()
-        .fixedSize()
+          .textFieldStyle(.plain)
+          .font(.system(.body, design: .rounded).weight(.medium))
+          .frame(width: 88)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 4)
+          .background(Color.primary.opacity(0.06), in: Capsule())
+        GlassDropdown(selection: $level.timing,
+                      options: [(.now, "Alert right away"), (.nextMoment, "Wait for a natural moment")],
+                      accessibilityName: "\(level.name) timing")
         Spacer(minLength: 4)
-        TriggerEditor(trigger: $level.trigger)
+        TriggerEditor(trigger: $level.trigger, levelName: level.name)
       }
       if showAdvanced {
         HStack(spacing: 8) {
           Text("Repeat").foregroundStyle(.secondary)
-          Picker("Repeat", selection: $level.repeatPolicy) {
-            Text("never").tag(RepeatPolicy.never)
-            Text("every 4 h").tag(RepeatPolicy.everyHours(4))
-            Text("every 12 h").tag(RepeatPolicy.everyHours(12))
-            Text("daily").tag(RepeatPolicy.daily)
-          }
-          .labelsHidden()
-          .fixedSize()
+          GlassDropdown(selection: $level.repeatPolicy,
+                        options: [(.never, "Never"), (.everyHours(4), "Every 4 hours"),
+                                  (.everyHours(12), "Every 12 hours"), (.daily, "Daily")],
+                        accessibilityName: "\(level.name) repeat")
         }
         .font(.callout)
-        .padding(.leading, 50)
+        .padding(.leading, 52)
       }
     }
-    .opacity(level.enabled ? 1 : 0.5)
-  }
-}
-
-/// Icon color a fired level gives its device in the menu bar and widget.
-/// (A `Menu` can't draw a custom shape as its label on macOS, so the dot sits beside a compact picker.)
-struct TintPicker: View {
-  @Binding var tint: IconTint
-
-  var body: some View {
-    HStack(spacing: 3) {
-      Circle()
-        .fill(tint.color ?? Color.secondary.opacity(0.25))
-        .overlay(Circle().strokeBorder(Color.primary.opacity(0.2)))
-        .frame(width: 11, height: 11)
-      Picker("Color", selection: $tint) {
-        Text("none").tag(IconTint.none)
-        Text("yellow").tag(IconTint.yellow)
-        Text("red").tag(IconTint.red)
-      }
-      .labelsHidden()
-      .fixedSize()
-    }
-    .frame(width: 96, alignment: .leading)
-    .help("Icon color while this level is active")
+    .opacity(level.enabled ? 1 : 0.45)
   }
 }
 
 struct TriggerEditor: View {
   @Binding var trigger: Trigger
+  let levelName: String
 
-  private var isPercent: Binding<Bool> {
+  private var unit: Binding<Bool> {
     Binding(
       get: { if case .percentAtOrBelow = trigger { return true } else { return false } },
       set: { trigger = $0 ? .percentAtOrBelow(20) : .forecastDaysAtOrBelow(3) })
   }
 
   var body: some View {
-    HStack(spacing: 4) {
+    HStack(spacing: 6) {
       switch trigger {
       case .percentAtOrBelow(let p):
         Text("≤ \(p)%")
-          .font(.system(.body, design: .rounded).weight(.medium))
+          .font(.system(.body, design: .rounded).weight(.semibold))
           .monospacedDigit()
+          .help("Drag the marker on the bar to change")
       case .forecastDaysAtOrBelow(let d):
-        Text("≤ \(Int(d))").font(.system(.body, design: .rounded).weight(.medium)).monospacedDigit()
-        Stepper("Days left", value: Binding(get: { Int(d) }, set: { trigger = .forecastDaysAtOrBelow(Double($0)) }),
-                in: 1...30)
+        Text("≤ \(Int(d)) days")
+          .font(.system(.body, design: .rounded).weight(.semibold))
+          .monospacedDigit()
+        Stepper("\(levelName) days left",
+                value: Binding(get: { Int(d) }, set: { trigger = .forecastDaysAtOrBelow(Double($0)) }), in: 1...30)
           .labelsHidden()
       }
-      Picker("Unit", selection: isPercent) {
-        Text("%").tag(true)
-        Text("days left").tag(false)
-      }
-      .labelsHidden()
-      .fixedSize()
+      GlassDropdown(selection: unit, options: [(true, "%"), (false, "days left")],
+                    accessibilityName: "\(levelName) threshold unit")
     }
   }
 }

@@ -35,21 +35,24 @@ struct ThresholdBar: View {
     tint.color.map { $0.opacity(0.75) } ?? Color.primary.opacity(0.07)
   }
 
+  /// A glass battery body with liquid-filled alert segments (a soft gradient and a bright surface line,
+  /// echoing the app icon) and a glass terminal nub.
   private func track(width: CGFloat) -> some View {
-    HStack(spacing: 2) {
+    HStack(spacing: 3) {
       ZStack(alignment: .leading) {
-        ForEach(ThresholdLayout.segments(profile), id: \.from) { seg in
+        ForEach(ThresholdLayout.segments(profile).filter { $0.levelID != nil }, id: \.from) { seg in
+          let base = seg.tint.color ?? Color.secondary
           Rectangle()
-            .fill(seg.levelID == nil ? Color.primary.opacity(0.07) : fill(seg.tint))
+            .fill(LinearGradient(colors: [base.opacity(0.95), base.opacity(0.65)], startPoint: .top, endPoint: .bottom))
+            .overlay(alignment: .top) { Rectangle().fill(Color.white.opacity(0.45)).frame(height: 1) }
             .frame(width: max(0, x(seg.to, width) - x(seg.from, width)))
             .offset(x: x(seg.from, width))
         }
       }
       .frame(width: width, height: trackHeight, alignment: .leading)
-      .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-      .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color.primary.opacity(0.25)))
-      // The battery terminal.
-      RoundedRectangle(cornerRadius: 1.5).fill(Color.primary.opacity(0.25)).frame(width: nubWidth - 2, height: 9)
+      .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+      .glassPanel(cornerRadius: 8)
+      Capsule().fill(Color.primary.opacity(0.22)).frame(width: nubWidth - 2, height: 10)
     }
   }
 
@@ -74,9 +77,10 @@ struct ThresholdBar: View {
         .fill(Color.primary.opacity(0.75))
         .frame(width: 2, height: trackHeight + 6)
       Circle()
-        .fill(Color(nsColor: .controlBackgroundColor))
-        .overlay(Circle().strokeBorder(m.tint.color ?? Color.secondary, lineWidth: 2.5))
+        .fill(Color.clear)
         .frame(width: knob, height: knob)
+        .glassCapsule()
+        .overlay(Circle().strokeBorder(m.tint.color ?? Color.secondary, lineWidth: 2.5))
         .offset(y: trackHeight + 4)
       Text("\(m.threshold)%")
         .font(.system(size: 11, weight: .semibold, design: .rounded))
