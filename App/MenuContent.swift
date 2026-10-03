@@ -7,7 +7,7 @@ extension IconTint {
     switch self {
     case .none: return nil
     case .yellow: return .systemYellow
-    case .red: return .systemRed
+    case .red: return NSColor.systemRed.withAlphaComponent(0.85)
     }
   }
 
