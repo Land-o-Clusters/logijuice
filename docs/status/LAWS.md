@@ -38,6 +38,10 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **A surface is verified only in its real host:** the widget in the gallery, the icon in the menu bar, alerts in
   Notification Center. "It builds" or "pluginkit lists it" is not "it works". Puddle's widget pattern was copied
   unverified and crashed.
+- **Check UI layout yourself before the owner sees it.** Run the app with
+  `defaults write com.penguinspecz.logijuice debugSettingsSnapshotPath /tmp/x.png`; the settings window writes a PNG
+  plus metrics. On macOS 27 a grouped `Form` needs ≥ ~744pt of width, and controls inside custom Form rows need
+  `.labelsHidden()` with explicit labels.
 - **Run checks bare, capture the exit code, commit only on 0.** Never `check | tail && git commit`: the `&&` reads the
   pipe's status, not the check's.
 - **Commit with the pathspec on the commit:** `git commit -m "…" -- <paths>`. Use `git add -- <path>` only for a file

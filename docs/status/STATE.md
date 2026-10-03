@@ -4,8 +4,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** implementation. Tasks 0–17 are code-complete on `main` (the redesign is `b06c3ae`, sync + settings
-`607649c`). Waiting on the owner's visual check of the redesign and settings window, then check D (hub switch).
+**Phase:** implementation. Tasks 0–17 are done on `main`. The settings window works since `9b47058` (checked by
+juice-arch via the snapshot hook). The owner has verified the menu bar redesign (three gauges, hover highlight).
 
 **Done (verified):**
 - Spec `0f2a347` (§7 amended at `9826453`: device-silhouette gauge), plan `9286109` + fixes, bring-up `ed186d4`.
@@ -21,6 +21,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 - Redesign `b06c3ae` (114 tests green): per-level tint, per-Mac pins, contrast fix (renders checked dark and light),
   hover/press highlight. Sync + settings `607649c`: this Mac's iCloud file `BA292111-…json` holds only the 2 real
   devices. The legacy `always` setting migrated to both pinned. Installed to /Applications at `607649c`.
+- Settings clipping fixed `9b47058`: the grouped Form needs ~744pt on macOS 27 (window now 760 min), and alert-row
+  controls use `.labelsHidden()` with explicit labels. Red tint softened to 85% (owner: "a bit high").
 - Widget crash fixed `d1a3fab`: the extension now links `-e _NSExtensionMain` and build-app.sh guards it (red then
   green). Owner saw both sizes in Edit Widgets 2026-10-03; 0 crash reports since. Check C (lock-screen nudge) passed.
 - At `4831c17`: `swift test` **111 passed, 0 failed**, widget build rc 0, `build-app.sh` rc 0 (universal, ad-hoc,
@@ -36,9 +38,9 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   job; dies at the clear; needed only for Task 14 checks).
 - No `origin` remote, so every commit is local-only.
 
-**Next action:** owner checks the menu bar (two pinned gauges plus a yellow/red Test Mouse), the dropdown hover, and
-the settings window. Then check D (hub switch), revert the test settings (debug menu, Test Mouse), Task 18 Shortcuts,
-Task 19 Step 3 (checklist). Polish: an app icon (notifications show a blank one).
+**Next action:** owner looks at the settings window. Then check D (hub switch), revert the test settings
+(`defaults delete com.penguinspecz.logijuice debugMenu`, "Debug: forget Test Mouse"), Task 18 Shortcuts, Task 19
+Step 3 checklist. Polish: an app icon (blank in notifications); the nickname field doesn't look editable.
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
