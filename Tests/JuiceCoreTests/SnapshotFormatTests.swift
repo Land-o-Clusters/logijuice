@@ -13,19 +13,21 @@ final class SnapshotFormatTests: XCTestCase {
   }
 
   func device(level: BatteryLevel? = .percent(50), charging: Bool = false, live: Bool = true,
-              alerting: Bool = false, tinted: Bool = false) -> SnapshotDevice {
+              alerting: Bool = false, tint: IconTint = .none) -> SnapshotDevice {
     SnapshotDevice(id: .serial("X"), name: "MX Keys", nickname: nil, kind: .keyboard, level: level,
-                   charging: charging, lastSeen: t0, live: live, forecast: .learning, alerting: alerting, tinted: tinted)
+                   charging: charging, lastSeen: t0, live: live, forecast: .learning, alerting: alerting, tint: tint)
   }
 
   func testBuildSortsLowestFirstAndCarriesFlags() {
     let snap = SnapshotBuilder.build(
       records: [record("A", "Keys", readings: [(0, 80, false)]), record("B", "Mouse", readings: [(0, 12, false)])],
-      liveDevices: [.serial("B")], receiverPresent: true, alerting: [.serial("B")], tinted: [], now: t0)
+      liveDevices: [.serial("B")], receiverPresent: true, alerting: [.serial("B")], tints: [.serial("B"): .yellow], now: t0)
     XCTAssertEqual(snap.devices.map(\.name), ["Mouse", "Keys"])
     XCTAssertEqual(snap.devices[0].level, .percent(12))
     XCTAssertTrue(snap.devices[0].live)
     XCTAssertTrue(snap.devices[0].alerting)
+    XCTAssertEqual(snap.devices[0].tint, .yellow)
+    XCTAssertEqual(snap.devices[1].tint, IconTint.none)
     XCTAssertFalse(snap.devices[1].live)
     XCTAssertEqual(snap.lowest?.name, "Mouse")
     XCTAssertEqual(snap.schema, 1)
@@ -39,26 +41,45 @@ final class SnapshotFormatTests: XCTestCase {
     XCTAssertEqual(d.displayName, "Desk keys")
   }
 
-  func testAutoHiddenWithNoDevices() {
-    XCTAssertFalse(MenuBarPolicy.isVisible(mode: .auto, snapshot: .empty))
-    XCTAssertTrue(MenuBarPolicy.isVisible(mode: .always, snapshot: .empty))
+  func testNothingVisibleWithNoDevicesOrPins() {
+    XCTAssertEqual(MenuBarPolicy.visibleDevices(snapshot: .empty, pinned: [], showAlerting: true), [])
+    XCTAssertEqual(MenuBarPolicy.visibleDevices(snapshot: .empty, pinned: [.serial("GONE")], showAlerting: true), [])
   }
 
-  func testAutoVisibility() {
-    func snap(_ d: SnapshotDevice) -> Snapshot { Snapshot(generatedAt: t0, receiverPresent: true, devices: [d]) }
-    XCTAssertFalse(MenuBarPolicy.isVisible(mode: .auto, snapshot: snap(device())))
-    XCTAssertTrue(MenuBarPolicy.isVisible(mode: .auto, snapshot: snap(device(alerting: true))))
-    XCTAssertTrue(MenuBarPolicy.isVisible(mode: .auto, snapshot: snap(device(charging: true, live: true))))
-    XCTAssertFalse(MenuBarPolicy.isVisible(mode: .auto, snapshot: snap(device(charging: true, live: false))))
-    XCTAssertFalse(MenuBarPolicy.isVisible(mode: .never, snapshot: snap(device(alerting: true))))
+  func testVisibleDevices() {
+    var mouse = device(level: .percent(70))
+    mouse.id = .serial("M")
+    var keys = device(level: .percent(90))
+    keys.id = .serial("K")
+    var low = device(level: .percent(12), alerting: true)
+    low.id = .serial("L")
+    var charging = device(level: .percent(40), charging: true, live: true)
+    charging.id = .serial("C")
+    var staleCharging = device(level: .percent(40), charging: true, live: false)
+    staleCharging.id = .serial("S")
+    let snap = Snapshot(generatedAt: t0, receiverPresent: true, devices: [low, charging, staleCharging, mouse, keys])
+    func ids(_ pinned: [DeviceID], _ showAlerting: Bool) -> [String] {
+      MenuBarPolicy.visibleDevices(snapshot: snap, pinned: pinned, showAlerting: showAlerting).map(\.id.rawValue)
+    }
+    // Healthy, unpinned devices never show; low and live-charging ones do when enabled.
+    XCTAssertEqual(ids([], true), ["sn:L", "sn:C"])
+    XCTAssertEqual(ids([], false), [])
+    // Pins come first, in pin order, and are not duplicated.
+    XCTAssertEqual(ids([.serial("K"), .serial("M")], true), ["sn:K", "sn:M", "sn:L", "sn:C"])
+    XCTAssertEqual(ids([.serial("L")], true), ["sn:L", "sn:C"])
+    XCTAssertEqual(ids([.serial("K")], false), ["sn:K"])
   }
 
-  func testIsTinted() {
+  func testTintIsMostSevereFiredLevelColor() {
     var s = DeviceAlertState()
+    XCTAssertEqual(MenuBarPolicy.tint(state: s, profile: .default), IconTint.none)
     s.firedAt["low"] = t0
-    XCTAssertFalse(MenuBarPolicy.isTinted(state: s, profile: .default))
+    XCTAssertEqual(MenuBarPolicy.tint(state: s, profile: .default), .yellow)
     s.firedAt["veryLow"] = t0
-    XCTAssertTrue(MenuBarPolicy.isTinted(state: s, profile: .default))
+    XCTAssertEqual(MenuBarPolicy.tint(state: s, profile: .default), .red)
+    var quiet = AlertProfile.default
+    quiet.levels = quiet.levels.map { var l = $0; l.tint = .none; return l }
+    XCTAssertEqual(MenuBarPolicy.tint(state: s, profile: quiet), IconTint.none)
   }
 
   func testLevelAndForecastStrings() {
@@ -125,17 +146,12 @@ final class SnapshotFormatTests: XCTestCase {
     XCTAssertEqual(DeviceKind.keyboard.symbolName, "keyboard")
   }
 
-  func testMenuBarTextOnlyWhenLowestIsAlerting() {
-    func snap(_ devices: [SnapshotDevice]) -> Snapshot {
-      Snapshot(generatedAt: t0, receiverPresent: true, devices: devices)
-    }
-    XCTAssertNil(Format.menuBarText(.empty))
-    XCTAssertNil(Format.menuBarText(snap([device(level: .percent(70))])))
-    XCTAssertEqual(Format.menuBarText(snap([device(level: .percent(14), alerting: true)])), "14%")
-    XCTAssertEqual(Format.menuBarText(snap([device(level: .word(.low), alerting: true)])), "Low")
-    var keys = device(level: .percent(90))
-    keys.id = .serial("K")
-    XCTAssertEqual(Format.menuBarText(snap([keys, device(level: .percent(9), alerting: true)])), "9%")
+  func testMenuBarText() {
+    XCTAssertNil(Format.menuBarText(device(level: .percent(70)), display: .whenLow))
+    XCTAssertEqual(Format.menuBarText(device(level: .percent(70)), display: .always), "70%")
+    XCTAssertEqual(Format.menuBarText(device(level: .percent(14), alerting: true), display: .whenLow), "14%")
+    XCTAssertEqual(Format.menuBarText(device(level: .word(.low), alerting: true), display: .whenLow), "Low")
+    XCTAssertNil(Format.menuBarText(device(level: nil), display: .always))
   }
 
   func testGaugeSymbolsPerKind() {

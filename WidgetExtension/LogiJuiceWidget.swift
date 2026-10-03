@@ -29,16 +29,26 @@ struct BatteryProvider: TimelineProvider {
   }
 }
 
+extension IconTint {
+  var color: Color? {
+    switch self {
+    case .none: return nil
+    case .yellow: return .yellow
+    case .red: return .red
+    }
+  }
+}
+
 struct Ring: View {
   let fraction: Double
-  let tinted: Bool
+  let tint: IconTint
 
   var body: some View {
     ZStack {
       Circle().stroke(.quaternary, lineWidth: 8)
       Circle()
         .trim(from: 0, to: max(0.02, min(1, fraction)))
-        .stroke(tinted ? Color.red : Color.green, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+        .stroke(tint.color ?? Color.green, style: StrokeStyle(lineWidth: 8, lineCap: .round))
         .rotationEffect(.degrees(-90))
     }
   }
@@ -51,7 +61,7 @@ struct SmallBatteryView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       ZStack {
-        Ring(fraction: Double(device.level?.equivalentPercent ?? 0) / 100, tinted: device.tinted || device.alerting)
+        Ring(fraction: Double(device.level?.equivalentPercent ?? 0) / 100, tint: device.tint)
         VStack(spacing: 2) {
           Image(systemName: device.charging ? "bolt.fill" : device.kind.symbolName).font(.caption)
           Text(device.level.map(Format.level) ?? "—").font(.title3.bold()).monospacedDigit()
@@ -83,7 +93,7 @@ struct MediumBatteryView: View {
           if d.charging { Image(systemName: "bolt.fill").foregroundStyle(.yellow) }
           Text(d.level.map(Format.level) ?? "—")
             .font(.title3.bold()).monospacedDigit()
-            .foregroundStyle(d.tinted ? Color.red : Color.primary)
+            .foregroundStyle(d.tint.color ?? Color.primary)
         }
       }
     }

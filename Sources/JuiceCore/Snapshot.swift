@@ -11,11 +11,11 @@ public struct SnapshotDevice: Hashable, Sendable, Codable, Identifiable {
   public var live: Bool
   public var forecast: ForecastResult
   public var alerting: Bool
-  public var tinted: Bool
+  public var tint: IconTint
 
   public init(id: DeviceID, name: String, nickname: String?, kind: DeviceKind, level: BatteryLevel?,
               charging: Bool, lastSeen: Date?, live: Bool, forecast: ForecastResult, alerting: Bool,
-              tinted: Bool) {
+              tint: IconTint) {
     self.id = id
     self.name = name
     self.nickname = nickname
@@ -26,7 +26,7 @@ public struct SnapshotDevice: Hashable, Sendable, Codable, Identifiable {
     self.live = live
     self.forecast = forecast
     self.alerting = alerting
-    self.tinted = tinted
+    self.tint = tint
   }
 
   public var displayName: String {
@@ -65,23 +65,23 @@ public struct Snapshot: Hashable, Sendable, Codable {
       SnapshotDevice(id: .serial("PREVIEW-MOUSE"), name: "MX Master 3S", nickname: nil, kind: .mouse,
                      level: .percent(14), charging: false, lastSeen: Date(timeIntervalSince1970: 1_800_000_000),
                      live: true, forecast: .estimate(daysLeft: 2, emptyAt: Date(timeIntervalSince1970: 1_800_172_800)),
-                     alerting: true, tinted: false),
+                     alerting: true, tint: .yellow),
       SnapshotDevice(id: .serial("PREVIEW-KEYS"), name: "MX Keys S", nickname: nil, kind: .keyboard,
                      level: .percent(72), charging: false, lastSeen: Date(timeIntervalSince1970: 1_800_000_000),
-                     live: true, forecast: .learning, alerting: false, tinted: false),
+                     live: true, forecast: .learning, alerting: false, tint: .none),
     ])
 }
 
 public enum SnapshotBuilder {
   public static func build(records: [DeviceRecord], liveDevices: Set<DeviceID>, receiverPresent: Bool,
-                           alerting: Set<DeviceID>, tinted: Set<DeviceID>, now: Date) -> Snapshot {
+                           alerting: Set<DeviceID>, tints: [DeviceID: IconTint], now: Date) -> Snapshot {
     let devices = records.map { r -> SnapshotDevice in
       let latest = r.readings.max { $0.observedAt < $1.observedAt }
       return SnapshotDevice(
         id: r.info.id, name: r.info.name, nickname: r.nickname, kind: r.info.kind, level: latest?.level,
         charging: latest?.charging ?? false, lastSeen: latest?.observedAt, live: liveDevices.contains(r.info.id),
         forecast: Forecaster.forecast(r.readings, now: now), alerting: alerting.contains(r.info.id),
-        tinted: tinted.contains(r.info.id))
+        tint: tints[r.info.id] ?? .none)
     }.sorted {
       ($0.level?.equivalentPercent ?? 101, $0.displayName) < ($1.level?.equivalentPercent ?? 101, $1.displayName)
     }

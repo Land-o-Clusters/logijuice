@@ -34,7 +34,7 @@ struct LogiJuiceApp: App {
     MenuBarExtra(isInserted: Binding(get: { model.menuBarVisible }, set: { _ in })) {
       MenuContent(model: model)
     } label: {
-      MenuBarLabel(snapshot: model.snapshot, tinted: model.iconTinted)
+      MenuBarLabel(devices: model.menuBarDevices, display: model.settings.percentDisplay)
     }
     .menuBarExtraStyle(.window)
   }

@@ -48,8 +48,34 @@ final class AppModel: ObservableObject {
   }
 
   var isFirstRun: Bool { state.records.isEmpty }
-  var menuBarVisible: Bool { MenuBarPolicy.isVisible(mode: settings.menuBarMode, snapshot: snapshot) }
-  var iconTinted: Bool { snapshot.devices.contains { $0.tinted } }
+  var menuBarDevices: [SnapshotDevice] {
+    MenuBarPolicy.visibleDevices(snapshot: snapshot, pinned: settings.pinnedDevices,
+                                 showAlerting: settings.showAlertingInMenuBar)
+  }
+  var menuBarVisible: Bool { !menuBarDevices.isEmpty }
+
+  func isPinned(_ id: DeviceID) -> Bool { settings.pinnedDevices.contains(id) }
+
+  func setPinned(_ pinned: Bool, for id: DeviceID) {
+    if pinned {
+      if !settings.pinnedDevices.contains(id) { settings.pinnedDevices.append(id) }
+    } else {
+      settings.pinnedDevices.removeAll { $0 == id }
+    }
+  }
+
+  /// One-time migration of the pre-2026-10-03 Auto/Always/Never setting.
+  private func migrateLegacyMenuBarMode() {
+    guard let legacy = settings.legacyMenuBarMode else { return }
+    var next = settings
+    switch legacy {
+    case .always: next.pinnedDevices = mergedRecords.map(\.info.id).filter { !$0.rawValue.hasPrefix("debug:") }
+    case .never: next.showAlertingInMenuBar = false
+    case .auto: break
+    }
+    next.legacyMenuBarMode = nil
+    settings = next
+  }
 
   var mergedRecords: [DeviceRecord] {
     SyncMerge.merge(local: state.records, remotes: settings.syncEnabled ? remoteFiles : [], now: Date())
@@ -63,6 +89,7 @@ final class AppModel: ObservableObject {
     hid.onReading = { [weak self] reading, info in self?.ingest(reading, info: info) }
     hid.onReceiverChange = { [weak self] present in self?.receiverChanged(present) }
     hid.start()
+    migrateLegacyMenuBarMode()
     tickTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated { self?.handleTick() }
     }
@@ -126,16 +153,14 @@ final class AppModel: ObservableObject {
     let now = Date()
     let records = mergedRecords
     var alerting = Set<DeviceID>()
-    var tinted = Set<DeviceID>()
+    var tints: [DeviceID: IconTint] = [:]
     for record in records {
       let alertState = state.alertStates[record.info.id] ?? DeviceAlertState()
       if !alertState.firedAt.isEmpty { alerting.insert(record.info.id) }
-      if MenuBarPolicy.isTinted(state: alertState, profile: record.alertOverride ?? settings.profile) {
-        tinted.insert(record.info.id)
-      }
+      tints[record.info.id] = MenuBarPolicy.tint(state: alertState, profile: record.alertOverride ?? settings.profile)
     }
     let next = SnapshotBuilder.build(records: records, liveDevices: liveDevices, receiverPresent: receiverPresent,
-                                     alerting: alerting, tinted: tinted, now: now)
+                                     alerting: alerting, tints: tints, now: now)
     let changed = next.devices != snapshot.devices || next.receiverPresent != snapshot.receiverPresent
     snapshot = next
     if changed {

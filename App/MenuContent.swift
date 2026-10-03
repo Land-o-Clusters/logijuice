@@ -2,22 +2,52 @@ import AppKit
 import JuiceCore
 import SwiftUI
 
-struct MenuBarLabel: View {
-  let snapshot: Snapshot
-  let tinted: Bool
-
-  var body: some View {
-    Image(nsImage: Self.image(snapshot: snapshot, tinted: tinted))
+extension IconTint {
+  var nsColor: NSColor? {
+    switch self {
+    case .none: return nil
+    case .yellow: return .systemYellow
+    case .red: return .systemRed
+    }
   }
 
-  /// The lowest device's own silhouette, filled to its level (spec §7, amended 2026-10-03).
-  static func image(snapshot: Snapshot, tinted: Bool) -> NSImage {
-    let device = snapshot.lowest
-    let symbols = (device?.kind ?? .other).gaugeSymbols
-    return MenuBarIcon.render(
-      outline: symbols.outline, fill: symbols.fill,
-      fraction: Double(device?.level?.equivalentPercent ?? 0) / 100, tinted: tinted,
-      charging: device.map { $0.charging && $0.live } ?? false, text: Format.menuBarText(snapshot))
+  var color: Color? { nsColor.map(Color.init(nsColor:)) }
+}
+
+struct MenuBarLabel: View {
+  let devices: [SnapshotDevice]
+  let display: PercentDisplay
+
+  var body: some View {
+    Image(nsImage: Self.image(devices: devices, display: display))
+  }
+
+  /// One silhouette gauge per shown device (spec §7, amended 2026-10-03).
+  static func image(devices: [SnapshotDevice], display: PercentDisplay) -> NSImage {
+    MenuBarIcon.render(devices.map { d in
+      let symbols = d.kind.gaugeSymbols
+      return MenuBarIcon.Gauge(
+        outline: symbols.outline, fill: symbols.fill,
+        fraction: Double(d.level?.equivalentPercent ?? 0) / 100, tint: d.tint.nsColor,
+        charging: d.charging && d.live, text: Format.menuBarText(d, display: display))
+    })
+  }
+}
+
+/// Native-menu-like feedback: highlight on hover, darker while pressed.
+struct MenuRowButtonStyle: ButtonStyle {
+  @State private var hovering = false
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.vertical, 4)
+      .padding(.horizontal, 8)
+      .background(
+        RoundedRectangle(cornerRadius: 5)
+          .fill(Color.accentColor.opacity(configuration.isPressed ? 0.45 : hovering ? 0.25 : 0)))
+      .contentShape(Rectangle())
+      .onHover { hovering = $0 }
   }
 }
 
@@ -37,7 +67,7 @@ struct DeviceRow: View {
       if device.charging { Image(systemName: "bolt.fill").foregroundStyle(.yellow) }
       Text(device.level.map(Format.level) ?? "—")
         .monospacedDigit()
-        .foregroundStyle(device.tinted ? Color.red : Color.primary)
+        .foregroundStyle(device.tint.color ?? Color.primary)
     }
   }
 }
@@ -66,8 +96,8 @@ struct MenuContent: View {
       }
       Button("Quit LogiJuice") { NSApp.terminate(nil) }
     }
-    .buttonStyle(.borderless)
-    .padding(14)
+    .buttonStyle(MenuRowButtonStyle())
+    .padding(10)
     .frame(width: 300)
   }
 }

@@ -87,10 +87,13 @@ public enum Format {
     return line
   }
 
-  /// Text beside the menu bar gauge: the lowest device's level, only while it is alerting.
-  public static func menuBarText(_ snapshot: Snapshot) -> String? {
-    guard let lowest = snapshot.lowest, lowest.alerting, let level = lowest.level else { return nil }
-    return Format.level(level)
+  /// Text beside a menu bar gauge: always, or only while that device is alerting.
+  public static func menuBarText(_ device: SnapshotDevice, display: PercentDisplay) -> String? {
+    guard let level = device.level else { return nil }
+    switch display {
+    case .always: return Format.level(level)
+    case .whenLow: return device.alerting ? Format.level(level) : nil
+    }
   }
 
   public static func batterySymbol(percent: Int?) -> String {

@@ -1,16 +1,23 @@
 import Foundation
 
 public enum MenuBarPolicy {
-  /// Auto: visible while any device has a fired level, or a live device is charging (spec §7).
-  public static func isVisible(mode: MenuBarMode, snapshot: Snapshot) -> Bool {
-    switch mode {
-    case .always: return true
-    case .never: return false
-    case .auto: return snapshot.devices.contains { $0.alerting || ($0.charging && $0.live) }
+  /// Pinned devices first (in pin order), then — if enabled — unpinned devices that are alerting or
+  /// charging while live. Empty means the menu bar item hides (spec §7, amended 2026-10-03).
+  public static func visibleDevices(snapshot: Snapshot, pinned: [DeviceID], showAlerting: Bool) -> [SnapshotDevice] {
+    let byID = Dictionary(snapshot.devices.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    var shown = pinned.compactMap { byID[$0] }
+    var seen = Set(shown.map(\.id))
+    if showAlerting {
+      for d in snapshot.devices where !seen.contains(d.id) && (d.alerting || (d.charging && d.live)) {
+        shown.append(d)
+        seen.insert(d.id)
+      }
     }
+    return shown
   }
 
-  public static func isTinted(state: DeviceAlertState, profile: AlertProfile) -> Bool {
-    profile.levels.contains { $0.tintsIcon && state.firedAt[$0.id] != nil }
+  /// The color of the most severe fired level that has one.
+  public static func tint(state: DeviceAlertState, profile: AlertProfile) -> IconTint {
+    profile.levels.filter { state.firedAt[$0.id] != nil }.map(\.tint).max() ?? .none
   }
 }

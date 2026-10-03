@@ -15,7 +15,7 @@ final class AlertProfileTests: XCTestCase {
     XCTAssertEqual(p.levels.map(\.trigger), [.percentAtOrBelow(20), .percentAtOrBelow(10), .percentAtOrBelow(5)])
     XCTAssertEqual(p.levels.map(\.timing), [.nextMoment, .now, .now])
     XCTAssertEqual(p.levels.map(\.repeatPolicy), [.never, .never, .daily])
-    XCTAssertEqual(p.levels.map(\.tintsIcon), [false, true, true])
+    XCTAssertEqual(p.levels.map(\.tint), [.yellow, .red, .red])
     XCTAssertTrue(p.levels.allSatisfy(\.enabled))
   }
 
@@ -46,7 +46,10 @@ final class AlertProfileTests: XCTestCase {
   func testSettingsDefaults() {
     let s = Settings()
     XCTAssertEqual(s.profile, .default)
-    XCTAssertEqual(s.menuBarMode, .auto)
+    XCTAssertEqual(s.pinnedDevices, [])
+    XCTAssertTrue(s.showAlertingInMenuBar)
+    XCTAssertEqual(s.percentDisplay, .whenLow)
+    XCTAssertNil(s.legacyMenuBarMode)
     XCTAssertTrue(s.fullyChargedEnabled)
     XCTAssertEqual(s.endOfDayHour, 17)
     XCTAssertEqual(s.endOfDayMinute, 30)
@@ -56,12 +59,35 @@ final class AlertProfileTests: XCTestCase {
 
   func testSettingsRoundTripAndMissingKeysUseDefaults() throws {
     var s = Settings()
-    s.menuBarMode = .always
+    s.pinnedDevices = [.serial("M")]
+    s.percentDisplay = .always
     s.maxWaitHours = 3
     XCTAssertEqual(try JuiceJSON.decoder.decode(Settings.self, from: JuiceJSON.encoder.encode(s)), s)
     let partial = try JuiceJSON.decoder.decode(Settings.self, from: Data("{\"maxWaitHours\":2}".utf8))
     XCTAssertEqual(partial.maxWaitHours, 2)
     XCTAssertEqual(partial.profile, .default)
-    XCTAssertEqual(partial.menuBarMode, .auto)
+    XCTAssertEqual(partial.pinnedDevices, [])
+  }
+
+  func testLegacyTintsIconDecodes() throws {
+    func level(_ json: String) throws -> AlertLevel {
+      try JuiceJSON.decoder.decode(AlertLevel.self, from: Data(json.utf8))
+    }
+    let base = #"{"id":"x","name":"X","enabled":true,"trigger":{"percentAtOrBelow":{"_0":20}},"timing":"now","repeatPolicy":{"never":{}},"#
+    XCTAssertEqual(try level(base + #""tintsIcon":true}"#).tint, .red)
+    XCTAssertEqual(try level(base + #""tintsIcon":false}"#).tint, IconTint.none)
+    XCTAssertEqual(try level(base + #""tint":"yellow"}"#).tint, .yellow)
+  }
+
+  func testLegacyMenuBarModeIsReadButNotWritten() throws {
+    let s = try JuiceJSON.decoder.decode(Settings.self, from: Data(#"{"menuBarMode":"always"}"#.utf8))
+    XCTAssertEqual(s.legacyMenuBarMode, .always)
+    let written = String(decoding: try JuiceJSON.encoder.encode(s), as: UTF8.self)
+    XCTAssertFalse(written.contains("menuBarMode"), written)
+  }
+
+  func testIconTintOrdering() {
+    XCTAssertLessThan(IconTint.none, .yellow)
+    XCTAssertLessThan(IconTint.yellow, .red)
   }
 }

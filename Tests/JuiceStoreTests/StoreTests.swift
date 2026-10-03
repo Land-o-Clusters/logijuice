@@ -20,7 +20,7 @@ final class StoreTests: XCTestCase {
   func testSettingsRoundTrip() throws {
     let store = SettingsStore(url: dir.appendingPathComponent("nested/s.json"))
     var s = Settings()
-    s.menuBarMode = .never
+    s.showAlertingInMenuBar = false
     try store.save(s)
     XCTAssertEqual(store.load(default: Settings()), s)
   }
