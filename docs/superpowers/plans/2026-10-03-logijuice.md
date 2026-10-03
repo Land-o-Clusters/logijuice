@@ -1028,7 +1028,7 @@ public enum AlertEngine {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.AlertEngineTests`
-Expected: PASS (14 tests).
+Expected: PASS (13 tests).
 
 - [ ] **Step 5: Commit**
 
@@ -2914,7 +2914,7 @@ public enum FeatureParsers {
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `swift test --filter JuiceHIDTests.FrameAndParserTests`
-Expected: PASS (14 tests).
+Expected: PASS (13 tests).
 
 - [ ] **Step 6: Commit**
 
