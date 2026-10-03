@@ -103,7 +103,7 @@ for d in all {
                prop(d, kIOHIDLocationIDKey), prop(d, kIOHIDMaxInputReportSizeKey), prop(d, kIOHIDMaxOutputReportSizeKey),
                (IOHIDDeviceGetProperty(d, kIOHIDProductKey as CFString) as? String) ?? "?"))
 }
-let vendor = all.filter { prop($0, kIOHIDPrimaryUsagePageKey) == 0xFF00 && [0xC548, 0xC52B, 0xC532].contains(prop($0, kIOHIDProductIDKey)) }
+let vendor = Array(all).filter { prop($0, kIOHIDPrimaryUsagePageKey) == 0xFF00 && [0xC548, 0xC52B, 0xC532].contains(prop($0, kIOHIDProductIDKey)) }
 guard !vendor.isEmpty else { print("No receiver HID++ interface found"); exit(1) }
 
 var buffers: [UnsafeMutablePointer<UInt8>] = []
@@ -2706,6 +2706,24 @@ final class FrameAndParserTests: XCTestCase {
     XCTAssertNil(FeatureParsers.serialNumber(Array(repeating: 0, count: 16)))
   }
 
+  /// Exact frames captured from the owner's Bolt receiver in Task 0 (docs/bringup-notes.md).
+  func testRealCapturedFrames() throws {
+    XCTAssertEqual(FeatureParsers.deviceInformation(
+      [0x03, 0xA1, 0xB2, 0xC3, 0xD4, 0x00, 0x02, 0xB3, 0x78, 0, 0, 0, 0, 0x00, 0x01, 0x00]),
+      DeviceInformation(unitID: "A1B2C3D4", serialSupported: true))
+    XCTAssertEqual(FeatureParsers.serialNumber(Array("TESTMOUSE001".utf8) + [0, 0, 0, 0]), "TESTMOUSE001")
+    XCTAssertTrue(FeatureParsers.unifiedBatteryPercentSupported([0x0F, 0x03]))
+    XCTAssertEqual(FeatureParsers.unifiedBatteryStatus([0x41, 0x08, 0x00, 0x00], percentSupported: true),
+                   BatteryReport(level: .percent(65), charging: false))
+    XCTAssertEqual(FeatureParsers.unifiedBatteryStatus([0x46, 0x08, 0x01, 0x01], percentSupported: true),
+                   BatteryReport(level: .percent(70), charging: true))
+    let down = try XCTUnwrap(HIDPPFrame(bytes: [0x10, 0x02, 0x41, 0x10, 0x42, 0x34, 0xB0]))
+    XCTAssertEqual(FeatureParsers.connectionNotice(down), ConnectionNotice(slot: 2, linkUp: false, wpid: 0xB034))
+    let up2 = try XCTUnwrap(HIDPPFrame(bytes: [0x10, 0x02, 0x41, 0x10, 0x02, 0x34, 0xB0]))
+    XCTAssertEqual(FeatureParsers.connectionNotice(up2)?.linkUp, true)
+    XCTAssertTrue(try XCTUnwrap(HIDPPFrame(bytes: [0x10, 0x03, 0x8F, 0x00, 0x1A, 0x09, 0x00])).isError)
+  }
+
   func testConnectionNotice() throws {
     let up = try XCTUnwrap(HIDPPFrame(bytes: [0x10, 0x01, 0x41, 0x10, 0x00, 0x8A, 0x40]))
     XCTAssertEqual(FeatureParsers.connectionNotice(up), ConnectionNotice(slot: 1, linkUp: true, wpid: 0x408A))
@@ -2895,7 +2913,7 @@ public enum FeatureParsers {
 - [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `swift test --filter JuiceHIDTests.FrameAndParserTests`
-Expected: PASS (13 tests).
+Expected: PASS (14 tests).
 
 - [ ] **Step 6: Commit**
 
@@ -4088,7 +4106,8 @@ final class HIDCoordinator {
     monitor.onArrive = { [weak self] channel in MainActor.assumeIsolated { self?.attach(channel) } }
     monitor.onDepart = { [weak self] in MainActor.assumeIsolated { self?.detach() } }
     monitor.start()
-    safetyTimer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { [weak self] _ in
+    // 30 min: covers Macs where the receiver's notification flags are off (bring-up notes).
+    safetyTimer = Timer.scheduledTimer(withTimeInterval: 30 * 60, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated { self?.refreshAll() }
     }
   }

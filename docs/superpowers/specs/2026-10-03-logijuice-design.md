@@ -110,7 +110,7 @@ by everyone.
 
 **Events, no polling:** subscribe to receiver connection notifications (device wake/link up) and
 battery status broadcast events. On link-up, re-read battery. One low-frequency safety re-read
-(every 6 h) covers missed events.
+(every 30 min; see docs/bringup-notes.md) covers missed events and receivers whose notification flags are off.
 
 **Timeouts:** 2 s per request. A sleeping device does not answer; that is normal and not an error.
 The request is dropped and retried on the next link-up event. No request ever blocks the main thread.
