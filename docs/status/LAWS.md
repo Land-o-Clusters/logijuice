@@ -56,8 +56,9 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   unverified and crashed.
 - **Check UI layout yourself before the owner sees it.** `defaults write com.penguinspecz.logijuice
   debugSettingsSnapshotPath /tmp/x.png` writes a PNG plus metrics of the settings window. It shows layout only: glass
-  and behind-window blur don't render into it, so materials need an owner screenshot. The computer-use tools can't see
-  LogiJuice (menu-bar-only app).
+  and behind-window blur don't render into it, so materials need an owner screenshot. The built-in computer-use tools
+  can't see LogiJuice (menu-bar-only app). **Drive LogiJuice's UI with sleight**, passing the full path
+  `/Applications/LogiJuice.app` (the `dist/` build shares the bundle ID, so the ID is ambiguous).
 - **Settings uses a custom glass layout, not a grouped `Form`.** On macOS 27 a grouped Form needs ≥ ~744pt, and its
   rows grow label columns.
 - **Never fade the window's blur by more than ~5%** (`NSVisualEffectView.alphaValue`). Fading cuts holes and the sharp
