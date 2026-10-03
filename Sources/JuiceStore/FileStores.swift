@@ -39,6 +39,8 @@ public struct LocalState: Hashable, Sendable, Codable {
   public var records: [DeviceRecord] = []
   public var alertStates: [DeviceID: DeviceAlertState] = [:]
   public var scheduler = NudgeScheduler(maxWait: 8 * 3600)
+  /// Run start of the last drain alert per device (optional so older state files still decode).
+  public var drainAlertedRuns: [DeviceID: Date]?
 
   public init() {}
 }

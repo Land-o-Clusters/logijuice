@@ -7,14 +7,16 @@ public struct DeviceRecord: Hashable, Sendable, Codable, Identifiable {
   public var alertOverride: AlertProfile?
   public var metaUpdatedAt: Date
   public var readings: [Reading]
+  public var health: HealthLog?
 
   public init(info: DeviceInfo, nickname: String?, alertOverride: AlertProfile?, metaUpdatedAt: Date,
-              readings: [Reading]) {
+              readings: [Reading], health: HealthLog? = nil) {
     self.info = info
     self.nickname = nickname
     self.alertOverride = alertOverride
     self.metaUpdatedAt = metaUpdatedAt
     self.readings = readings
+    self.health = health
   }
 
   public var id: DeviceID { info.id }
@@ -58,6 +60,7 @@ public enum SyncMerge {
         }
         if var existing = byID[remote.info.id] {
           existing.readings = union(existing.readings, retagged)
+          existing.health = HealthLog.merge(existing.health, remote.health)
           if remote.metaUpdatedAt > existing.metaUpdatedAt {
             existing.info = remote.info
             existing.nickname = remote.nickname

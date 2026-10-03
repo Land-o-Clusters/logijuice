@@ -115,7 +115,14 @@ final class AppModel: ObservableObject {
 
   func ingest(_ reading: Reading, info: DeviceInfo) {
     let now = reading.observedAt
-    upsertLocal(info) { $0.readings = History.appending(reading, to: $0.readings, now: now) }
+    let history = mergedRecords.first { $0.info.id == reading.device }?.readings ?? []
+    let previous = state.records.first { $0.info.id == reading.device }?.readings.last
+    let macID = sync.store.macID
+    upsertLocal(info) { record in
+      record.health = HealthTracker.update(record.health, previous: previous, reading: reading, history: history,
+                                           macID: macID)
+      record.readings = History.appending(reading, to: record.readings, now: now)
+    }
     if reading.source == .local { liveDevices.insert(reading.device) }
     let record = mergedRecords.first { $0.info.id == reading.device }
     let forecast = Forecaster.forecast(record?.readings ?? [reading], now: now)
@@ -127,8 +134,25 @@ final class AppModel: ObservableObject {
     if reading.charging { state.scheduler.dropPending(for: reading.device) }
     publish()
     for decision in decisions { deliver(state.scheduler.schedule(decision, now: now)) }
+    if let record { checkDrain(record, reading: reading, now: now) }
     saveSoon()
     if settings.syncEnabled { sync.write(records: state.records, force: false) }
+  }
+
+  /// Opt-in alert when a device drains about twice as fast as its own history; at most once per discharge run.
+  private func checkDrain(_ record: DeviceRecord, reading: Reading, now: Date) {
+    guard settings.drainAlertEnabled, reading.source == .local, !reading.charging,
+      let ratio = HealthTracker.drainRatio(record.health, history: record.readings, now: now),
+      ratio >= HealthTracker.drainAlertRatio,
+      let runStart = HealthTracker.currentRunStart(record.readings),
+      state.drainAlertedRuns?[reading.device] != runStart
+    else { return }
+    let typical = HealthTracker.report(record.health).daysPerCharge ?? 0
+    notifier.post(Format.drainAlert(displayName: record.displayName, device: reading.device, ratio: ratio,
+                                    typicalDays: typical), device: reading.device)
+    var alerted = state.drainAlertedRuns ?? [:]
+    alerted[reading.device] = runStart
+    state.drainAlertedRuns = alerted
   }
 
   func deliver(_ deliveries: [Delivery]) {

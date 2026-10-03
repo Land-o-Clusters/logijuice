@@ -107,6 +107,33 @@ public enum Format {
     }
   }
 
+  public static func health(_ r: HealthReport, timeZone: TimeZone = .current) -> String {
+    guard r.ready, let days = r.daysPerCharge else {
+      let left = HealthReport.runsNeeded - r.completedRuns
+      return "health · ready after \(left) more full \(left == 1 ? "charge" : "charges")"
+    }
+    var parts = ["a charge lasts ~\(Int(days.rounded())) days"]
+    if let change = r.changePercent, let base = r.baselineDate {
+      let month = DateFormatter()
+      month.locale = Locale(identifier: "en_US_POSIX")
+      month.timeZone = timeZone
+      month.dateFormat = "MMM"
+      let n = Int(change.rounded())
+      parts.append("\(n < 0 ? "−" : "+")\(abs(n))% since \(month.string(from: base))")
+    }
+    parts.append(r.cycles < 1 ? "<1 cycle" : "~\(Int(r.cycles.rounded())) cycles")
+    return parts.joined(separator: " · ")
+  }
+
+  public static func drainAlert(displayName: String, device: DeviceID, ratio: Double, typicalDays: Double)
+    -> NotificationText
+  {
+    NotificationText(
+      title: "\(displayName) is draining fast",
+      body: "About \(Int(ratio.rounded()))× faster than usual. A charge usually lasts ~\(Int(typicalDays.rounded())) days.",
+      identifier: "\(device.rawValue).drain")
+  }
+
   public static func batterySymbol(percent: Int?) -> String {
     guard let p = percent else { return "battery.0percent" }
     switch p {

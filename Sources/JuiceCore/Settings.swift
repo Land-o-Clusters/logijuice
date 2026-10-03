@@ -23,6 +23,8 @@ public struct Settings: Hashable, Sendable, Codable {
   public var endOfDayMinute = 30
   public var maxWaitHours = 8
   public var syncEnabled = true
+  /// Notify when a device drains about twice as fast as its own history (owner: in, off by default).
+  public var drainAlertEnabled = false
   /// Set only when an old settings file had `menuBarMode`; the app migrates it once, then it disappears.
   public var legacyMenuBarMode: MenuBarMode?
 
@@ -30,7 +32,7 @@ public struct Settings: Hashable, Sendable, Codable {
 
   private enum CodingKeys: String, CodingKey {
     case profile, pinnedDevices, showAlertingInMenuBar, percentDisplay, fullyChargedEnabled, endOfDayHour,
-      endOfDayMinute, maxWaitHours, syncEnabled
+      endOfDayMinute, maxWaitHours, syncEnabled, drainAlertEnabled
     case menuBarMode  // legacy, read only
   }
 
@@ -49,6 +51,7 @@ public struct Settings: Hashable, Sendable, Codable {
     endOfDayMinute = try c.decodeIfPresent(Int.self, forKey: .endOfDayMinute) ?? d.endOfDayMinute
     maxWaitHours = try c.decodeIfPresent(Int.self, forKey: .maxWaitHours) ?? d.maxWaitHours
     syncEnabled = try c.decodeIfPresent(Bool.self, forKey: .syncEnabled) ?? d.syncEnabled
+    drainAlertEnabled = try c.decodeIfPresent(Bool.self, forKey: .drainAlertEnabled) ?? d.drainAlertEnabled
     legacyMenuBarMode = try c.decodeIfPresent(MenuBarMode.self, forKey: .menuBarMode)
   }
 
@@ -63,5 +66,6 @@ public struct Settings: Hashable, Sendable, Codable {
     try c.encode(endOfDayMinute, forKey: .endOfDayMinute)
     try c.encode(maxWaitHours, forKey: .maxWaitHours)
     try c.encode(syncEnabled, forKey: .syncEnabled)
+    try c.encode(drainAlertEnabled, forKey: .drainAlertEnabled)
   }
 }

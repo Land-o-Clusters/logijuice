@@ -170,6 +170,10 @@ struct SettingsView: View {
             Toggle("Notify when fully charged", isOn: $model.settings.fullyChargedEnabled)
               .labelsHidden().toggleStyle(.switch)
           }
+          GlassRow(label: "Alert when a device drains unusually fast") {
+            Toggle("Alert when a device drains unusually fast", isOn: $model.settings.drainAlertEnabled)
+              .labelsHidden().toggleStyle(.switch)
+          }
         }
         .padding(.top, 10)
       }
@@ -271,6 +275,9 @@ struct DeviceSettingsRow: View {
           }
           if !detail.isEmpty {
             Text(detail).font(.caption).foregroundStyle(.secondary)
+          }
+          if let health = device.health {
+            HealthLine(report: health)
           }
         }
         Spacer(minLength: 8)
