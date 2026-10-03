@@ -2,7 +2,7 @@
 
 What is true NOW. Replace §0 in place; never stack banners. Rules that hold always live in `LAWS.md`.
 
-## §0 Current state (2026-10-03 23:35 UTC, flushed for a clear)
+## §0 Current state (2026-10-03 23:50 UTC)
 
 **Phase:** v1 feature-complete (plan Tasks 0–18 done, Task 19 Steps 1–2 done). Now in **Task 19 Step 3**, the manual
 checklist (`docs/manual-checklist.md`). Charging follow-up landed (`edfd79b`): a charging device's fill and bolt are
@@ -20,15 +20,19 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
   voltage/headset `8c261f2` (untested on hardware), battery health `71e9da1`, charging `edfd79b`.
 - **Secrets scrub done:** history rewritten with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`); all
   SHAs here are post-rewrite. The pre-scrub bundle lives only in an old session scratchpad (real IDs; never push it).
-- Checklist: **passed** #1, #2, #7, #9, #10, #12, #14. **Pending:** #11 (snooze, then escalation) and #13 (rename);
-  juice-arch drives these with sleight in the next session. **Mon 2026-10-05:** #4, #5, #6, #15 (hub switch, sleep/wake,
-  second Mac). #3 isn't testable (Options+ is a KeepAlive agent). #8 comes on the next full charge.
+- Checklist: **passed** #1, #2, #7, #9, #10, #12, #14. **#13 partial:** juice-arch renamed the mouse "Desk Mouse" with
+  sleight; Settings and the CLI show it. The menu and widget need the owner's glance (they render the same
+  `SnapshotDevice.displayName`). **#11 pending, owner-present:** sleight sees LogiJuice's windows only, not the
+  status item (the debug simulate buttons) or Notification Center (the Snooze action). **Mon 2026-10-05:** #4, #5, #6,
+  #15 (hub switch, sleep/wake, second Mac). #3 isn't testable (Options+ is a KeepAlive agent). #8 comes on the next
+  full charge.
 
 **In flight:**
-- Branch `main`, HEAD = the commit adding this banner, 0 ahead / 0 behind `origin/main` (`Land-o-Clusters/logijuice`,
-  **private**). Working tree clean. Only worktree: the main checkout. No other branches.
-- **Test settings on (owner's Mac):** `debugMenu = 1` in `com.penguinspecz.logijuice`. #11 needs it. After #11:
-  `defaults delete com.penguinspecz.logijuice debugMenu`, then "Debug: forget Test Mouse" from the dropdown if one exists.
+- Branch `main`, HEAD = the commit adding this banner, pushed to `origin/main` (`Land-o-Clusters/logijuice`,
+  **private**). juice-arch works in the app-made worktree `claude/boot-juice-arch-*` and fast-forwards `main`.
+- **Test settings on (owner's Mac):** `debugMenu = 1` in `com.penguinspecz.logijuice` (#11 needs it), and the mouse's
+  nickname is **"Desk Mouse"** (#13). After both: `defaults delete com.penguinspecz.logijuice debugMenu`, "Debug:
+  forget Test Mouse" from the dropdown if one exists, and clear the nickname in Settings (empty falls back to the name).
 - **Background jobs:** none of ours. (A `log stream` with a display/powerd predicate belongs to another session; leave it.)
 - **sleight** (owner's tool, `~/Projects/sleight`, owned by the "sleight arch" session) is installed for Claude Code at
   user scope, now 0.1.1. 0.1.0 had approvals silently declined in the desktop Code tab; 0.1.1 asks via its own macOS
@@ -38,11 +42,11 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
   3 full charges.
 
 **Next action:**
-1. Run #11 and #13 with sleight (`cua.getApp("/Applications/LogiJuice.app")`; the owner clicks Allow on the panel).
-   - **#13:** rename a device in Settings, then check the menu, the widget and `logijuice status`.
-   - **#11:** debug "simulate 18%", lock the screen, "Snooze 1 day" on the Low alert, then "simulate 8%". The Very low
-     alert must still fire (there's no 4% button; 8% is the escalation).
-   Fix failures test-first, record results in the checklist, then revert the test settings.
+1. With the owner at the Mac (about 2 minutes):
+   - **#13:** the owner confirms the dropdown and the widget say "Desk Mouse".
+   - **#11:** the owner clicks dropdown → "Debug: simulate 18%", locks the screen, unlocks, clicks "Snooze 1 day" on
+     the Low alert, then "Debug: simulate 8%". The Very low alert must still fire (no 4% button; 8% is the escalation).
+   Fix failures test-first, record results in the checklist, then revert the test settings (above).
 2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
 3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
 4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
