@@ -4,8 +4,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** implementation. Tasks 0–14 and 17, plus Task 19 Steps 1–2, are on `main`. Task 14 hardware checks C
-(lock-screen nudge) and D (hub switch) are in progress with the owner.
+**Phase:** implementation. Tasks 0–14 and 17 are done; the widget was owner-verified in the gallery after the
+`_NSExtensionMain` fix. Next: the approved menu bar redesign plus the Task 16 settings window.
 
 **Done (verified):**
 - Spec `0f2a347` (§7 amended at `9826453`: device-silhouette gauge), plan `9286109` + fixes, bring-up `ed186d4`.
@@ -18,6 +18,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 - Codex delivered Task 17 widget `fe1d865` and Task 19 README/cask `32f8acf` in worktree `../logijuice-codex`. Gated
   by juice-arch: files byte-identical to the plan, widget build rc 0, 109/109. Merged at `4831c17` (Package.swift
   conflict resolved to the union).
+- Widget crash fixed `d1a3fab`: the extension now links `-e _NSExtensionMain` and build-app.sh guards it (red then
+  green). Owner saw both sizes in Edit Widgets 2026-10-03; 0 crash reports since. Check C (lock-screen nudge) passed.
 - At `4831c17`: `swift test` **111 passed, 0 failed**, widget build rc 0, `build-app.sh` rc 0 (universal, ad-hoc,
   app group). Installed to `/Applications/LogiJuice.app`; pluginkit lists `com.penguinspecz.logijuice.widget`.
 
@@ -31,8 +33,16 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   job; dies at the clear; needed only for Task 14 checks).
 - No `origin` remote, so every commit is local-only.
 
-**Next action:** finish Task 14 checks C and D with the owner, then Task 15 (sync), Task 16 (settings window, which
-can go to Codex now that the AppModel API exists), Task 18 (Shortcuts), and Task 19 Step 3 (manual checklist).
+**Next action:** owner-approved 2026-10-03, building now:
+1. Gauge contrast: the empty part stays the menu bar color; only the fill and the % take the alert color.
+2. Per-level icon color none/yellow/red (defaults Low yellow, Very low red, Critical red), replacing `tintsIcon`.
+3. Per-device "Always show in menu bar" pins (per Mac, in Settings), several gauges in one item, a global "also show
+   low/charging" (default on) and "show % when low/always". These replace Auto/Always/Never; the current
+   `always` migrates to both devices pinned.
+4. Task 16 settings window with these controls (built here, not by Codex).
+5. Dropdown buttons get a hover/press highlight (owner: clicks gave no feedback).
+Still pending: check D (hub switch, owner later); Tasks 15 and 18; Task 19 Step 3. Polish: an app icon (notifications
+show a blank one).
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
@@ -40,6 +50,7 @@ can go to Codex now that the AppModel API exists), Task 18 (Shortcuts), and Task
 - Untested: a freshly powered receiver on a Mac **without** Options+ may send no events. The mitigation is a 30-minute
   re-read (decided; in the plan, Task 14).
 - Repo creation and visibility, and when to buy the Apple Developer membership: both deferred to the owner.
+- Puddle has the same widget crash. A task chip was offered to the owner (the Puddle repo isn't touched from here).
 - **Before the repo goes public:** the device serials and unit IDs in `docs/bringup-notes.md`, this file and
   `Tests/JuiceHIDTests/Fixtures/owner-mouse.json` are the owner's. Decide whether to scrub them (owner-tier).
 

@@ -13,6 +13,9 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **Coexist with Options+.** Open HID devices non-exclusively. Every request carries software ID `0x0A`; replies with
   any other non-zero software ID are ignored (Options+ uses `0xF`).
 - **Use the percentage** when 0x1004 capabilities say it's supported. The level mask is too coarse to drive anything.
+- **The menu bar icon is the device's own silhouette used as a battery gauge** (owner, 2026-10-03). A battery glyph
+  reads as the Mac's own battery. Only the filled part and the percentage take the alert color.
+- **Menu bar pins are per Mac** and not synced (menu bar space differs per Mac).
 - **Only `.local` readings fire alerts.** Synced readings update displays and forecasts only.
 - **No telemetry, no network.** The only data leaving the Mac is the owner's own iCloud Drive file
   (`iCloud Drive/logijuice/<hardware-UUID>.json`, one per Mac, each Mac writes only its own).
@@ -25,11 +28,16 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - IDs: bundle `com.penguinspecz.logijuice`, widget `com.penguinspecz.logijuice.widget`, app group
   `group.com.penguinspecz.logijuice`, logger subsystem `com.penguinspecz.logijuice`. App display name **LogiJuice**;
   repo and CLI command **logijuice** (built as product `logijuice-cli`, because APFS is case-insensitive).
+- **App extensions are linked with `-e _NSExtensionMain`**, as Xcode does. Without it the widget traps at launch and
+  never reaches the gallery; `scripts/build-app.sh` refuses to package one that doesn't.
 - Ad-hoc signing by default. `SIGNING_IDENTITY` switches to Developer ID later. Nothing may depend on an Apple Developer
   membership until the owner buys one.
 
 ## Method
 - **Verify, never trust.** "Done" means the tests were re-run and their output read. Hardware claims need a hardware run.
+- **A surface is verified only in its real host:** the widget in the gallery, the icon in the menu bar, alerts in
+  Notification Center. "It builds" or "pluginkit lists it" is not "it works". Puddle's widget pattern was copied
+  unverified and crashed.
 - **Run checks bare, capture the exit code, commit only on 0.** Never `check | tail && git commit`: the `&&` reads the
   pipe's status, not the check's.
 - **Commit with the pathspec on the commit:** `git commit -m "…" -- <paths>`. Use `git add -- <path>` only for a file
