@@ -29,6 +29,23 @@ if [[ -d WidgetExtension ]]; then
 fi
 BIN="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)"
 
+# App Intents metadata (Shortcuts actions). Xcode does this automatically; with SwiftPM the App target's
+# release flags emit .build/LogiJuice.swiftconstvalues and this compiles it into Metadata.appintents.
+AI="$ROOT/.build/appintents"
+rm -rf "$AI" && mkdir -p "$AI/out"
+ls "$ROOT"/App/*.swift > "$AI/sources.txt"
+echo "$ROOT/.build/LogiJuice.swiftconstvalues" > "$AI/constvals.txt"
+xcrun appintentsmetadataprocessor --output "$AI/out" \
+  --toolchain-dir "$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain" --module-name LogiJuice \
+  --sdk-root "$(xcrun --sdk macosx --show-sdk-path)" \
+  --xcode-version "$(xcodebuild -version | awk '/Build version/{print $3}')" \
+  --platform-family macOS --deployment-target 14.0 --target-triple arm64-apple-macos14.0 \
+  --source-file-list "$AI/sources.txt" --swift-const-vals-list "$AI/constvals.txt" --force >/dev/null
+if ! grep -q GetLowestBatteryIntent "$AI/out/Metadata.appintents/extract.actionsdata" 2>/dev/null; then
+  printf 'App Intents metadata missing or empty; Shortcuts actions would not appear.\n' >&2
+  exit 67
+fi
+
 # An app extension must enter through _NSExtensionMain (Xcode links with `-e _NSExtensionMain`).
 # Entering at WidgetBundle.main() directly leaves ExtensionFoundation uninitialised and the
 # extension traps at launch, so the widget never appears in the gallery (diagnosed 2026-10-03).
@@ -43,7 +60,8 @@ cp "$BIN/LogiJuice" "$APP/Contents/MacOS/LogiJuice"
 cp "$BIN/logijuice-cli" "$APP/Contents/Resources/bin/logijuice"
 chmod 0755 "$APP/Contents/Resources/bin/logijuice"
 cp LICENSE "$APP/Contents/Resources/LICENSE"
-cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"  # regenerate: swift scripts/make-icon.swift
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+cp -R "$AI/out/Metadata.appintents" "$APP/Contents/Resources/Metadata.appintents"  # regenerate: swift scripts/make-icon.swift
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
