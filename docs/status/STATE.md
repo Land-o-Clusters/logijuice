@@ -15,15 +15,20 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   index 0x08 with a percentage. Battery events and 0x41 link events arrive. Options+ uses software ID `0xF`.
 
 **In flight:**
-- Branch `main` at the commit that adds this file (`git log -1 -- docs/status/STATE.md`). Working tree clean.
-- No other worktrees. No background jobs.
+- **Codex is executing plan Tasks 1–9** in the main worktree on branch `codex/logijuice-tasks-1-9` (started
+  2026-10-03). At 7e88a54+1 it had uncommitted Task 1 files (`.gitignore`, `LICENSE`, `Package.swift`,
+  `Tests/JuiceCoreTests/`, no `Sources/` yet). `main` is still at `ed186d4`.
+- The juice-arch commits adding STATE/LAWS sit on Codex's branch (pathspec-only; no Codex files included). They reach
+  `main` when that branch merges; branch authority covers reads until then.
+- **Don't switch branches or stage anything in the main worktree while Codex is mid-flight.** Do parallel work in a
+  separate worktree off `main`.
+- No background jobs.
 - **No `origin` remote:** `Land-o-Clusters/logijuice` has not been created (owner-tier), so every commit is
   local-only.
-- The owner was offered a Codex prompt for plan Tasks 1–9; whether it was dispatched is unknown. **Before starting
-  Task 1, check `git log --all` for Task 1 commits** ("Scaffold package and core models").
 
-**Next action:** plan **Task 1** (package scaffold + core models), unless it has landed. The Core track (Tasks 2–9)
-and the HID track (Tasks 10–12) can then run in parallel. Tasks 13–15 and 18 need the owner's Mac and receiver.
+**Next action:** gate Codex's deliveries as Tasks 1–9 land. Re-run `swift test` yourself per task and check each
+commit against its plan task. The HID track (Tasks 10–12) can start in parallel in a separate worktree once Task 1 is
+committed. Tasks 13–15 and 18 need the owner's Mac and receiver.
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
