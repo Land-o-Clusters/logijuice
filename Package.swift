@@ -4,10 +4,16 @@ import PackageDescription
 let package = Package(
   name: "LogiJuice",
   platforms: [.macOS(.v14)],
+  products: [
+    .executable(name: "logijuice-cli", targets: ["LogiJuiceCLI"]),
+  ],
   targets: [
     .target(name: "JuiceCore"),
     .target(name: "JuiceStore", dependencies: ["JuiceCore"], linkerSettings: [.linkedFramework("IOKit")]),
+    .target(name: "JuiceCLIKit", dependencies: ["JuiceCore", "JuiceStore"]),
+    .executableTarget(name: "LogiJuiceCLI", dependencies: ["JuiceCLIKit", "JuiceStore"]),
     .testTarget(name: "JuiceCoreTests", dependencies: ["JuiceCore"]),
     .testTarget(name: "JuiceStoreTests", dependencies: ["JuiceStore", "JuiceCore"]),
+    .testTarget(name: "JuiceCLIKitTests", dependencies: ["JuiceCLIKit", "JuiceStore", "JuiceCore"]),
   ]
 )
