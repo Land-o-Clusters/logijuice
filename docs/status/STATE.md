@@ -12,7 +12,7 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   redesign `ca9dfc7`; sync + settings `131fa20`; settings clipping fix `3e001fe`; settings polish `ca6d726` (alert bar,
   device gauge rows); app icon `e756b16`; Shortcuts `a40db04` (App Intents metadata built by build-app.sh outside Xcode).
   Learning progress `9220136`; Liquid Glass settings `914786c`; backdrop `cf774a0` (.popover material at full blur, owner-tuned 3% fade).
-- `swift test` at `cf774a0`: **126 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
+- `swift test` at the battery-health commit: **145 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
   + icon). Installed to /Applications at `a40db04`.
 - Owner-verified on hardware: receiver + both devices, notifications, Low nudge waits for lock, the widget in the
   gallery, three menu bar gauges, hover feedback, settings layout (pre-polish).
@@ -23,6 +23,13 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   replay fixture). History rewritten with filter-branch and force-pushed; SHAs cited here are post-rewrite. A pre-scrub
   backup bundle exists only in the session scratchpad (contains the real IDs; never push it).
 
+- Lightspeed + 0x1001 voltage + headset kind `8c261f2` (untested on hardware; README says so). Battery health and
+  the opt-in drain alert landed 2026-10-03 (owner-approved design; health appears after 3 full charges).
+- Checklist 2026-10-03: #12 (no duplicate notifications on relaunch) and #14 (CLI JSON) passed; #14 caught the
+  CLI learning text (fixed). #1, #2, #9 and #10 were covered earlier. Owner still to report #6, #7, #11 and #13.
+  Parked to Monday: #4, #5 and #15 (hub switch, second Mac). #3 isn't testable (Options+ restarts itself). #8
+  happens naturally.
+
 **In flight:**
 - `main` at the commit adding this banner, pushed. Working tree clean. Merged branches `codex/logijuice-tasks-1-9` and
   `codex/widget-docs` are local only; worktree `../logijuice-codex` (Codex's, idle) can be removed.
@@ -30,7 +37,7 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   Revert after the checklist: `defaults delete com.penguinspecz.logijuice debugMenu`, then "Debug: forget Test Mouse".
 - No background jobs (the log stream hit its time limit and is not needed).
 
-**Next action:** check D (hub
+**Next action:** owner reports checklist #6/#7/#11/#13; then check D (Monday) (hub
 switch) and the Task 19 Step 3 manual checklist (`docs/manual-checklist.md`) with the owner, then revert the test
 settings.
 
