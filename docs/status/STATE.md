@@ -4,31 +4,27 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** design done, bring-up done, implementation not started.
+**Phase:** implementation. Core track Tasks 1–7 landed and verified. Next is Task 8.
 
 **Done (verified):**
-- Spec approved and committed: `0f2a347`.
-- Plan written: `9286109` (20 tasks, numbered 0–19). Task 0 bring-up is done: `ed186d4`. Findings are in
-  `docs/bringup-notes.md`, and the plan and spec were updated from them.
-- On the owner's Mac, the Bolt receiver (`0xC548`) exposes a single HID++ collection. Slot 1 is the **MX Keys S**
-  (serial `TESTKEYS0001`) and slot 2 the **MX Master 3S** (`TESTMOUSE001`). Both report battery through 0x1004 at
-  index 0x08 with a percentage. Battery events and 0x41 link events arrive. Options+ uses software ID `0xF`.
+- Spec `0f2a347`, plan `9286109`, Task 0 bring-up `ed186d4` (findings in `docs/bringup-notes.md`).
+- Plan fix `4d45b9e`: in Tasks 1, 9 and 10 a target with no sources fails at module resolution, so their expected red
+  was wrong (Codex stopped on it at Task 1 Step 3). Every plan commit step now carries a pathspec.
+- Tasks 1–7 by juice-arch (taking over from Codex on its branch): `5d06b82` models, `31fd615` profile/settings,
+  `0e71f1c` alert engine, `e56f6ab` scheduler, `d1642e0` forecaster, `e2b36f5` history/sync merge, `f390b5b`
+  snapshot/format/menu policy. `swift test --filter JuiceCoreTests`: **66 tests, 0 failures, rc 0** at `f390b5b`.
+- Hardware facts from the owner's Mac: Bolt `0xC548`, one HID++ collection. MX Keys S slot 1 (`TESTKEYS0001`) and
+  MX Master 3S slot 2 (`TESTMOUSE001`), both 0x1004 at index 0x08 with a percentage. Options+ uses software ID `0xF`.
 
 **In flight:**
-- **Codex is executing plan Tasks 1–9** in the main worktree on branch `codex/logijuice-tasks-1-9` (started
-  2026-10-03). At 7e88a54+1 it had uncommitted Task 1 files (`.gitignore`, `LICENSE`, `Package.swift`,
-  `Tests/JuiceCoreTests/`, no `Sources/` yet). `main` is still at `ed186d4`.
-- The juice-arch commits adding STATE/LAWS sit on Codex's branch (pathspec-only; no Codex files included). They reach
-  `main` when that branch merges; branch authority covers reads until then.
-- **Don't switch branches or stage anything in the main worktree while Codex is mid-flight.** Do parallel work in a
-  separate worktree off `main`.
-- No background jobs.
-- **No `origin` remote:** `Land-o-Clusters/logijuice` has not been created (owner-tier), so every commit is
-  local-only.
+- Branch `codex/logijuice-tasks-1-9` in the main worktree at the commit adding this banner. Working tree clean.
+  `main` is still at `ed186d4` (fast-forwardable). Codex stopped and is not running; juice-arch now owns this branch.
+- Plan files are copied verbatim with a helper that extracts each file's block from the plan (in the session
+  scratchpad, not committed). Any copy of the plan text works the same way.
+- No background jobs. **No `origin` remote** (repo creation is owner-tier), so every commit is local-only.
 
-**Next action:** gate Codex's deliveries as Tasks 1–9 land. Re-run `swift test` yourself per task and check each
-commit against its plan task. The HID track (Tasks 10–12) can start in parallel in a separate worktree once Task 1 is
-committed. Tasks 13–15 and 18 need the owner's Mac and receiver.
+**Next action:** Task 8 (JuiceStore), then Task 9 (CLI). The HID track (Tasks 10–12) is independent of 8–9. Tasks
+13–15 and 18 need the owner's Mac and receiver.
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
