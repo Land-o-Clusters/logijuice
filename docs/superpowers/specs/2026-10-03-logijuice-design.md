@@ -230,7 +230,10 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 - Mode: **Auto** (default: visible while any device is at or below its first enabled level, or is
   charging), **Always**, **Never**.
-- Glyph: a battery showing the lowest device's level. Red when any fired level has `tintsIcon`.
+- Glyph (amended 2026-10-03, owner's choice): the lowest device's **own silhouette** (mouse, keyboard, …) used as its
+  battery gauge: the solid shape dimmed for "empty", solid up to the level (tall glyphs fill bottom→top, wide ones
+  left→right). A battery glyph was rejected because it reads as the Mac's own battery. Red when any fired level has
+  `tintsIcon`. The level appears as text beside it while the lowest device is alerting, and a bolt while it charges.
 - Dropdown: one row per device (kind glyph, nickname, level, forecast, "seen 3h ago" when not live,
   charging bolt), then **Settings…**, **Open Logi Options+** (if installed), **Quit**.
 - With mode Never, or Auto while hidden, opening the app from Spotlight/Finder opens Settings, so the

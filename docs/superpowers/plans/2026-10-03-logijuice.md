@@ -4475,6 +4475,10 @@ struct MenuContent: View {
 }
 ```
 
+**Amendment (2026-10-03, owner):** the menu bar label is a device-silhouette gauge, not a battery glyph. See
+`App/MenuBarIcon.swift`, `MenuBarLabel` in `App/MenuContent.swift`, and `Format.menuBarText` /
+`DeviceKind.gaugeSymbols` (tested in `SnapshotFormatTests`). The `MenuBarLabel` code above is superseded.
+
 `App/SettingsWindow.swift` (Task 16 replaces `SettingsView` with the full form):
 ```swift
 import AppKit

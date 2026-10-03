@@ -7,18 +7,17 @@ struct MenuBarLabel: View {
   let tinted: Bool
 
   var body: some View {
-    Image(nsImage: Self.image(percent: snapshot.lowest?.level?.equivalentPercent, tinted: tinted))
+    Image(nsImage: Self.image(snapshot: snapshot, tinted: tinted))
   }
 
-  static func image(percent: Int?, tinted: Bool) -> NSImage {
-    let base = NSImage(systemSymbolName: Format.batterySymbol(percent: percent),
-                       accessibilityDescription: "Logitech battery") ?? NSImage()
-    guard tinted, let red = base.withSymbolConfiguration(.init(paletteColors: [.systemRed])) else {
-      base.isTemplate = true
-      return base
-    }
-    red.isTemplate = false
-    return red
+  /// The lowest device's own silhouette, filled to its level (spec §7, amended 2026-10-03).
+  static func image(snapshot: Snapshot, tinted: Bool) -> NSImage {
+    let device = snapshot.lowest
+    let symbols = (device?.kind ?? .other).gaugeSymbols
+    return MenuBarIcon.render(
+      outline: symbols.outline, fill: symbols.fill,
+      fraction: Double(device?.level?.equivalentPercent ?? 0) / 100, tinted: tinted,
+      charging: device.map { $0.charging && $0.live } ?? false, text: Format.menuBarText(snapshot))
   }
 }
 

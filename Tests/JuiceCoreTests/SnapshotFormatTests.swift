@@ -125,6 +125,30 @@ final class SnapshotFormatTests: XCTestCase {
     XCTAssertEqual(DeviceKind.keyboard.symbolName, "keyboard")
   }
 
+  func testMenuBarTextOnlyWhenLowestIsAlerting() {
+    func snap(_ devices: [SnapshotDevice]) -> Snapshot {
+      Snapshot(generatedAt: t0, receiverPresent: true, devices: devices)
+    }
+    XCTAssertNil(Format.menuBarText(.empty))
+    XCTAssertNil(Format.menuBarText(snap([device(level: .percent(70))])))
+    XCTAssertEqual(Format.menuBarText(snap([device(level: .percent(14), alerting: true)])), "14%")
+    XCTAssertEqual(Format.menuBarText(snap([device(level: .word(.low), alerting: true)])), "Low")
+    var keys = device(level: .percent(90))
+    keys.id = .serial("K")
+    XCTAssertEqual(Format.menuBarText(snap([keys, device(level: .percent(9), alerting: true)])), "9%")
+  }
+
+  func testGaugeSymbolsPerKind() {
+    XCTAssertEqual(DeviceKind.mouse.gaugeSymbols.outline, "computermouse")
+    XCTAssertEqual(DeviceKind.mouse.gaugeSymbols.fill, "computermouse.fill")
+    XCTAssertEqual(DeviceKind.keyboard.gaugeSymbols.outline, "keyboard")
+    XCTAssertEqual(DeviceKind.keyboard.gaugeSymbols.fill, "keyboard.fill")
+    for kind in DeviceKind.allCases {
+      XCTAssertFalse(kind.gaugeSymbols.outline.isEmpty)
+      XCTAssertFalse(kind.gaugeSymbols.fill.isEmpty)
+    }
+  }
+
   func testSnapshotRoundTrips() throws {
     XCTAssertEqual(try JuiceJSON.decoder.decode(Snapshot.self, from: JuiceJSON.encoder.encode(Snapshot.preview)), .preview)
   }

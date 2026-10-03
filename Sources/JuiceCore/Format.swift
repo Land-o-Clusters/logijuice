@@ -87,6 +87,12 @@ public enum Format {
     return line
   }
 
+  /// Text beside the menu bar gauge: the lowest device's level, only while it is alerting.
+  public static func menuBarText(_ snapshot: Snapshot) -> String? {
+    guard let lowest = snapshot.lowest, lowest.alerting, let level = lowest.level else { return nil }
+    return Format.level(level)
+  }
+
   public static func batterySymbol(percent: Int?) -> String {
     guard let p = percent else { return "battery.0percent" }
     switch p {
@@ -100,6 +106,19 @@ public enum Format {
 }
 
 extension DeviceKind {
+  /// Outline + filled SF Symbol pair: the menu bar draws the device's own shape as its battery gauge.
+  public var gaugeSymbols: (outline: String, fill: String) {
+    switch self {
+    case .keyboard: return ("keyboard", "keyboard.fill")
+    case .mouse: return ("computermouse", "computermouse.fill")
+    case .trackball: return ("circle.circle", "circle.circle.fill")
+    case .touchpad: return ("rectangle.and.hand.point.up.left", "rectangle.and.hand.point.up.left.fill")
+    case .numpad: return ("number.square", "number.square.fill")
+    case .presenter: return ("av.remote", "av.remote.fill")
+    case .other: return ("circle", "circle.fill")
+    }
+  }
+
   /// SF Symbol for the device kind, shared by menu, settings and widget.
   public var symbolName: String {
     switch self {
