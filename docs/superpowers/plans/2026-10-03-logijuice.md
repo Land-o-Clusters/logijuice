@@ -22,6 +22,7 @@
 - No telemetry and no network traffic. The only data leaving the Mac is the owner's own iCloud Drive file.
 - Ad-hoc signing (`codesign --sign -`) by default. `SIGNING_IDENTITY` env var switches to Developer ID signing later.
 - README carries: "logijuice is unofficial and not affiliated with or endorsed by Logitech."
+- **Commits carry their pathspec** (`git commit -m "…" -- <paths>`; `git add --` first only so new files are tracked). Never a bare commit, never `git add -A`. Run checks bare and commit only on exit code 0.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent commits.
 
 ## Spec adjustments made while planning (owner should confirm)
@@ -190,8 +191,8 @@ Quit Logi Options+ (menu bar → Quit, and `killall logioptionsplus_agent 2>/dev
 
 ```bash
 git rm -q --cached spikes/hidpp-probe.swift 2>/dev/null; rm -rf spikes
-git add docs/bringup-notes.md
-git commit -m "Record HID++ bring-up findings for the Bolt receiver"
+git add -- docs/bringup-notes.md
+git commit -m "Record HID++ bring-up findings for the Bolt receiver" -- docs/bringup-notes.md
 ```
 
 **If a finding contradicts this plan** (for example, the report ID is not byte 0, or no 0x41 notifications arrive unless a register is written), stop and raise it with the owner before Tasks 10–13. Writing receiver registers would break the read-only constraint.
@@ -307,7 +308,7 @@ final class ModelsTests: XCTestCase {
 - [ ] **Step 3: Run the test to verify it fails**
 
 Run: `export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer && swift test --filter JuiceCoreTests.ModelsTests`
-Expected: FAIL to compile with "cannot find 'Reading' in scope".
+Expected: FAIL. `JuiceCore` has no source files yet, so SwiftPM stops before compiling with `unable to resolve module dependency: 'JuiceCore'` (or "target 'JuiceCore' … has no sources"). That is the correct red for this step.
 
 - [ ] **Step 4: Implement**
 
@@ -517,8 +518,8 @@ Expected: PASS (6 tests).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Package.swift .gitignore LICENSE Sources Tests
-git commit -m "Scaffold package and core models"
+git add -- Package.swift .gitignore LICENSE Sources Tests
+git commit -m "Scaffold package and core models" -- Package.swift .gitignore LICENSE Sources Tests
 ```
 
 ---
@@ -739,8 +740,8 @@ Expected: PASS (6 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore Tests/JuiceCoreTests
-git commit -m "Add alert profile and settings models"
+git add -- Sources/JuiceCore Tests/JuiceCoreTests
+git commit -m "Add alert profile and settings models" -- Sources/JuiceCore Tests/JuiceCoreTests
 ```
 
 ---
@@ -1032,8 +1033,8 @@ Expected: PASS (14 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore/AlertEngine.swift Tests/JuiceCoreTests/AlertEngineTests.swift
-git commit -m "Add alert engine with escalation, hysteresis, repeat and snooze"
+git add -- Sources/JuiceCore/AlertEngine.swift Tests/JuiceCoreTests/AlertEngineTests.swift
+git commit -m "Add alert engine with escalation, hysteresis, repeat and snooze" -- Sources/JuiceCore/AlertEngine.swift Tests/JuiceCoreTests/AlertEngineTests.swift
 ```
 
 ---
@@ -1222,8 +1223,8 @@ Expected: PASS (8 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore/NudgeScheduler.swift Tests/JuiceCoreTests/NudgeSchedulerTests.swift
-git commit -m "Add natural-moment nudge scheduler"
+git add -- Sources/JuiceCore/NudgeScheduler.swift Tests/JuiceCoreTests/NudgeSchedulerTests.swift
+git commit -m "Add natural-moment nudge scheduler" -- Sources/JuiceCore/NudgeScheduler.swift Tests/JuiceCoreTests/NudgeSchedulerTests.swift
 ```
 
 ---
@@ -1432,8 +1433,8 @@ Expected: PASS (11 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore/Forecaster.swift Tests/JuiceCoreTests/ForecasterTests.swift
-git commit -m "Add Theil-Sen battery forecaster"
+git add -- Sources/JuiceCore/Forecaster.swift Tests/JuiceCoreTests/ForecasterTests.swift
+git commit -m "Add Theil-Sen battery forecaster" -- Sources/JuiceCore/Forecaster.swift Tests/JuiceCoreTests/ForecasterTests.swift
 ```
 
 ---
@@ -1684,8 +1685,8 @@ Expected: PASS (9 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore Tests/JuiceCoreTests/SyncMergeTests.swift
-git commit -m "Add reading history and cross-Mac sync merge"
+git add -- Sources/JuiceCore Tests/JuiceCoreTests/SyncMergeTests.swift
+git commit -m "Add reading history and cross-Mac sync merge" -- Sources/JuiceCore Tests/JuiceCoreTests/SyncMergeTests.swift
 ```
 
 ---
@@ -2092,8 +2093,8 @@ Expected: PASS (all JuiceCore tests, including 13 new).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceCore Tests/JuiceCoreTests/SnapshotFormatTests.swift
-git commit -m "Add snapshot, formatting and menu bar policy"
+git add -- Sources/JuiceCore Tests/JuiceCoreTests/SnapshotFormatTests.swift
+git commit -m "Add snapshot, formatting and menu bar policy" -- Sources/JuiceCore Tests/JuiceCoreTests/SnapshotFormatTests.swift
 ```
 
 ---
@@ -2392,8 +2393,8 @@ Expected: PASS (9 tests).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Package.swift Sources/JuiceStore Tests/JuiceStoreTests
-git commit -m "Add JSON stores, sync folder store and Mac identity"
+git add -- Package.swift Sources/JuiceStore Tests/JuiceStoreTests
+git commit -m "Add JSON stores, sync folder store and Mac identity" -- Package.swift Sources/JuiceStore Tests/JuiceStoreTests
 ```
 
 ---
@@ -2501,7 +2502,7 @@ final class CLITests: XCTestCase {
 - [ ] **Step 3: Run the test to verify it fails**
 
 Run: `swift test --filter JuiceCLIKitTests`
-Expected: FAIL to compile with "cannot find 'CLI' in scope".
+Expected: FAIL. `JuiceCLIKit` has no source files yet, so SwiftPM stops with `unable to resolve module dependency: 'JuiceCLIKit'` (or a no-sources error). That is the correct red for this step.
 
 - [ ] **Step 4: Implement**
 
@@ -2582,8 +2583,8 @@ Expected: tests PASS (6). The CLI prints `No data yet. Is LogiJuice running?` an
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Package.swift Sources/JuiceCLIKit Sources/LogiJuiceCLI Tests/JuiceCLIKitTests
-git commit -m "Add logijuice CLI status and devices commands"
+git add -- Package.swift Sources/JuiceCLIKit Sources/LogiJuiceCLI Tests/JuiceCLIKitTests
+git commit -m "Add logijuice CLI status and devices commands" -- Package.swift Sources/JuiceCLIKit Sources/LogiJuiceCLI Tests/JuiceCLIKitTests
 ```
 
 ---
@@ -2738,7 +2739,7 @@ final class FrameAndParserTests: XCTestCase {
 - [ ] **Step 3: Run the test to verify it fails**
 
 Run: `swift test --filter JuiceHIDTests.FrameAndParserTests`
-Expected: FAIL to compile with "cannot find 'HIDPPFrame' in scope".
+Expected: FAIL. `JuiceHID` has no source files yet, so SwiftPM stops with `unable to resolve module dependency: 'JuiceHID'` (or a no-sources error). That is the correct red for this step.
 
 - [ ] **Step 4: Implement**
 
@@ -2918,8 +2919,8 @@ Expected: PASS (14 tests).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Package.swift Sources/JuiceHID Tests/JuiceHIDTests
-git commit -m "Add HID++ frame codec and feature parsers"
+git add -- Package.swift Sources/JuiceHID Tests/JuiceHIDTests
+git commit -m "Add HID++ frame codec and feature parsers" -- Package.swift Sources/JuiceHID Tests/JuiceHIDTests
 ```
 
 ---
@@ -3271,8 +3272,8 @@ Expected: PASS (8 tests). If the compiler rejects mutating `pending` inside the 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceHID/RequestBroker.swift Tests/JuiceHIDTests
-git commit -m "Add HID++ request broker with software-ID routing"
+git add -- Sources/JuiceHID/RequestBroker.swift Tests/JuiceHIDTests
+git commit -m "Add HID++ request broker with software-ID routing" -- Sources/JuiceHID/RequestBroker.swift Tests/JuiceHIDTests
 ```
 
 ---
@@ -3527,8 +3528,8 @@ Expected: PASS (all, including 6 new).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Sources/JuiceHID/ReceiverSession.swift Tests/JuiceHIDTests/ReceiverSessionTests.swift
-git commit -m "Add receiver session: identify devices, read and interpret battery"
+git add -- Sources/JuiceHID/ReceiverSession.swift Tests/JuiceHIDTests/ReceiverSessionTests.swift
+git commit -m "Add receiver session: identify devices, read and interpret battery" -- Sources/JuiceHID/ReceiverSession.swift Tests/JuiceHIDTests/ReceiverSessionTests.swift
 ```
 
 ---
@@ -3905,8 +3906,8 @@ Expected: PASS (all targets, including `ReplayTests`).
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Package.swift Sources Tests/JuiceHIDTests
-git commit -m "Add IOHID receiver channel, hotplug monitor, debug capture and real-device replay test"
+git add -- Package.swift Sources Tests/JuiceHIDTests
+git commit -m "Add IOHID receiver channel, hotplug monitor, debug capture and real-device replay test" -- Package.swift Sources Tests/JuiceHIDTests
 ```
 
 ---
@@ -4674,8 +4675,8 @@ Record any failure with its log lines before changing code.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add Package.swift App Config scripts
-git commit -m "Add LogiJuice menu bar app: receiver wiring, alerts, nudges, notifications"
+git add -- Package.swift App Config scripts
+git commit -m "Add LogiJuice menu bar app: receiver wiring, alerts, nudges, notifications" -- Package.swift App Config scripts
 ```
 
 ---
@@ -4818,8 +4819,8 @@ If only one Mac is available, copy your own file to `TEST-OTHER.json` in that fo
 - [ ] **Step 4: Commit**
 
 ```bash
-git add App
-git commit -m "Wire iCloud Drive sync: throttled own-file writes, remote polling"
+git add -- App
+git commit -m "Wire iCloud Drive sync: throttled own-file writes, remote polling" -- App
 ```
 
 ---
@@ -5077,8 +5078,8 @@ Expected:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add App
-git commit -m "Add settings window: devices, alert levels, general options, login item"
+git add -- App
+git commit -m "Add settings window: devices, alert levels, general options, login item" -- App
 ```
 
 ---
@@ -5310,8 +5311,8 @@ The widget only registers when the app runs from `/Applications` (or another sta
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Package.swift WidgetExtension Config
-git commit -m "Add small and medium battery widgets"
+git add -- Package.swift WidgetExtension Config
+git commit -m "Add small and medium battery widgets" -- Package.swift WidgetExtension Config
 ```
 
 ---
@@ -5411,8 +5412,8 @@ Expected: "Get Device Battery" and "Get Lowest Battery" are listed. Running "Get
 
 - **If the actions appear:** commit.
   ```bash
-  git add Package.swift App/ShortcutsIntents.swift
-  git commit -m "Add Shortcuts actions for device and lowest battery"
+  git add -- Package.swift App/ShortcutsIntents.swift
+  git commit -m "Add Shortcuts actions for device and lowest battery" -- Package.swift App/ShortcutsIntents.swift
   ```
 - **If they don't appear:** SwiftPM didn't generate App Intents metadata (`Contents/Resources/Metadata.appintents` is missing from the bundle). Don't spend more than 30 minutes on it. Revert (`git checkout Package.swift && rm App/ShortcutsIntents.swift`). Then add a line to the README's "Scripting" section: "Use `logijuice status --json` from a Shortcuts *Run Shell Script* action." Commit that, and tell the owner the native actions are deferred.
 
@@ -5540,8 +5541,8 @@ Go through every row on the Mac and fill in the Result column. Fix failures thro
 - [ ] **Step 4: Commit**
 
 ```bash
-git add README.md Casks docs/manual-checklist.md
-git commit -m "Add README, Homebrew cask and completed manual checklist"
+git add -- README.md Casks docs/manual-checklist.md
+git commit -m "Add README, Homebrew cask and completed manual checklist" -- README.md Casks docs/manual-checklist.md
 ```
 
 ---
