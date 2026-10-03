@@ -2,13 +2,13 @@
 
 What is true NOW. Replace §0 in place; never stack banners. Rules that hold always live in `LAWS.md`.
 
-## §0 Current state (2026-10-03, end of session)
+## §0 Current state (2026-10-03, juice-arch re-booted 22:28 UTC)
 
 **Phase:** v1 feature-complete. Plan Tasks 0–18 are done; Task 19 Steps 1–2 are done. What's left: **Task 19 Step 3**
 (the manual checklist, owner-run) and the hub-switch check, plus the post-plan items under Next.
 
 **Verified (2026-10-03):**
-- `swift test` at `71e9da1`: **145 passed, 0 failed**. `scripts/build-app.sh` rc 0: universal, ad-hoc, with widget,
+- `swift test` at `674d204` (re-run on boot): **145 passed, 0 failed**, rc 0 (Store 9, HID 34, Core 96, CLI 6). `scripts/build-app.sh` rc 0: universal, ad-hoc, with widget,
   `Metadata.appintents` and icon; it refuses to package a widget without `_NSExtensionMain` or without intents metadata.
   The app is installed to `/Applications/LogiJuice.app` from `71e9da1` and is running.
 - Owner-verified on hardware: receiver and both devices, notifications, the Low nudge waiting for a lock, the widget in
@@ -19,7 +19,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 - **Secrets scrub done:** serials and unit IDs were replaced by fakes in all history (`TESTKEYS0001`, `TESTMOUSE001`,
   `A1B2C3D4`, `D4C3B2A1`). History was rewritten and force-pushed; every SHA here is post-rewrite. A pre-scrub bundle
   `logijuice-pre-scrub.bundle` sits in the session scratchpad only (it contains the real IDs; never push it).
-- Manual checklist (`docs/manual-checklist.md`):
+- Manual checklist (`docs/manual-checklist.md`, committed on boot: it was cited here but never in git; the plan's
+  checkboxes for Tasks 0–18 and Task 19 Steps 1–2 were also ticked then, after being left blank):
   - Passed: #1, #2, #9, #10, #12, #14. #14 caught the CLI learning text, which was fixed in `dd0f4a9`.
   - Owner still to report: **#6 (sleep/wake), #7 (charging bolt), #11 (snooze, then escalation), #13 (rename)**.
   - Parked to **Mon 2026-10-05**: #4, #5, #15 (hub switch, second Mac).
