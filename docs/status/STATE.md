@@ -4,8 +4,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** implementation. Tasks 0–14 and 17 are done; the widget was owner-verified in the gallery after the
-`_NSExtensionMain` fix. Next: the approved menu bar redesign plus the Task 16 settings window.
+**Phase:** implementation. Tasks 0–17 are code-complete on `main` (the redesign is `b06c3ae`, sync + settings
+`607649c`). Waiting on the owner's visual check of the redesign and settings window, then check D (hub switch).
 
 **Done (verified):**
 - Spec `0f2a347` (§7 amended at `9826453`: device-silhouette gauge), plan `9286109` + fixes, bring-up `ed186d4`.
@@ -18,6 +18,9 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 - Codex delivered Task 17 widget `fe1d865` and Task 19 README/cask `32f8acf` in worktree `../logijuice-codex`. Gated
   by juice-arch: files byte-identical to the plan, widget build rc 0, 109/109. Merged at `4831c17` (Package.swift
   conflict resolved to the union).
+- Redesign `b06c3ae` (114 tests green): per-level tint, per-Mac pins, contrast fix (renders checked dark and light),
+  hover/press highlight. Sync + settings `607649c`: this Mac's iCloud file `BA292111-…json` holds only the 2 real
+  devices. The legacy `always` setting migrated to both pinned. Installed to /Applications at `607649c`.
 - Widget crash fixed `d1a3fab`: the extension now links `-e _NSExtensionMain` and build-app.sh guards it (red then
   green). Owner saw both sizes in Edit Widgets 2026-10-03; 0 crash reports since. Check C (lock-screen nudge) passed.
 - At `4831c17`: `swift test` **111 passed, 0 failed**, widget build rc 0, `build-app.sh` rc 0 (universal, ad-hoc,
@@ -33,16 +36,9 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   job; dies at the clear; needed only for Task 14 checks).
 - No `origin` remote, so every commit is local-only.
 
-**Next action:** owner-approved 2026-10-03, building now:
-1. Gauge contrast: the empty part stays the menu bar color; only the fill and the % take the alert color.
-2. Per-level icon color none/yellow/red (defaults Low yellow, Very low red, Critical red), replacing `tintsIcon`.
-3. Per-device "Always show in menu bar" pins (per Mac, in Settings), several gauges in one item, a global "also show
-   low/charging" (default on) and "show % when low/always". These replace Auto/Always/Never; the current
-   `always` migrates to both devices pinned.
-4. Task 16 settings window with these controls (built here, not by Codex).
-5. Dropdown buttons get a hover/press highlight (owner: clicks gave no feedback).
-Still pending: check D (hub switch, owner later); Tasks 15 and 18; Task 19 Step 3. Polish: an app icon (notifications
-show a blank one).
+**Next action:** owner checks the menu bar (two pinned gauges plus a yellow/red Test Mouse), the dropdown hover, and
+the settings window. Then check D (hub switch), revert the test settings (debug menu, Test Mouse), Task 18 Shortcuts,
+Task 19 Step 3 (checklist). Polish: an app icon (notifications show a blank one).
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
