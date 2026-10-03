@@ -25,8 +25,10 @@ while charging). It's installed to `/Applications` and running; the green and th
 - Manual checklist (`docs/manual-checklist.md`, committed on boot: it was cited here but never in git; the plan's
   checkboxes for Tasks 0–18 and Task 19 Steps 1–2 were also ticked then, after being left blank):
   - Passed: #1, #2, #7, #9, #10, #12, #14. #14 caught the CLI learning text, which was fixed in `dd0f4a9`.
-  - #11 (snooze, then escalation) and #13 (rename): **juice-arch runs these with sleight** (owner, 2026-10-03). There's
-    no 4% debug button; simulate 8% (Very low) after snoozing Low is the escalation to check.
+  - #11 (snooze, then escalation) and #13 (rename): **back with the owner.** Sleight in the desktop Code tab refuses
+    every app ("not approved", no prompt shown; Calculator too; reported to "sleight arch"). The built-in computer use
+    doesn't list LogiJuice as an app at all. There's no 4% debug button; simulate 8% (Very low) after snoozing Low is
+    the escalation to check.
   - Parked to **Mon 2026-10-05**: #4, #5, #6, #15 (hub switch, sleep/wake, second Mac).
   - #3 isn't testable (Options+ is a KeepAlive agent). #8 happens on the next full charge.
 
@@ -47,7 +49,8 @@ while charging). It's installed to `/Applications` and running; the green and th
   A session needs `/reload-plugins` (or a restart) to get its tools.
 
 **Next action:**
-1. Run #11 and #13 with sleight. Fix anything that fails test-first. Then revert the test settings.
+1. Get the owner's #11/#13 results (or retry sleight from a terminal `claude` session). Fix anything that fails
+   test-first. Then revert the test settings.
 2. On the next real charge, confirm the fill rises while charging (log: `charging: re-reading every 60 s`).
 3. Mon 2026-10-05: hub switch and sleep/wake with the owner (#4, #5, #6, #15).
 4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
