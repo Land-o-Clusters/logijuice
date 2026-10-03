@@ -29,6 +29,14 @@ if [[ -d WidgetExtension ]]; then
 fi
 BIN="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)"
 
+# An app extension must enter through _NSExtensionMain (Xcode links with `-e _NSExtensionMain`).
+# Entering at WidgetBundle.main() directly leaves ExtensionFoundation uninitialised and the
+# extension traps at launch, so the widget never appears in the gallery (diagnosed 2026-10-03).
+if [[ "$HAS_WIDGET" == 1 ]] && ! nm -u "$BIN/LogiJuiceWidgetExtension" | grep -q '_NSExtensionMain$'; then
+  printf 'Widget extension does not enter via _NSExtensionMain; refusing to package.\n' >&2
+  exit 66
+fi
+
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/bin"
 cp "$BIN/LogiJuice" "$APP/Contents/MacOS/LogiJuice"

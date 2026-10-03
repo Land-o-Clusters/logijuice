@@ -28,7 +28,11 @@ let package = Package(
       dependencies: ["JuiceCore", "JuiceStore"],
       path: "WidgetExtension",
       exclude: ["Info.plist"],
-      linkerSettings: [.linkedFramework("WidgetKit")]),
+      linkerSettings: [
+        .linkedFramework("WidgetKit"),
+        // App extensions must enter via _NSExtensionMain, as Xcode links them; see scripts/build-app.sh.
+        .unsafeFlags(["-Xlinker", "-e", "-Xlinker", "_NSExtensionMain"]),
+      ]),
     .testTarget(name: "JuiceCoreTests", dependencies: ["JuiceCore"]),
     .testTarget(name: "JuiceStoreTests", dependencies: ["JuiceStore", "JuiceCore"]),
     .testTarget(name: "JuiceCLIKitTests", dependencies: ["JuiceCLIKit", "JuiceStore", "JuiceCore"]),
