@@ -34,6 +34,7 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   pipe's status, not the check's.
 - **Commit with the pathspec on the commit:** `git commit -m "…" -- <paths>`. Use `git add -- <path>` only for a file
   git doesn't track yet. Never `git add -A`, never a bare commit.
+  The one exception is concluding a merge: check that `git status` shows only the merge's files, then `git commit --no-edit`.
 - **Branch authority:** the newest commit touching a status file, on any branch, is authoritative.
 - **STATE.md is updated as work happens.** The §0 banner is replaced in place (never stacked); it stays under 32 KB.
   The handoff is amortized, never written at clear time.

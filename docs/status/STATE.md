@@ -4,30 +4,35 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03)
 
-**Phase:** implementation. Tasks 0–13 landed and verified on `main`. Next is Task 14 (the app), which needs the owner
-present.
+**Phase:** implementation. Tasks 0–14 and 17, plus Task 19 Steps 1–2, are on `main`. Task 14 hardware checks C
+(lock-screen nudge) and D (hub switch) are in progress with the owner.
 
 **Done (verified):**
-- Spec `0f2a347`, plan `9286109` (fixes `4d45b9e` and the test counts in later commits), Task 0 bring-up `ed186d4`.
-- Tasks 1–9 (core, store, CLI): `5d06b82` … `3da48f8`. Tasks 10–12 (HID++ codec, broker, session): `9009ece`,
-  `fb5d42d`, `1c76bd1`. Task 13 (IOHID channel, hotplug monitor, `debug capture`, replay test): `10386a7`.
-- Full `swift test` at `10386a7`: **109 test cases, 0 failures, rc 0**. The broker tests (timing-based) were re-run 5×
-  at `fb5d42d`, all green.
-- **Live hardware run at `10386a7`** (`logijuice-cli debug capture --probe`, Options+ running): MX Keys S slot 1
-  `sn:TESTKEYS0001` 100 %, MX Master 3S slot 2 `sn:TESTMOUSE001` 70 %, both 0x1004 at index 8 with a percentage. The
-  capture is committed as `Tests/JuiceHIDTests/Fixtures/owner-mouse.json` and replayed by `ReplayTests`.
+- Spec `0f2a347` (§7 amended at `9826453`: device-silhouette gauge), plan `9286109` + fixes, bring-up `ed186d4`.
+- Tasks 1–13: `5d06b82` … `10386a7` (core, store, CLI, HID++ codec/broker/session, IOHID + `debug capture` + replay).
+- Task 14 app `69a2e2a`. Owner-verified 2026-10-03: first-run window, notification permission granted, Auto hides the
+  icon when healthy, Options+ unaffected, dropdown correct, simulated 8 % → one `debug:test-mouse.veryLow` notification
+  (usernoted log) and a red icon.
+- Gauge `9826453`: the owner rejected the battery glyph (it reads as the Mac's battery). Renders checked by
+  juice-arch at 6×.
+- Codex delivered Task 17 widget `fe1d865` and Task 19 README/cask `32f8acf` in worktree `../logijuice-codex`. Gated
+  by juice-arch: files byte-identical to the plan, widget build rc 0, 109/109. Merged at `4831c17` (Package.swift
+  conflict resolved to the union).
+- At `4831c17`: `swift test` **111 passed, 0 failed**, widget build rc 0, `build-app.sh` rc 0 (universal, ad-hoc,
+  app group). Installed to `/Applications/LogiJuice.app`; pluginkit lists `com.penguinspecz.logijuice.widget`.
 
 **In flight:**
-- Branch `main` at the commit adding this banner. Working tree clean. `codex/logijuice-tasks-1-9` points at
-  `10386a7` (fully merged; safe to delete). Codex is not running.
-- Plan files are copied verbatim by a helper that extracts each file's block from the plan (session scratchpad,
-  not committed). Files that appear in several plan tasks (`Package.swift`, `Sources/LogiJuiceCLI/main.swift`) are
-  written by hand per task.
-- No background jobs. **No `origin` remote** (repo creation is owner-tier), so every commit is local-only.
+- `main` at the commit adding this banner. Working tree clean. Branches `codex/logijuice-tasks-1-9` and
+  `codex/widget-docs` are fully merged; worktree `../logijuice-codex` can be removed.
+- **Test settings on the owner's Mac (revert after Task 14):** `defaults write com.penguinspecz.logijuice debugMenu
+  -bool true`; `settings.json` `menuBarMode: always`; a "Test Mouse" (`debug:test-mouse`) is in `state.json`. Revert
+  with `defaults delete com.penguinspecz.logijuice debugMenu`, mode back to auto, and "Debug: forget Test Mouse".
+- **Background job:** `/usr/bin/log stream` for subsystem `com.penguinspecz.logijuice` → `/tmp/lj-app-log.txt` (session
+  job; dies at the clear; needed only for Task 14 checks).
+- No `origin` remote, so every commit is local-only.
 
-**Next action:** Task 14 (app shell + `scripts/build-app.sh`). Its Step 4 needs the owner at the Mac: the
-notification-permission prompt, the menu bar check, lock-screen timing, and a hub switch. Then Task 15 (sync), Task 16
-(settings), Task 17 (widget), Task 18 (Shortcuts), Task 19 (docs + manual checklist).
+**Next action:** finish Task 14 checks C and D with the owner, then Task 15 (sync), Task 16 (settings window, which
+can go to Codex now that the AppModel API exists), Task 18 (Shortcuts), and Task 19 Step 3 (manual checklist).
 
 **Open owner decisions:**
 - Spec adjustments 1–9 (plan header): presented 2026-10-03, and the owner proceeded without objection. They stand
