@@ -14,6 +14,9 @@ final class AppModel: ObservableObject {
       try? settingsStore.save(settings)
       state.scheduler.maxWait = TimeInterval(settings.maxWaitHours) * 3600
       moments.reschedule(endOfDayHour: settings.endOfDayHour, minute: settings.endOfDayMinute)
+      if settings.syncEnabled != oldValue.syncEnabled {
+        if settings.syncEnabled { sync.start() } else { sync.stop() }
+      }
       publish()
     }
   }
@@ -24,6 +27,7 @@ final class AppModel: ObservableObject {
   let notifier = Notifier()
   let moments = MomentMonitor()
   let hid = HIDCoordinator()
+  let sync: SyncCoordinator
   private let settingsStore: SettingsStore
   private let stateStore: StateStore
   private let snapshotStore: SnapshotStore
@@ -40,6 +44,7 @@ final class AppModel: ObservableObject {
     stateStore = StateStore(url: paths.stateURL)
     snapshotStore = SnapshotStore(url: paths.snapshotURL)
     cliSnapshotStore = SnapshotStore(url: paths.cliSnapshotURL)
+    sync = SyncCoordinator(store: SyncStore(folder: paths.iCloudFolder, macID: MacIdentity.hardwareUUID()))
     let loadedSettings = settingsStore.load(default: Settings())
     settings = loadedSettings
     var loadedState = stateStore.load(default: LocalState())
@@ -53,6 +58,7 @@ final class AppModel: ObservableObject {
                                  showAlerting: settings.showAlertingInMenuBar)
   }
   var menuBarVisible: Bool { !menuBarDevices.isEmpty }
+  var syncAvailable: Bool { sync.isAvailable }
 
   func isPinned(_ id: DeviceID) -> Bool { settings.pinnedDevices.contains(id) }
 
@@ -82,6 +88,10 @@ final class AppModel: ObservableObject {
   }
 
   func start() {
+    if !UserDefaults.standard.bool(forKey: "registeredLoginItem") {
+      LoginItem.set(true)
+      UserDefaults.standard.set(true, forKey: "registeredLoginItem")
+    }
     notifier.onSnooze = { [weak self] id in self?.snooze(id) }
     notifier.start()
     moments.onMoment = { [weak self] moment in self?.handleMoment(moment) }
@@ -89,6 +99,11 @@ final class AppModel: ObservableObject {
     hid.onReading = { [weak self] reading, info in self?.ingest(reading, info: info) }
     hid.onReceiverChange = { [weak self] present in self?.receiverChanged(present) }
     hid.start()
+    sync.onRemoteFiles = { [weak self] files in
+      self?.remoteFiles = files
+      self?.publish()
+    }
+    if settings.syncEnabled { sync.start() }
     migrateLegacyMenuBarMode()
     tickTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated { self?.handleTick() }
@@ -113,6 +128,7 @@ final class AppModel: ObservableObject {
     publish()
     for decision in decisions { deliver(state.scheduler.schedule(decision, now: now)) }
     saveSoon()
+    if settings.syncEnabled { sync.write(records: state.records, force: false) }
   }
 
   func deliver(_ deliveries: [Delivery]) {
@@ -126,7 +142,12 @@ final class AppModel: ObservableObject {
 
   func handleMoment(_ moment: Moment) {
     deliver(state.scheduler.onMoment(moment, now: Date()))
-    if moment == .willSleep { saveNow() } else { saveSoon() }
+    if moment == .willSleep || moment == .receiverDeparted {
+      saveNow()
+      if settings.syncEnabled { sync.write(records: state.records, force: true) }
+    } else {
+      saveSoon()
+    }
   }
 
   func handleTick() {
@@ -239,5 +260,6 @@ final class AppModel: ObservableObject {
     state.records[i].metaUpdatedAt = Date()
     publish()
     saveSoon()
+    if settings.syncEnabled { sync.write(records: state.records, force: true) }
   }
 }
