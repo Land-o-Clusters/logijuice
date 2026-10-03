@@ -58,7 +58,7 @@ logijuice debug capture --seconds 30 --probe   # raw HID++ frames, for bug repor
 
 ## Privacy
 
-No telemetry and no network access. Data stays in `~/Library/Application Support/logijuice/`, the app's group container, and (if sync is on) `iCloud Drive/logijuice/`.
+No telemetry and no network access. Data stays in `~/Library/Application Support/logijuice/` and (if sync is on) `iCloud Drive/logijuice/`.
 
 ## License
 

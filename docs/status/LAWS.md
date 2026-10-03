@@ -39,9 +39,13 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - macOS 14.0 minimum. `swift-tools-version: 5.10`, Swift 5 language mode. No third-party dependencies.
 - Every `swift`/`xcrun` command runs with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`
   (`xcode-select` points at the Command Line Tools, which can't build XCTest or WidgetKit).
-- IDs: bundle `com.penguinspecz.logijuice`, widget `com.penguinspecz.logijuice.widget`, app group
-  `group.com.penguinspecz.logijuice`, logger subsystem `com.penguinspecz.logijuice`. App display name **LogiJuice**;
+- IDs: bundle `com.penguinspecz.logijuice`, widget `com.penguinspecz.logijuice.widget`, logger subsystem `com.penguinspecz.logijuice`. App display name **LogiJuice**;
   repo and CLI command **logijuice** (built as product `logijuice-cli`, because APFS is case-insensitive).
+- **No app-group container while ad-hoc signed.** macOS refuses the non-sandboxed, ad-hoc-signed app's writes there
+  (EPERM, silently through `try?`), which left the widget and Shortcuts empty. The one snapshot lives in
+  `~/Library/Application Support/logijuice/`; the sandboxed widget reads it via a read-only home-relative exception
+  and resolves the home from `getpwuid` (its own home is the sandbox container). Persistence errors are logged, never
+  swallowed.
 - **App extensions are linked with `-e _NSExtensionMain`**, as Xcode does. Without it the widget traps at launch and
   never reaches the gallery; `scripts/build-app.sh` refuses to package one that doesn't.
 - **App Intents metadata is built outside Xcode:** the App target's release flags emit Swift const values, and

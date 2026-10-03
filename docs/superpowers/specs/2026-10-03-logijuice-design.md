@@ -73,14 +73,16 @@ receiver event / wake / connect
         │                                   │
         │                         UNUserNotificationCenter / menu bar state
         ▼
-   JuiceCore.Forecast ──► Snapshot ──► app-group snapshot.json ──► widget reload, CLI
+   JuiceCore.Forecast ──► Snapshot ──► Application Support snapshot.json ──► widget reload, CLI, Shortcuts
                                    └─► iCloud Drive <mac>.json (throttled)
 ```
 
 ### Identifiers
 
 - Bundle ID `com.penguinspecz.logijuice`, widget `com.penguinspecz.logijuice.widget`
-- App group `group.com.penguinspecz.logijuice` (the widget is sandboxed; the app is not, because it
+- No app group (amended 2026-10-03: macOS refuses the ad-hoc-signed app's writes to the group container, EPERM).
+  The widget is sandboxed and reads the snapshot through a read-only exception for
+  `~/Library/Application Support/logijuice/`. The app is not sandboxed, because it
   writes to iCloud Drive without the iCloud entitlement)
 - Signing: ad-hoc (`codesign --sign -`) in v1, like Puddle. The build script takes an optional
   `SIGNING_IDENTITY` so Developer ID signing and notarization become a configuration change once the
@@ -269,7 +271,7 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 ### Snapshot file
 
-`~/Library/Group Containers/group.com.penguinspecz.logijuice/snapshot.json`:
+`~/Library/Application Support/logijuice/snapshot.json` (amended 2026-10-03; was the app-group container):
 `{ schema: 1, generatedAt, receiverPresent, devices: [{ id, name, nickname, kind, level, charging,
 lastSeen, live, forecast }] }`. Written atomically. It is the only contract between the app, the
 widget and the CLI.

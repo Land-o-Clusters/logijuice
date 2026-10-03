@@ -72,9 +72,17 @@ final class StoreTests: XCTestCase {
   func testStandardPaths() {
     let p = JuicePaths.standard()
     XCTAssertTrue(p.settingsURL.path.hasSuffix("Library/Application Support/logijuice/settings.json"))
-    XCTAssertTrue(p.cliSnapshotURL.path.hasSuffix("Library/Application Support/logijuice/snapshot.json"))
-    XCTAssertTrue(p.snapshotURL.path.contains(JuicePaths.appGroupID))
     XCTAssertTrue(p.iCloudFolder.path.hasSuffix("Mobile Documents/com~apple~CloudDocs/logijuice"))
+  }
+
+  /// One snapshot for the widget, the CLI and Shortcuts, in Application Support under the user's real home:
+  /// the app can't write the app-group container (EPERM under ad-hoc signing), and inside the widget's sandbox
+  /// the home directory is the sandbox container, so the path must come from the user record.
+  func testSnapshotLivesInRealHomeApplicationSupport() {
+    let realHome = String(cString: getpwuid(getuid())!.pointee.pw_dir)
+    XCTAssertEqual(JuicePaths.realHome().path, realHome)
+    XCTAssertEqual(JuicePaths.standard().snapshotURL.path,
+                   realHome + "/Library/Application Support/logijuice/snapshot.json")
   }
 
   func testMacIdentityIsStable() {

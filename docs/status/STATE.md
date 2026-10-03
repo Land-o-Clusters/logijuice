@@ -2,7 +2,13 @@
 
 What is true NOW. Replace §0 in place; never stack banners. Rules that hold always live in `LAWS.md`.
 
-## §0 Current state (2026-10-03 23:47 UTC)
+## §0 Current state (2026-10-03 23:58 UTC)
+
+**Widget/Shortcuts fix (this session):** the widget showed "Open LogiJuice to start". Root cause from logged
+errors: every save to the app-group container failed with EPERM (silently, `try?`), so the widget and Shortcuts
+never had a snapshot. Fixed: one snapshot in Application Support, widget reads it via a read-only sandbox exception,
+save errors logged. Tests pass and the build is installed (pid confirmed, no save errors); the **widget still needs the
+owner's glance**.
 
 **Phase:** v1 feature-complete (plan Tasks 0–18 done, Task 19 Steps 1–2 done). Now in **Task 19 Step 3**, the manual
 checklist (`docs/manual-checklist.md`). Charging follow-up landed (`edfd79b`): a charging device's fill and bolt are
@@ -21,7 +27,7 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
 - **Secrets scrub done:** history rewritten with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`); all
   SHAs here are post-rewrite. The pre-scrub bundle lives only in an old session scratchpad (real IDs; never push it).
 - Checklist: **passed** #1, #2, #7, #9, #10, #11, #12, #14. **#13 partial:** Settings, CLI and the menu show "Desk
-  Mouse"; only the widget is unchecked (it renders the same `SnapshotDevice.displayName`). #11 was owner-driven
+  Mouse"; the widget was empty (fixed above; re-check pending). #11 was owner-driven
   (sleight can't reach the status item or Notification Center); evidence came from `state.json` and `usernoted` logs.
   macOS silences banners with reason "display shared" while screen capture runs, so a missing banner ≠ a missing
   alert: check `log show --predicate 'process == "usernoted" AND eventMessage CONTAINS "logijuice"'` first.
@@ -43,8 +49,9 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
   3 full charges.
 
 **Next action:**
-1. Owner glances at the widget ("Desk Mouse" closes #13) and clicks dropdown → "Debug: forget Test Mouse". Then
-   juice-arch reverts the test settings (above): `defaults delete … debugMenu`, clear the nickname in Settings.
+1. Owner glances at the widget ("Desk Mouse" closes #13 and verifies the fix; also worth one run of Shortcuts
+   "Get Lowest Battery"). Test Mouse is already forgotten. Then juice-arch reverts the test settings (above):
+   `defaults delete … debugMenu`, clear the nickname in Settings.
 2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
 3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
 4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into

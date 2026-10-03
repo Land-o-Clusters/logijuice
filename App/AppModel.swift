@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import JuiceCore
+import os
 import JuiceStore
 import WidgetKit
 
@@ -11,7 +12,7 @@ final class AppModel: ObservableObject {
   @Published var settings: Settings {
     didSet {
       guard settings != oldValue else { return }
-      try? settingsStore.save(settings)
+      persist("settings") { try settingsStore.save(settings) }
       state.scheduler.maxWait = TimeInterval(settings.maxWaitHours) * 3600
       moments.reschedule(endOfDayHour: settings.endOfDayHour, minute: settings.endOfDayMinute)
       if settings.syncEnabled != oldValue.syncEnabled {
@@ -31,19 +32,18 @@ final class AppModel: ObservableObject {
   private let settingsStore: SettingsStore
   private let stateStore: StateStore
   private let snapshotStore: SnapshotStore
-  private let cliSnapshotStore: SnapshotStore
   private(set) var state: LocalState
   var remoteFiles: [SyncFile] = []
   private var liveDevices: Set<DeviceID> = []
   private var tickTimer: Timer?
   private var saveWork: DispatchWorkItem?
+  private let log = Logger(subsystem: "com.penguinspecz.logijuice", category: "store")
 
   init(paths: JuicePaths = .standard()) {
     self.paths = paths
     settingsStore = SettingsStore(url: paths.settingsURL)
     stateStore = StateStore(url: paths.stateURL)
     snapshotStore = SnapshotStore(url: paths.snapshotURL)
-    cliSnapshotStore = SnapshotStore(url: paths.cliSnapshotURL)
     sync = SyncCoordinator(store: SyncStore(folder: paths.iCloudFolder, macID: MacIdentity.hardwareUUID()))
     let loadedSettings = settingsStore.load(default: Settings())
     settings = loadedSettings
@@ -209,8 +209,7 @@ final class AppModel: ObservableObject {
     let changed = next.devices != snapshot.devices || next.receiverPresent != snapshot.receiverPresent
     snapshot = next
     if changed {
-      try? snapshotStore.save(next)
-      try? cliSnapshotStore.save(next)
+      persist("snapshot") { try snapshotStore.save(next) }
       WidgetCenter.shared.reloadAllTimelines()
     }
   }
@@ -245,6 +244,11 @@ final class AppModel: ObservableObject {
 
   // MARK: Persistence
 
+  /// Saves never throw into the UI, but a failure is logged: a silent one left the widget empty.
+  private func persist(_ what: String, _ save: () throws -> Void) {
+    do { try save() } catch { log.error("save \(what, privacy: .public) failed: \(error, privacy: .public)") }
+  }
+
   func saveSoon() {
     saveWork?.cancel()
     let work = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.saveNow() } }
@@ -254,7 +258,7 @@ final class AppModel: ObservableObject {
 
   func saveNow() {
     saveWork?.cancel()
-    try? stateStore.save(state)
+    persist("state") { try stateStore.save(state) }
   }
 
   private func upsertLocal(_ info: DeviceInfo, _ mutate: (inout DeviceRecord) -> Void) {
