@@ -2088,7 +2088,7 @@ extension DeviceKind {
 - [ ] **Step 4: Run all core tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests`
-Expected: PASS (all JuiceCore tests, including 13 new).
+Expected: PASS (66 JuiceCore tests, including 12 new).
 
 - [ ] **Step 5: Commit**
 
