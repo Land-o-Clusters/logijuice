@@ -4462,7 +4462,8 @@ struct MenuContent: View {
       Button("Settings…") { SettingsWindowController.shared.show() }
       if OptionsPlus.isInstalled { Button("Open Logi Options+") { OptionsPlus.open() } }
       if debugMenu {
-        Button("Debug: simulate 8% Test Mouse") { model.simulateLowBattery(percent: 8) }
+        Button("Debug: simulate 18% Test Mouse (Low, waits for a moment)") { model.simulateLowBattery(percent: 18) }
+        Button("Debug: simulate 8% Test Mouse (Very low, immediate)") { model.simulateLowBattery(percent: 8) }
         Button("Debug: forget Test Mouse") { model.forgetTestDevice() }
       }
       Button("Quit LogiJuice") { NSApp.terminate(nil) }
@@ -4665,7 +4666,7 @@ Expected:
 3. Within a few seconds the list shows the owner's devices with percentages (move the mouse and type to wake them). `log stream --predicate 'subsystem == "com.penguinspecz.logijuice"' --level info` shows `receiver attached` and the `slot N:` lines.
 4. With mode Auto and healthy batteries, there is no menu bar icon.
 5. Quit the app. Run `defaults write com.penguinspecz.logijuice debugMenu -bool true` and write `{"menuBarMode":"always"}` to `~/Library/Application Support/logijuice/settings.json`. Missing keys load as defaults, and the Settings UI only arrives in Task 16. Relaunch: the icon appears. Click "Debug: simulate 8% Test Mouse". Within a second there's a "Test Mouse · 8%" notification, and the icon turns red.
-6. Lock the screen (⌃⌘Q) with a pending Low nudge: simulate 18% after a "Debug: forget Test Mouse" (which re-arms). The nudge arrives at lock.
+6. Click "Debug: forget Test Mouse" (re-arms), then "Debug: simulate 18% Test Mouse". No notification yet. Lock the screen (⌃⌘Q): the Low nudge arrives at lock.
 7. `dist/LogiJuice.app/Contents/Resources/bin/logijuice status` lists the devices.
 8. Logi Options+ still shows battery and remapping still works while LogiJuice runs.
 9. Unplug the receiver (or switch the hub). The menu dropdown shows "Receiver not connected to this Mac" and "seen …" times. Plug it back in and readings resume.
