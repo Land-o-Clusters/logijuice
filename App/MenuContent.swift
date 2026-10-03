@@ -24,13 +24,17 @@ struct MenuBarLabel: View {
 
   /// One silhouette gauge per shown device (spec §7, amended 2026-10-03).
   static func image(devices: [SnapshotDevice], display: PercentDisplay) -> NSImage {
-    MenuBarIcon.render(devices.map { d in
-      let symbols = d.kind.gaugeSymbols
-      return MenuBarIcon.Gauge(
-        outline: symbols.outline, fill: symbols.fill,
-        fraction: Double(d.level?.equivalentPercent ?? 0) / 100, tint: d.tint.nsColor,
-        charging: d.charging && d.live, text: Format.menuBarText(d, display: display))
-    })
+    MenuBarIcon.render(devices.map { MenuBarIcon.gauge(for: $0, text: Format.menuBarText($0, display: display)) })
+  }
+}
+
+extension MenuBarIcon {
+  static func gauge(for d: SnapshotDevice, text: String?) -> Gauge {
+    let symbols = d.kind.gaugeSymbols
+    return Gauge(
+      outline: symbols.outline, fill: symbols.fill,
+      fraction: Double(d.level?.equivalentPercent ?? 0) / 100, tint: d.tint.nsColor,
+      charging: d.charging && d.live, text: text)
   }
 }
 

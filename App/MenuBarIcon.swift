@@ -27,14 +27,15 @@ enum MenuBarIcon {
     var width: CGFloat
   }
 
-  static func render(_ gauges: [Gauge]) -> NSImage {
+  static func render(_ gauges: [Gauge], pointSize: CGFloat = glyphPointSize) -> NSImage {
+    let scale = pointSize / glyphPointSize
     let anyTint = gauges.contains { $0.tint != nil }
     // Template images are recolored by the menu bar (light/dark, wallpaper-adaptive). Once anything is tinted the
     // image can't be template, so the neutral parts use labelColor, which resolves in the status item's appearance.
     let neutral: NSColor = anyTint ? .labelColor : .black
-    let config = NSImage.SymbolConfiguration(pointSize: glyphPointSize, weight: .regular)
-    let boltConfig = NSImage.SymbolConfiguration(pointSize: 9, weight: .bold)
-    let font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+    let config = NSImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+    let boltConfig = NSImage.SymbolConfiguration(pointSize: 9 * scale, weight: .bold)
+    let font = NSFont.monospacedDigitSystemFont(ofSize: 12 * scale, weight: .medium)
 
     let prepared: [Prepared] = gauges.compactMap { g in
       guard let outline = NSImage(systemSymbolName: g.outline, accessibilityDescription: nil)?
@@ -52,7 +53,7 @@ enum MenuBarIcon {
     }
     guard !prepared.isEmpty else { return NSImage(size: NSSize(width: 16, height: 16)) }
 
-    let height = max(17, prepared.map(\.outline.size.height).max() ?? 17)
+    let height = max(17 * scale, prepared.map(\.outline.size.height).max() ?? 17)
     let totalWidth = ceil(prepared.map(\.width).reduce(0, +) + gaugeSpacing * CGFloat(prepared.count - 1))
     let image = NSImage(size: NSSize(width: totalWidth, height: height), flipped: false) { rect in
       var x: CGFloat = 0

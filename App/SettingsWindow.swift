@@ -88,7 +88,7 @@ struct SettingsView: View {
         }
       } }
       if !hidden.contains("alerts") { Section("Alerts") {
-        LevelList(profile: $model.settings.profile, showAdvanced: showAdvanced)
+        LevelList(profile: $model.settings.profile, showAdvanced: showAdvanced, devices: model.snapshot.devices)
         DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
           Stepper("Hold nudges at most \(model.settings.maxWaitHours) h",
                   value: $model.settings.maxWaitHours, in: 1...24)
@@ -128,6 +128,7 @@ struct DeviceSettingsRow: View {
   @ObservedObject var model: AppModel
   let device: SnapshotDevice
   @State private var nickname = ""
+  @FocusState private var editingName: Bool
 
   private var pinned: Binding<Bool> {
     Binding(get: { model.isPinned(device.id) }, set: { model.setPinned($0, for: device.id) })
@@ -139,34 +140,67 @@ struct DeviceSettingsRow: View {
       set: { model.setAlertOverride($0 ? model.settings.profile : nil, for: device.id) })
   }
 
+  /// The hardware name stays visible under a nickname, so a renamed device is still recognisable.
+  private var detail: String {
+    let parts = [device.nickname?.isEmpty == false ? device.name : nil, Format.subtitle(device, now: Date())]
+    return parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+  }
+
+  /// The field shows the display name; saving the hardware name back means "no nickname".
+  private func commitName() {
+    let trimmed = nickname.trimmingCharacters(in: .whitespaces)
+    let next = (trimmed.isEmpty || trimmed == device.name) ? "" : trimmed
+    if next != (device.nickname ?? "") { model.setNickname(next, for: device.id) }
+    if trimmed.isEmpty { nickname = device.name }
+  }
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack(spacing: 10) {
-        Image(systemName: device.kind.symbolName).frame(width: 22)
-        TextField(device.name, text: $nickname)
-          .textFieldStyle(.plain)
-          .frame(maxWidth: 200)
-          .onSubmit { model.setNickname(nickname, for: device.id) }
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 12) {
+        Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 24))
+          .foregroundStyle(.primary)
+          .frame(width: 34, alignment: .center)
+        VStack(alignment: .leading, spacing: 2) {
+          HStack(spacing: 4) {
+            TextField("Name", text: $nickname, prompt: Text(device.name))
+              .labelsHidden()
+              .textFieldStyle(.plain)
+              .font(.headline)
+              .focused($editingName)
+              .fixedSize()
+              .onSubmit(commitName)
+            if !editingName {
+              Button { editingName = true } label: { Image(systemName: "pencil") }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
+                .help("Rename")
+                .accessibilityLabel("Rename \(device.displayName)")
+            }
+          }
+          if !detail.isEmpty {
+            Text(detail).font(.caption).foregroundStyle(.secondary)
+          }
+        }
         Spacer()
-        Text(Format.subtitle(device, now: Date())).font(.caption).foregroundStyle(.secondary)
-        Text(device.level.map(Format.level) ?? "—").monospacedDigit()
+        Text(device.level.map(Format.level) ?? "—")
+          .font(.system(size: 22, weight: .semibold, design: .rounded))
+          .monospacedDigit()
           .foregroundStyle(device.tint.color ?? Color.primary)
       }
-      HStack(spacing: 16) {
-        Toggle("Always show in menu bar", isOn: pinned)
-        Toggle("Custom alerts", isOn: custom)
+      HStack(spacing: 20) {
+        Toggle("Show in menu bar", isOn: pinned).toggleStyle(.checkbox)
+        Toggle("Custom alerts", isOn: custom).toggleStyle(.checkbox)
       }
-      .font(.caption)
-      .padding(.leading, 32)
+      .font(.callout)
+      .padding(.leading, 46)
       if let override = model.alertOverride(for: device.id) {
         LevelList(profile: Binding(get: { override }, set: { model.setAlertOverride($0, for: device.id) }),
-                  showAdvanced: false)
-          .padding(.leading, 32)
+                  showAdvanced: false, devices: [device])
+          .padding(.leading, 46)
       }
     }
-    .onAppear { nickname = device.nickname ?? "" }
-    .onDisappear {
-      if nickname != (device.nickname ?? "") { model.setNickname(nickname, for: device.id) }
-    }
+    .padding(.vertical, 2)
+    .onAppear { nickname = device.displayName }
+    .onChange(of: editingName) { _, editing in if !editing { commitName() } }
   }
 }

@@ -4,39 +4,44 @@ import SwiftUI
 struct LevelList: View {
   @Binding var profile: AlertProfile
   let showAdvanced: Bool
+  var devices: [SnapshotDevice] = []
+  var showsBar = true
 
   var body: some View {
+    if showsBar {
+      ThresholdBar(profile: $profile, devices: devices)
+    }
     ForEach($profile.levels) { $level in
       LevelRow(level: $level, showAdvanced: showAdvanced)
     }
   }
 }
 
+/// One line per level; percent thresholds are edited on the alert bar, "days left" ones here.
 struct LevelRow: View {
   @Binding var level: AlertLevel
   let showAdvanced: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      HStack(spacing: 8) {
-        Toggle("", isOn: $level.enabled).labelsHidden()
+      HStack(spacing: 10) {
+        Toggle("Enabled", isOn: $level.enabled).labelsHidden()
+        TintPicker(tint: $level.tint)
         TextField("Name", text: $level.name)
           .labelsHidden()
           .textFieldStyle(.roundedBorder)
-          .frame(width: 110)
-        Spacer(minLength: 8)
-        TriggerEditor(trigger: $level.trigger)
-      }
-      HStack(spacing: 12) {
-        Text("Alert").foregroundStyle(.secondary)
-        Picker("Alert", selection: $level.timing) {
-          Text("right away").tag(Timing.now)
-          Text("at a natural moment").tag(Timing.nextMoment)
+          .frame(width: 104)
+        Picker("When", selection: $level.timing) {
+          Text("alert right away").tag(Timing.now)
+          Text("wait for a natural moment").tag(Timing.nextMoment)
         }
         .labelsHidden()
         .fixedSize()
-        TintPicker(tint: $level.tint)
-        if showAdvanced {
+        Spacer(minLength: 4)
+        TriggerEditor(trigger: $level.trigger)
+      }
+      if showAdvanced {
+        HStack(spacing: 8) {
           Text("Repeat").foregroundStyle(.secondary)
           Picker("Repeat", selection: $level.repeatPolicy) {
             Text("never").tag(RepeatPolicy.never)
@@ -47,24 +52,25 @@ struct LevelRow: View {
           .labelsHidden()
           .fixedSize()
         }
+        .font(.callout)
+        .padding(.leading, 50)
       }
-      .font(.callout)
-      .padding(.leading, 40)
     }
     .opacity(level.enabled ? 1 : 0.5)
   }
 }
 
 /// Icon color a fired level gives its device in the menu bar and widget.
+/// (A `Menu` can't draw a custom shape as its label on macOS, so the dot sits beside a compact picker.)
 struct TintPicker: View {
   @Binding var tint: IconTint
 
   var body: some View {
-    HStack(spacing: 4) {
+    HStack(spacing: 3) {
       Circle()
         .fill(tint.color ?? Color.secondary.opacity(0.25))
-        .frame(width: 10, height: 10)
-      Text("Color").foregroundStyle(.secondary)
+        .overlay(Circle().strokeBorder(Color.primary.opacity(0.2)))
+        .frame(width: 11, height: 11)
       Picker("Color", selection: $tint) {
         Text("none").tag(IconTint.none)
         Text("yellow").tag(IconTint.yellow)
@@ -73,6 +79,7 @@ struct TintPicker: View {
       .labelsHidden()
       .fixedSize()
     }
+    .frame(width: 96, alignment: .leading)
     .help("Icon color while this level is active")
   }
 }
@@ -88,15 +95,14 @@ struct TriggerEditor: View {
 
   var body: some View {
     HStack(spacing: 4) {
-      // Explicit value text + label-less stepper: inside a grouped Form a labelled stepper grows a label column.
       switch trigger {
       case .percentAtOrBelow(let p):
-        Text("≤ \(p)").monospacedDigit()
-        Stepper("Threshold", value: Binding(get: { p }, set: { trigger = .percentAtOrBelow($0) }), in: 1...95)
-          .labelsHidden()
+        Text("≤ \(p)%")
+          .font(.system(.body, design: .rounded).weight(.medium))
+          .monospacedDigit()
       case .forecastDaysAtOrBelow(let d):
-        Text("≤ \(Int(d))").monospacedDigit()
-        Stepper("Threshold", value: Binding(get: { Int(d) }, set: { trigger = .forecastDaysAtOrBelow(Double($0)) }),
+        Text("≤ \(Int(d))").font(.system(.body, design: .rounded).weight(.medium)).monospacedDigit()
+        Stepper("Days left", value: Binding(get: { Int(d) }, set: { trigger = .forecastDaysAtOrBelow(Double($0)) }),
                 in: 1...30)
           .labelsHidden()
       }
