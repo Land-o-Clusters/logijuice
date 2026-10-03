@@ -8,15 +8,20 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 **Done (verified):**
 - Spec `0f2a347` (§7 amended: device-silhouette gauge, per-Mac pins, per-level tints), plan `9286109` + fixes, bring-up
-  `ed186d4`. Tasks 1–13 `5d06b82`…`10386a7`; app `69a2e2a`; widget fix `d1a3fab` (owner saw it in the gallery);
-  redesign `b06c3ae`; sync + settings `607649c`; settings clipping fix `9b47058`; settings polish `06b27d5` (alert bar,
-  device gauge rows); app icon `bee399c`; Shortcuts `63cba5f` (App Intents metadata built by build-app.sh outside Xcode).
-  Learning progress `e3beec0`; Liquid Glass settings `f2d9cf4`; backdrop `2b42843` (.popover material at full blur, owner-tuned 3% fade).
-- `swift test` at `2b42843`: **126 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
-  + icon). Installed to /Applications at `63cba5f`.
+  `6426d0d`. Tasks 1–13 `8cfa168`…`42c135a`; app `48e85f2`; widget fix `cf291fc` (owner saw it in the gallery);
+  redesign `ca9dfc7`; sync + settings `131fa20`; settings clipping fix `3e001fe`; settings polish `ca6d726` (alert bar,
+  device gauge rows); app icon `e756b16`; Shortcuts `a40db04` (App Intents metadata built by build-app.sh outside Xcode).
+  Learning progress `9220136`; Liquid Glass settings `914786c`; backdrop `cf774a0` (.popover material at full blur, owner-tuned 3% fade).
+- `swift test` at `cf774a0`: **126 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
+  + icon). Installed to /Applications at `a40db04`.
 - Owner-verified on hardware: receiver + both devices, notifications, Low nudge waits for lock, the widget in the
   gallery, three menu bar gauges, hover feedback, settings layout (pre-polish).
 - **GitHub:** `Land-o-Clusters/logijuice` created **private** 2026-10-03 (owner: "all of it"); `main` pushed and tracking.
+
+- **Secrets scrub 2026-10-03 (owner: "definitely big secrets scrub"):** device serials and unit IDs replaced in all
+  history with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`, including hex-encoded bytes in the
+  replay fixture). History rewritten with filter-branch and force-pushed; SHAs cited here are post-rewrite. A pre-scrub
+  backup bundle exists only in the session scratchpad (contains the real IDs; never push it).
 
 **In flight:**
 - `main` at the commit adding this banner, pushed. Working tree clean. Merged branches `codex/logijuice-tasks-1-9` and
@@ -36,8 +41,8 @@ settings.
   re-read (decided; in the plan, Task 14).
 - Repo creation and visibility, and when to buy the Apple Developer membership: both deferred to the owner.
 - Puddle has the same widget crash. A task chip was offered to the owner (the Puddle repo isn't touched from here).
-- **Before the repo goes public (it is private now):** the device serials and unit IDs in `docs/bringup-notes.md`, this file and
-  `Tests/JuiceHIDTests/Fixtures/owner-mouse.json` are the owner's. Decide whether to scrub them (owner-tier).
+- **Before the repo goes public:** serials are scrubbed. GitHub may still serve the old commits by direct SHA, so
+  recreate the repo (delete + create) before flipping it public. That's owner-tier and needs an explicit yes.
 
 ## Reading List
 - `docs/superpowers/specs/2026-10-03-logijuice-design.md`: the spec (what and why).
