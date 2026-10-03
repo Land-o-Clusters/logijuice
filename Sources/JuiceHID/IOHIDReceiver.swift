@@ -1,10 +1,32 @@
 import Foundation
 import IOKit.hid
 
+public enum ReceiverFamily: String, Sendable { case bolt, unifying, lightspeed }
+
+public struct ReceiverModel: Sendable, Hashable {
+  public var productID: Int
+  public var family: ReceiverFamily
+  /// true only once a run on real hardware has confirmed it (see docs/bringup-notes.md).
+  public var verified: Bool
+}
+
 public enum HIDPPInterface {
   public static let vendorID = 0x046D
-  /// Bolt, Unifying, Unifying (newer).
-  public static let receiverProductIDs = [0xC548, 0xC52B, 0xC532]
+  /// Every receiver logijuice opens. All speak HID++ on vendor page 0xFF00; only the Bolt receiver has been
+  /// tested on hardware. Lightspeed IDs follow Solaar's receiver table and are untested.
+  public static let receivers: [ReceiverModel] = [
+    ReceiverModel(productID: 0xC548, family: .bolt, verified: true),
+    ReceiverModel(productID: 0xC52B, family: .unifying, verified: false),
+    ReceiverModel(productID: 0xC532, family: .unifying, verified: false),
+    ReceiverModel(productID: 0xC539, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC53A, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC53D, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC53F, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC541, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC545, family: .lightspeed, verified: false),
+    ReceiverModel(productID: 0xC547, family: .lightspeed, verified: false),
+  ]
+  public static var receiverProductIDs: [Int] { receivers.map(\.productID) }
   public static let usagePage = 0xFF00
   static let shortUsage = 0x0001
   static let longUsage = 0x0002

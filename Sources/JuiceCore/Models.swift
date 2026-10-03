@@ -37,17 +37,19 @@ extension DeviceID: CodingKeyRepresentable {
 }
 
 public enum DeviceKind: String, Codable, Sendable, CaseIterable {
-  case keyboard, mouse, trackball, touchpad, numpad, presenter, other
+  case keyboard, mouse, trackball, touchpad, numpad, presenter, headset, other
 
   /// Maps the HID++ feature 0x0005 getDeviceType value.
   public init(hidppType: UInt8) {
     switch hidppType {
     case 0: self = .keyboard
+    case 1: self = .presenter  // remote control
     case 2: self = .numpad
     case 3: self = .mouse
     case 4: self = .touchpad
     case 5: self = .trackball
     case 6: self = .presenter
+    case 8: self = .headset
     default: self = .other
     }
   }

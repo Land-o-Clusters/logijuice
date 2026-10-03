@@ -114,3 +114,24 @@ final class FrameAndParserTests: XCTestCase {
     XCTAssertNil(FeatureParsers.connectionNotice(other))
   }
 }
+
+final class VoltageBatteryTests: XCTestCase {
+  func testVoltageToPercentFollowsLithiumIonCurve() {
+    XCTAssertEqual(FeatureParsers.percent(fromMillivolts: 4200), 100)
+    XCTAssertEqual(FeatureParsers.percent(fromMillivolts: 3811), 50)
+    XCTAssertEqual(FeatureParsers.percent(fromMillivolts: 3500), 0)
+    XCTAssertEqual(FeatureParsers.percent(fromMillivolts: 3200), 0)
+    let mid = FeatureParsers.percent(fromMillivolts: 3890)  // between 3859 (60) and 3922 (70)
+    XCTAssertTrue((60...70).contains(mid), "\(mid)")
+  }
+
+  func testBatteryVoltageReport() {
+    // 0x0EE2 = 3810 mV, flags 0x00 → discharging ~50 %
+    XCTAssertEqual(FeatureParsers.batteryVoltage([0x0E, 0xE2, 0x00]), BatteryReport(level: .percent(50), charging: false))
+    // charging flag (0x80)
+    XCTAssertEqual(FeatureParsers.batteryVoltage([0x0F, 0xA0, 0x80])?.charging, true)
+    // nonsense voltage is rejected rather than reported as 0 %
+    XCTAssertNil(FeatureParsers.batteryVoltage([0x00, 0x00, 0x00]))
+    XCTAssertNil(FeatureParsers.batteryVoltage([0x0E]))
+  }
+}

@@ -41,6 +41,8 @@ final class ModelsTests: XCTestCase {
     XCTAssertEqual(DeviceKind(hidppType: 5), .trackball)
     XCTAssertEqual(DeviceKind(hidppType: 6), .presenter)
     XCTAssertEqual(DeviceKind(hidppType: 7), .other)
+    XCTAssertEqual(DeviceKind(hidppType: 8), .headset)
+    XCTAssertEqual(DeviceKind(hidppType: 1), .presenter)
   }
 
   func testDeviceIDFactoriesAndDictionaryKeys() throws {

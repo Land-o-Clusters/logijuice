@@ -16,6 +16,22 @@ Battery levels and low-battery alerts for Logitech keyboards and mice connected 
 - **Plays nicely with Logi Options+.** logijuice only *reads* battery information and never changes device settings.
 - **Scriptable.** `logijuice status --json`.
 
+## Supported hardware
+
+| Receiver | Status |
+|---|---|
+| **Logi Bolt** (`C548`) | Tested: MX Keys S, MX Master 3S |
+| **Unifying** (`C52B`, `C532`) | Same protocol, not yet tested |
+| **Lightspeed** (gaming: `C539`, `C53A`, `C53D`, `C53F`, `C541`, `C545`, `C547`) | Not yet tested |
+
+A device works if it reports battery through HID++ feature 0x1004 (percentage), 0x1000, or 0x1001. Feature 0x1001
+reports voltage; logijuice converts it to a percentage with a typical lithium-ion curve, which is common on G-series
+mice and untested. Devices without any of these (some gaming headsets, older AA models) are listed as "battery not
+reported". Bluetooth-connected devices aren't handled, because macOS already shows those.
+
+Have a device or receiver marked untested? `logijuice debug capture --seconds 30 --probe` records what it reports.
+Please open an issue with the file.
+
 ## Install (from source)
 
 Requirements: macOS 14+, Xcode (full install).

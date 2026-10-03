@@ -4,6 +4,8 @@ import JuiceCore
 public enum BatteryFeature: Hashable, Sendable {
   case unified(index: UInt8, percent: Bool)
   case legacy(index: UInt8)
+  /// 0x1001 voltage-only (common on Lightspeed G-series); percent from a Li-ion curve. Untested on hardware.
+  case voltage(index: UInt8)
   case none
 }
 
@@ -79,6 +81,8 @@ public actor ReceiverSession {
       battery = .unified(index: idx, percent: caps.map(FeatureParsers.unifiedBatteryPercentSupported) ?? false)
     } else if let idx = await featureIndex(slot, .batteryStatus) {
       battery = .legacy(index: idx)
+    } else if let idx = await featureIndex(slot, .batteryVoltage) {
+      battery = .voltage(index: idx)
     }
 
     return SlotInfo(slot: slot, info: DeviceInfo(id: id, name: name, kind: kind), battery: battery)
@@ -92,6 +96,9 @@ public actor ReceiverSession {
     case .legacy(let idx):
       guard let p = try? await broker.request(device: slot.slot, featureIndex: idx, function: 0) else { return nil }
       return FeatureParsers.batteryStatus(p)
+    case .voltage(let idx):
+      guard let p = try? await broker.request(device: slot.slot, featureIndex: idx, function: 0) else { return nil }
+      return FeatureParsers.batteryVoltage(p)
     case .none:
       return nil
     }
@@ -108,6 +115,8 @@ public actor ReceiverSession {
       return FeatureParsers.unifiedBatteryStatus(frame.params, percentSupported: percent).map { .battery(slot: s.slot, $0) }
     case .legacy(let idx) where frame.featureIndex == idx:
       return FeatureParsers.batteryStatus(frame.params).map { .battery(slot: s.slot, $0) }
+    case .voltage(let idx) where frame.featureIndex == idx:
+      return FeatureParsers.batteryVoltage(frame.params).map { .battery(slot: s.slot, $0) }
     default:
       return nil
     }

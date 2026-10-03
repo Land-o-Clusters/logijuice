@@ -8,7 +8,7 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   Logitech devices on a Bolt/Unifying receiver. It never replaces Logi Options+ or its features (remapping, gestures,
   firmware, pairing). Native-Bluetooth devices and Windows/Linux are out of scope.
 - **Read-only toward hardware.** Send only HID++ getter functions: root getFeature/ping, 0x0003 fn0/fn2,
-  0x0005 fn0/1/2, 0x1004 fn0/1, 0x1000 fn0. Never write a register or a device setting, including the receiver's
+  0x0005 fn0/1/2, 0x1004 fn0/1, 0x1000 fn0, 0x1001 fn0. Never write a register or a device setting, including the receiver's
   notification flags (register 0x00).
 - **Coexist with Options+.** Open HID devices non-exclusively. Every request carries software ID `0x0A`; replies with
   any other non-zero software ID are ignored (Options+ uses `0xF`).

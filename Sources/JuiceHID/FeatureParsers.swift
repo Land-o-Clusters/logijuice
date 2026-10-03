@@ -6,6 +6,7 @@ public enum FeatureID: UInt16, Sendable {
   case deviceInformation = 0x0003
   case deviceNameType = 0x0005
   case batteryStatus = 0x1000
+  case batteryVoltage = 0x1001
   case unifiedBattery = 0x1004
 }
 
@@ -70,6 +71,31 @@ public enum FeatureParsers {
     let percent = Int(p[0])
     guard (1...100).contains(percent) else { return nil }
     return BatteryReport(level: .percent(percent), charging: [1, 2, 4].contains(status))
+  }
+
+  /// Typical single-cell Li-ion discharge curve (mV → %), as used by Solaar for 0x1001 devices. Untested on hardware.
+  static let voltageCurve: [(mv: Int, percent: Int)] = [
+    (4186, 100), (4067, 90), (3989, 80), (3922, 70), (3859, 60), (3811, 50), (3778, 40), (3751, 30),
+    (3717, 20), (3671, 10), (3646, 5), (3579, 2), (3500, 0),
+  ]
+
+  public static func percent(fromMillivolts mv: Int) -> Int {
+    guard let top = voltageCurve.first, let bottom = voltageCurve.last else { return 0 }
+    if mv >= top.mv { return 100 }
+    if mv <= bottom.mv { return 0 }
+    for (hi, lo) in zip(voltageCurve, voltageCurve.dropFirst()) where mv <= hi.mv && mv >= lo.mv {
+      let t = Double(mv - lo.mv) / Double(hi.mv - lo.mv)
+      return Int((Double(lo.percent) + t * Double(hi.percent - lo.percent)).rounded())
+    }
+    return 0
+  }
+
+  /// 0x1001 getBatteryInfo / event: [voltage hi, voltage lo, flags]; flags bit 0x80 = charging.
+  public static func batteryVoltage(_ p: [UInt8]) -> BatteryReport? {
+    guard p.count >= 3 else { return nil }
+    let mv = Int(p[0]) << 8 | Int(p[1])
+    guard (3000...4500).contains(mv) else { return nil }
+    return BatteryReport(level: .percent(percent(fromMillivolts: mv)), charging: p[2] & 0x80 != 0)
   }
 
   /// 0x0005 getDeviceName chunk: ASCII bytes, stop at NUL or `remaining`.

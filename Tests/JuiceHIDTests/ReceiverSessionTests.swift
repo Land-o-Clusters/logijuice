@@ -87,3 +87,45 @@ final class ReceiverSessionTests: XCTestCase {
 func XCTUnwrapAsync<T>(_ value: T?, file: StaticString = #filePath, line: UInt = #line) async throws -> T {
   try XCTUnwrap(value, file: file, line: line)
 }
+
+final class VoltageSessionTests: XCTestCase {
+  /// A G-series-style mouse that only exposes 0x1001 Battery Voltage (index 5).
+  func responder() -> ([UInt8]) -> [[UInt8]] {
+    { req in
+      let dev = req[1], fi = req[2], fs = req[3], fn = fs >> 4
+      func ok(_ p: [UInt8]) -> [[UInt8]] { [long([0x11, dev, fi, fs] + p)] }
+      guard dev == 1 else { return [[0x10, dev, 0x8F, fi, fs, 0x09, 0]] }
+      switch (fi, fn) {
+      case (0, 0):
+        let id = UInt16(req[4]) << 8 | UInt16(req[5])
+        return ok([id == 0x1001 ? 5 : id == 0x0005 ? 3 : 0, 0, 0])
+      case (0, 1): return ok([4, 2, 0x5A])
+      case (3, 0): return ok([3])
+      case (3, 1): return ok(Array("G P".utf8))
+      case (3, 2): return ok([3])
+      case (5, 0): return ok([0x0E, 0xE2, 0x00])
+      default: return [long([0x11, dev, 0xFF, fi, fs, 0x02])]
+      }
+    }
+  }
+
+  func testIdentifyAndReadVoltageOnlyDevice() async throws {
+    let ch = FakeChannel()
+    ch.responder = responder()
+    let broker = RequestBroker(channel: ch)
+    broker.start()
+    let session = ReceiverSession(broker: broker)
+    let identified = await session.identify(slot: 1)
+    let info = try XCTUnwrap(identified)
+    XCTAssertEqual(info.battery, .voltage(index: 5))
+    let report = await session.readBattery(info)
+    XCTAssertEqual(report, BatteryReport(level: .percent(50), charging: false))
+  }
+
+  func testInterpretVoltageEvent() throws {
+    let slot = SlotInfo(slot: 1, info: DeviceInfo(id: .serial("G"), name: "G", kind: .mouse), battery: .voltage(index: 5))
+    let event = try XCTUnwrap(HIDPPFrame(bytes: long([0x11, 1, 5, 0x00, 0x0E, 0xE2, 0x80])))
+    XCTAssertEqual(ReceiverSession.interpret(event, slots: [1: slot]),
+                   .battery(slot: 1, BatteryReport(level: .percent(50), charging: true)))
+  }
+}

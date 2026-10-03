@@ -129,6 +129,7 @@ extension DeviceKind {
     case .touchpad: return ("rectangle.and.hand.point.up.left", "rectangle.and.hand.point.up.left.fill")
     case .numpad: return ("number.square", "number.square.fill")
     case .presenter: return ("av.remote", "av.remote.fill")
+    case .headset: return ("headphones", "headphones")
     case .other: return ("circle", "circle.fill")
     }
   }
@@ -142,6 +143,7 @@ extension DeviceKind {
     case .touchpad: return "rectangle.and.hand.point.up.left"
     case .numpad: return "number.square"
     case .presenter: return "av.remote"
+    case .headset: return "headphones"
     case .other: return "dot.radiowaves.left.and.right"
     }
   }

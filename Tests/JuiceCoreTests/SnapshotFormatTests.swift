@@ -150,6 +150,8 @@ final class SnapshotFormatTests: XCTestCase {
     XCTAssertEqual(Format.batterySymbol(percent: 95), "battery.100percent")
     XCTAssertEqual(DeviceKind.mouse.symbolName, "computermouse")
     XCTAssertEqual(DeviceKind.keyboard.symbolName, "keyboard")
+    XCTAssertEqual(DeviceKind.headset.symbolName, "headphones")
+    XCTAssertEqual(DeviceKind.headset.gaugeSymbols.fill, "headphones")
   }
 
   func testMenuBarText() {
