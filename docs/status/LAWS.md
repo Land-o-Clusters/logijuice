@@ -59,6 +59,10 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   and behind-window blur don't render into it, so materials need an owner screenshot. The built-in computer-use tools
   can't see LogiJuice (menu-bar-only app). **Drive LogiJuice's UI with sleight**, passing the full path
   `/Applications/LogiJuice.app` (the `dist/` build shares the bundle ID, so the ID is ambiguous).
+- **A missing banner is not a missing alert.** macOS silences banners (e.g. "display shared" while the screen is
+  captured) after the app posted correctly. Judge alerts by `usernoted` logs ("Delivering … req:<device>.<level>") and
+  `state.json`, not by what appeared on screen. sleight reaches LogiJuice's windows only, not its status item or
+  Notification Center, so dropdown and notification-action steps are owner-driven.
 - **Settings uses a custom glass layout, not a grouped `Form`.** On macOS 27 a grouped Form needs ≥ ~744pt, and its
   rows grow label columns.
 - **Never fade the window's blur by more than ~5%** (`NSVisualEffectView.alphaValue`). Fading cuts holes and the sharp

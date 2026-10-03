@@ -15,9 +15,9 @@ Results so far come from the 2026-10-03 owner runs. Rows marked _pending_ still 
 | 8 | Charge to full | "Fully charged" notification once | _pending_ (next full charge) |
 | 9 | Debug simulate 18% → lock screen | Low nudge arrives at lock, not before | Pass (2026-10-03) |
 | 10 | Debug simulate 8% | Immediate Very low notification; red icon; widget ring red | Pass (2026-10-03) |
-| 11 | Notification "Snooze 1 day" on a Low alert, then simulate 4% | Critical still alerts (escalation) | _pending_ (needs `debugMenu = 1`) |
+| 11 | Notification "Snooze 1 day" on a Low alert, then simulate 4% | Critical still alerts (escalation) | Pass (2026-10-03), run with 8% (no 4% button; Very low is the escalation): the Low nudge was held from simulate until lock and posted 0.4 s after it; Snooze set a 24 h snooze at Low; 8% fired Very low anyway and macOS delivered it. Note: macOS silenced the first banner ("display shared", while screen capture was active), so banners can be muted by system settings even when delivery is correct |
 | 12 | Relaunch after alerts fired | No duplicate notifications | Pass (2026-10-03) |
-| 13 | Rename a device in Settings | Menu, widget and `logijuice status` show the nickname | Partial (2026-10-03, driven with sleight): mouse renamed "Desk Mouse"; Settings rows, header gauges, `logijuice status` and `logijuice devices` show it. Menu and widget still need a look (sleight can't reach the status item; the group container is TCC-blocked from a shell) |
+| 13 | Rename a device in Settings | Menu, widget and `logijuice status` show the nickname | Partial (2026-10-03): mouse renamed "Desk Mouse" with sleight; Settings rows, header gauges, `logijuice status`, `logijuice devices` and the menu dropdown (owner screenshot) show it. Widget still needs a look |
 | 14 | `logijuice status --json` | Valid JSON matching the menu | Pass (2026-10-03). The plain `status` showed a bare "learning…"; fixed in `dd0f4a9` to show learning progress |
 | 15 | Second Mac (if available) | Other Mac shows synced readings; only the Mac with the receiver alerts | _pending_ (scheduled Mon 2026-10-05) |
 

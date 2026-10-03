@@ -2,7 +2,7 @@
 
 What is true NOW. Replace §0 in place; never stack banners. Rules that hold always live in `LAWS.md`.
 
-## §0 Current state (2026-10-03 23:50 UTC)
+## §0 Current state (2026-10-03 23:47 UTC)
 
 **Phase:** v1 feature-complete (plan Tasks 0–18 done, Task 19 Steps 1–2 done). Now in **Task 19 Step 3**, the manual
 checklist (`docs/manual-checklist.md`). Charging follow-up landed (`edfd79b`): a charging device's fill and bolt are
@@ -20,12 +20,13 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
   voltage/headset `8c261f2` (untested on hardware), battery health `71e9da1`, charging `edfd79b`.
 - **Secrets scrub done:** history rewritten with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`); all
   SHAs here are post-rewrite. The pre-scrub bundle lives only in an old session scratchpad (real IDs; never push it).
-- Checklist: **passed** #1, #2, #7, #9, #10, #12, #14. **#13 partial:** juice-arch renamed the mouse "Desk Mouse" with
-  sleight; Settings and the CLI show it. The menu and widget need the owner's glance (they render the same
-  `SnapshotDevice.displayName`). **#11 pending, owner-present:** sleight sees LogiJuice's windows only, not the
-  status item (the debug simulate buttons) or Notification Center (the Snooze action). **Mon 2026-10-05:** #4, #5, #6,
-  #15 (hub switch, sleep/wake, second Mac). #3 isn't testable (Options+ is a KeepAlive agent). #8 comes on the next
-  full charge.
+- Checklist: **passed** #1, #2, #7, #9, #10, #11, #12, #14. **#13 partial:** Settings, CLI and the menu show "Desk
+  Mouse"; only the widget is unchecked (it renders the same `SnapshotDevice.displayName`). #11 was owner-driven
+  (sleight can't reach the status item or Notification Center); evidence came from `state.json` and `usernoted` logs.
+  macOS silences banners with reason "display shared" while screen capture runs, so a missing banner ≠ a missing
+  alert: check `log show --predicate 'process == "usernoted" AND eventMessage CONTAINS "logijuice"'` first.
+  **Mon 2026-10-05:** #4, #5, #6, #15 (hub switch, sleep/wake, second Mac). #3 isn't testable (Options+ is a
+  KeepAlive agent). #8 comes on the next full charge.
 
 **In flight:**
 - Branch `main`, HEAD = the commit adding this banner, pushed to `origin/main` (`Land-o-Clusters/logijuice`,
@@ -42,11 +43,8 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
   3 full charges.
 
 **Next action:**
-1. With the owner at the Mac (about 2 minutes):
-   - **#13:** the owner confirms the dropdown and the widget say "Desk Mouse".
-   - **#11:** the owner clicks dropdown → "Debug: simulate 18%", locks the screen, unlocks, clicks "Snooze 1 day" on
-     the Low alert, then "Debug: simulate 8%". The Very low alert must still fire (no 4% button; 8% is the escalation).
-   Fix failures test-first, record results in the checklist, then revert the test settings (above).
+1. Owner glances at the widget ("Desk Mouse" closes #13) and clicks dropdown → "Debug: forget Test Mouse". Then
+   juice-arch reverts the test settings (above): `defaults delete … debugMenu`, clear the nickname in Settings.
 2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
 3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
 4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
