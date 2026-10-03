@@ -7,6 +7,17 @@ public enum Forecaster {
   static let riseSplit = 10.0
   static let maxPointsPerRun = 500
 
+  /// How far the current discharge run is toward a confident estimate; nil unless the forecast is `.learning`
+  /// on a percent-reporting, discharging device.
+  public static func learningProgress(_ readings: [Reading], now: Date) -> LearningProgress? {
+    guard forecast(readings, now: now) == .learning else { return nil }
+    let sorted = readings.sorted { $0.observedAt < $1.observedAt }
+    guard let latest = sorted.last, case .percent = latest.level, !latest.charging,
+      let run = dischargeRuns(sorted).last, let first = run.first, let last = run.last
+    else { return nil }
+    return LearningProgress(days: max(0, now.timeIntervalSince(first.t) / 86_400), drop: Int(first.p - last.p))
+  }
+
   struct Point: Hashable {
     var t: Date
     var p: Double

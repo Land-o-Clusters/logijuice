@@ -12,10 +12,12 @@ public struct SnapshotDevice: Hashable, Sendable, Codable, Identifiable {
   public var forecast: ForecastResult
   public var alerting: Bool
   public var tint: IconTint
+  /// Present while the forecast is learning, to say how far along it is.
+  public var learning: LearningProgress?
 
   public init(id: DeviceID, name: String, nickname: String?, kind: DeviceKind, level: BatteryLevel?,
               charging: Bool, lastSeen: Date?, live: Bool, forecast: ForecastResult, alerting: Bool,
-              tint: IconTint) {
+              tint: IconTint, learning: LearningProgress? = nil) {
     self.id = id
     self.name = name
     self.nickname = nickname
@@ -27,6 +29,7 @@ public struct SnapshotDevice: Hashable, Sendable, Codable, Identifiable {
     self.forecast = forecast
     self.alerting = alerting
     self.tint = tint
+    self.learning = learning
   }
 
   public var displayName: String {
@@ -81,7 +84,7 @@ public enum SnapshotBuilder {
         id: r.info.id, name: r.info.name, nickname: r.nickname, kind: r.info.kind, level: latest?.level,
         charging: latest?.charging ?? false, lastSeen: latest?.observedAt, live: liveDevices.contains(r.info.id),
         forecast: Forecaster.forecast(r.readings, now: now), alerting: alerting.contains(r.info.id),
-        tint: tints[r.info.id] ?? .none)
+        tint: tints[r.info.id] ?? .none, learning: Forecaster.learningProgress(r.readings, now: now))
     }.sorted {
       ($0.level?.equivalentPercent ?? 101, $0.displayName) < ($1.level?.equivalentPercent ?? 101, $1.displayName)
     }

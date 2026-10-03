@@ -53,7 +53,18 @@ public enum Format {
 
   /// Secondary line used by the menu, settings and widget: forecast, plus staleness when not live.
   public static func subtitle(_ d: SnapshotDevice, now: Date) -> String {
-    [forecast(d.forecast), d.live ? nil : seen(d.lastSeen, now: now)].compactMap { $0 }.joined(separator: " · ")
+    let estimate = d.learning.map(learning) ?? forecast(d.forecast)
+    return [estimate, d.live ? nil : seen(d.lastSeen, now: now)].compactMap { $0 }.joined(separator: " · ")
+  }
+
+  public static func learning(_ p: LearningProgress) -> String {
+    let daysLeft = Forecaster.minimumSpan / 86_400 - p.days
+    if daysLeft > 0 {
+      let n = max(1, Int(daysLeft.rounded(.up)))
+      return "learning · first estimate in ~\(n) \(n == 1 ? "day" : "days")"
+    }
+    let dropLeft = max(1, Int(Forecaster.minimumDrop) - p.drop)
+    return "learning · after another \(dropLeft)% drop"
   }
 
   public static func notificationBody(level: BatteryLevel, forecast: ForecastResult) -> String {

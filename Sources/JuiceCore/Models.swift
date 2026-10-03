@@ -165,3 +165,14 @@ public enum ForecastResult: Hashable, Sendable, Codable {
   case estimate(daysLeft: Double, emptyAt: Date)
   case unavailable
 }
+
+/// Progress of the current discharge run toward the forecaster's thresholds (2 days, 10 points).
+public struct LearningProgress: Hashable, Sendable, Codable {
+  public var days: Double
+  public var drop: Int
+
+  public init(days: Double, drop: Int) {
+    self.days = days
+    self.drop = drop
+  }
+}
