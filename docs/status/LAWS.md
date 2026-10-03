@@ -16,9 +16,19 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **The menu bar icon is the device's own silhouette used as a battery gauge** (owner, 2026-10-03). A battery glyph
   reads as the Mac's own battery. Only the filled part and the percentage take the alert color.
 - **Menu bar pins are per Mac** and not synced (menu bar space differs per Mac).
+- **Alert colors are per level** (none/yellow/red; defaults Low yellow, Very low and Critical red). Only the fill and
+  the percentage take the color; the empty part stays neutral.
+- **Battery health is an estimate and says so.** It's inferred from runs and charge gains, because the protocol reports
+  no capacity or cycles. It's shown only after 3 full charges; the trend only after 6. The drain alert is opt-in and
+  off by default.
+- **Untested hardware is labelled untested** in the receiver catalog (`verified: false`) and in the README until a
+  hardware run proves it.
 - **Only `.local` readings fire alerts.** Synced readings update displays and forecasts only.
 - **No telemetry, no network.** The only data leaving the Mac is the owner's own iCloud Drive file
   (`iCloud Drive/logijuice/<hardware-UUID>.json`, one per Mac, each Mac writes only its own).
+- **No personal identifiers in the repo.** Never commit device serials, unit IDs, hardware UUIDs, Mac names or home
+  paths. Fixtures use the fakes `TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1` (including as hex bytes in
+  captures). Scrub a capture before committing it.
 - **Unofficial.** The README always carries: "logijuice is unofficial and not affiliated with or endorsed by Logitech."
 
 ## Platform and build
@@ -30,6 +40,8 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   repo and CLI command **logijuice** (built as product `logijuice-cli`, because APFS is case-insensitive).
 - **App extensions are linked with `-e _NSExtensionMain`**, as Xcode does. Without it the widget traps at launch and
   never reaches the gallery; `scripts/build-app.sh` refuses to package one that doesn't.
+- **App Intents metadata is built outside Xcode:** the App target's release flags emit Swift const values, and
+  `build-app.sh` runs `appintentsmetadataprocessor`, refusing to package without `GetLowestBatteryIntent`.
 - Ad-hoc signing by default. `SIGNING_IDENTITY` switches to Developer ID later. Nothing may depend on an Apple Developer
   membership until the owner buys one.
 
@@ -38,10 +50,14 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **A surface is verified only in its real host:** the widget in the gallery, the icon in the menu bar, alerts in
   Notification Center. "It builds" or "pluginkit lists it" is not "it works". Puddle's widget pattern was copied
   unverified and crashed.
-- **Check UI layout yourself before the owner sees it.** Run the app with
-  `defaults write com.penguinspecz.logijuice debugSettingsSnapshotPath /tmp/x.png`; the settings window writes a PNG
-  plus metrics. On macOS 27 a grouped `Form` needs ≥ ~744pt of width, and controls inside custom Form rows need
-  `.labelsHidden()` with explicit labels.
+- **Check UI layout yourself before the owner sees it.** `defaults write com.penguinspecz.logijuice
+  debugSettingsSnapshotPath /tmp/x.png` writes a PNG plus metrics of the settings window. It shows layout only: glass
+  and behind-window blur don't render into it, so materials need an owner screenshot. The computer-use tools can't see
+  LogiJuice (menu-bar-only app).
+- **Settings uses a custom glass layout, not a grouped `Form`.** On macOS 27 a grouped Form needs ≥ ~744pt, and its
+  rows grow label columns.
+- **Never fade the window's blur by more than ~5%** (`NSVisualEffectView.alphaValue`). Fading cuts holes and the sharp
+  desktop shows through. For more translucency, change the material.
 - **Run checks bare, capture the exit code, commit only on 0.** Never `check | tail && git commit`: the `&&` reads the
   pipe's status, not the check's.
 - **Commit with the pathspec on the commit:** `git commit -m "…" -- <paths>`. Use `git add -- <path>` only for a file
@@ -51,5 +67,6 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **STATE.md is updated as work happens.** The §0 banner is replaced in place (never stacked); it stays under 32 KB.
   The handoff is amortized, never written at clear time.
 - **Decisions are ruled and recorded** in a committed doc with a one-line rationale. The owner overrules explicitly.
-- **Owner-tier, always ask first:** creating, publishing or changing visibility of the GitHub repo; spending money; any
-  hardware write; scope changes to the spec.
+- **Owner-tier, always ask first:** creating, publishing, deleting or changing visibility of the GitHub repo; spending
+  money; any hardware write; scope changes to the spec. Before going public, recreate the repo from scrubbed history
+  (GitHub keeps old SHAs fetchable after a force-push).
