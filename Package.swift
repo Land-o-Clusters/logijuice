@@ -6,6 +6,7 @@ let package = Package(
   platforms: [.macOS(.v14)],
   products: [
     .executable(name: "LogiJuice", targets: ["LogiJuice"]),
+    .executable(name: "LogiJuiceWidgetExtension", targets: ["LogiJuiceWidgetExtension"]),
     .executable(name: "logijuice-cli", targets: ["LogiJuiceCLI"]),
   ],
   targets: [
@@ -22,6 +23,12 @@ let package = Package(
         .linkedFramework("WidgetKit"), .linkedFramework("ServiceManagement"),
         .linkedFramework("UserNotifications"),
       ]),
+    .executableTarget(
+      name: "LogiJuiceWidgetExtension",
+      dependencies: ["JuiceCore", "JuiceStore"],
+      path: "WidgetExtension",
+      exclude: ["Info.plist"],
+      linkerSettings: [.linkedFramework("WidgetKit")]),
     .testTarget(name: "JuiceCoreTests", dependencies: ["JuiceCore"]),
     .testTarget(name: "JuiceStoreTests", dependencies: ["JuiceStore", "JuiceCore"]),
     .testTarget(name: "JuiceCLIKitTests", dependencies: ["JuiceCLIKit", "JuiceStore", "JuiceCore"]),
