@@ -4,11 +4,14 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 
 ## §0 Current state (2026-10-03, juice-arch re-booted 22:28 UTC)
 
-**Phase:** v1 feature-complete. Plan Tasks 0–18 are done; Task 19 Steps 1–2 are done. What's left: **Task 19 Step 3**
+**Phase:** v1 feature-complete, plus the charging follow-up (`edfd79b`: green charging fill and bolt, 60 s re-read
+while charging). It's installed to `/Applications` and running; the green and the rising fill need a real charge to verify.
+**Before that:** v1 feature-complete. Plan Tasks 0–18 are done; Task 19 Steps 1–2 are done. What's left: **Task 19 Step 3**
 (the manual checklist, owner-run) and the hub-switch check, plus the post-plan items under Next.
 
 **Verified (2026-10-03):**
-- `swift test` at `674d204` (re-run on boot): **145 passed, 0 failed**, rc 0 (Store 9, HID 34, Core 96, CLI 6). `scripts/build-app.sh` rc 0: universal, ad-hoc, with widget,
+- `swift test` at `edfd79b`: **150 passed, 0 failed**, rc 0 (Store 9, HID 34, Core 101, CLI 6). `build-app.sh` rc 0.
+  Icon rendered offline in light and dark: pale green on dark, deeper green on light; idle gauges unchanged. `scripts/build-app.sh` rc 0: universal, ad-hoc, with widget,
   `Metadata.appintents` and icon; it refuses to package a widget without `_NSExtensionMain` or without intents metadata.
   The app is installed to `/Applications/LogiJuice.app` from `71e9da1` and is running.
 - Owner-verified on hardware: receiver and both devices, notifications, the Low nudge waiting for a lock, the widget in
@@ -21,9 +24,10 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   `logijuice-pre-scrub.bundle` sits in the session scratchpad only (it contains the real IDs; never push it).
 - Manual checklist (`docs/manual-checklist.md`, committed on boot: it was cited here but never in git; the plan's
   checkboxes for Tasks 0–18 and Task 19 Steps 1–2 were also ticked then, after being left blank):
-  - Passed: #1, #2, #9, #10, #12, #14. #14 caught the CLI learning text, which was fixed in `dd0f4a9`.
-  - Owner still to report: **#6 (sleep/wake), #7 (charging bolt), #11 (snooze, then escalation), #13 (rename)**.
-  - Parked to **Mon 2026-10-05**: #4, #5, #15 (hub switch, second Mac).
+  - Passed: #1, #2, #7, #9, #10, #12, #14. #14 caught the CLI learning text, which was fixed in `dd0f4a9`.
+  - #11 (snooze, then escalation) and #13 (rename): **juice-arch runs these with sleight** (owner, 2026-10-03). There's
+    no 4% debug button; simulate 8% (Very low) after snoozing Low is the escalation to check.
+  - Parked to **Mon 2026-10-05**: #4, #5, #6, #15 (hub switch, sleep/wake, second Mac).
   - #3 isn't testable (Options+ is a KeepAlive agent). #8 happens on the next full charge.
 
 **In flight:**
@@ -39,11 +43,14 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
 - Health tracking started 2026-10-03 22:24 UTC on both devices. The forecast leaves "learning" around Mon 2026-10-05;
   health appears after 3 full charges.
 
+- **sleight plugin installed** for Claude Code (user scope, local marketplace `~/Projects/sleight`), 2026-10-03.
+  A session needs `/reload-plugins` (or a restart) to get its tools.
+
 **Next action:**
-1. Collect the owner's checklist results for #6/#7/#11/#13. Fix anything that fails test-first. Then revert the test
-   settings.
-2. Mon 2026-10-05: hub switch with the owner (#4, #5, #15).
-3. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
+1. Run #11 and #13 with sleight. Fix anything that fails test-first. Then revert the test settings.
+2. On the next real charge, confirm the fill rises while charging (log: `charging: re-reading every 60 s`).
+3. Mon 2026-10-05: hub switch and sleep/wake with the owner (#4, #5, #6, #15).
+4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
    `build-app.sh`, make a release zip, fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
    recreate the GitHub repo from the scrubbed history (old SHAs stay fetchable on GitHub otherwise) and make it public.
 
