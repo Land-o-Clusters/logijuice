@@ -135,6 +135,12 @@ final class SnapshotFormatTests: XCTestCase {
     XCTAssertEqual(Format.statusLine(d, now: t0), "MX Keys: 42%, ~9 days")
   }
 
+  func testStatusLineShowsLearningProgress() {
+    var d = device(level: .percent(95))
+    d.learning = LearningProgress(days: 0.1, drop: 5)
+    XCTAssertEqual(Format.statusLine(d, now: t0), "MX Keys: 95%, learning · first estimate in ~2 days")
+  }
+
   func testBatterySymbolsAndKindSymbols() {
     XCTAssertEqual(Format.batterySymbol(percent: nil), "battery.0percent")
     XCTAssertEqual(Format.batterySymbol(percent: 10), "battery.0percent")

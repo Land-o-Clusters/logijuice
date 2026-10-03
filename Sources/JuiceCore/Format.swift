@@ -93,7 +93,7 @@ public enum Format {
   public static func statusLine(_ d: SnapshotDevice, now: Date) -> String {
     var line = "\(d.displayName): \(d.level.map(level) ?? "unknown")"
     if d.charging { line += " (charging)" }
-    if let f = forecast(d.forecast) { line += ", \(f)" }
+    if let f = d.learning.map(learning) ?? forecast(d.forecast) { line += ", \(f)" }
     if !d.live { line += ", \(seen(d.lastSeen, now: now))" }
     return line
   }
