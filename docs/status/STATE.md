@@ -11,7 +11,8 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   `ed186d4`. Tasks 1–13 `5d06b82`…`10386a7`; app `69a2e2a`; widget fix `d1a3fab` (owner saw it in the gallery);
   redesign `b06c3ae`; sync + settings `607649c`; settings clipping fix `9b47058`; settings polish `06b27d5` (alert bar,
   device gauge rows); app icon `bee399c`; Shortcuts `63cba5f` (App Intents metadata built by build-app.sh outside Xcode).
-- `swift test` at `63cba5f`: **120 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
+  Learning progress `e3beec0`; Liquid Glass settings `f2d9cf4` (owner: "looks nice"; backdrop opacity 62%, may be tuned).
+- `swift test` at `f2d9cf4`: **126 passed, 0 failed**. build-app.sh rc 0 (universal, ad-hoc, widget + Metadata.appintents
   + icon). Installed to /Applications at `63cba5f`.
 - Owner-verified on hardware: receiver + both devices, notifications, Low nudge waits for lock, the widget in the
   gallery, three menu bar gauges, hover feedback, settings layout (pre-polish).
@@ -24,7 +25,7 @@ What is true NOW. Replace §0 in place; never stack banners. Rules that hold alw
   Revert after the checklist: `defaults delete com.penguinspecz.logijuice debugMenu`, then "Debug: forget Test Mouse".
 - No background jobs (the log stream hit its time limit and is not needed).
 
-**Next action:** owner checks the Shortcuts actions, the polished settings window and the icon. Then check D (hub
+**Next action:** owner confirms the lighter window transparency. Shortcuts, icon and Options+ were confirmed 2026-10-03. Then check D (hub
 switch) and the Task 19 Step 3 manual checklist (`docs/manual-checklist.md`) with the owner, then revert the test
 settings.
 
