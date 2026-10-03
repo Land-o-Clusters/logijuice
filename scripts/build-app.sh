@@ -43,6 +43,7 @@ cp "$BIN/LogiJuice" "$APP/Contents/MacOS/LogiJuice"
 cp "$BIN/logijuice-cli" "$APP/Contents/Resources/bin/logijuice"
 chmod 0755 "$APP/Contents/Resources/bin/logijuice"
 cp LICENSE "$APP/Contents/Resources/LICENSE"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"  # regenerate: swift scripts/make-icon.swift
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -54,6 +55,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <key>CFBundleDisplayName</key><string>LogiJuice</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleDevelopmentRegion</key><string>en</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundleShortVersionString</key><string>$VERSION</string>
 <key>CFBundleVersion</key><string>$BUILD_NUMBER</string>
 <key>CFBundleURLTypes</key><array><dict>
