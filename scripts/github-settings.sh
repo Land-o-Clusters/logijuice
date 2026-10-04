@@ -33,6 +33,10 @@ step "protect main (no force push, no deletion)" \
  "restrictions": null, "allow_force_pushes": false, "allow_deletions": false}
 JSON
 
+step "label used by the device-report issue template" \
+  gh label create hardware --repo "$REPO" --force --color 5319e7 \
+    --description "A receiver or device report, usually with a debug capture"
+
 step "private vulnerability reporting" \
   gh api -X PUT "repos/$REPO/private-vulnerability-reporting"
 
