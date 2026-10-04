@@ -58,7 +58,8 @@ communicate with the app". `linkd` logs `Unable to get teamId` and then `Rejecti
 requiresValidatedBundle`. App Intents need a Team ID, which ad-hoc signing lacks. Task 18 only checked that the
 actions appear. The owner chose to drop the actions from unsigned builds, and that's done (README, spec and
 LAWS updated). An unsigned build has no intents or metadata, and a forced build (`LOGIJUICE_APP_INTENTS=1`) still
-produces them. The release 0.1.0 zip still contains the broken actions, so a 0.1.1 release would remove them. The owner's test shortcut "LogiJuice
+produces them. Release [v0.1.1](https://github.com/Land-o-Clusters/logijuice/releases/tag/v0.1.1) (owner approved) removes them: build 2,
+sha256 `00514f1b…2a65`, downloaded asset matches the cask, `brew fetch` and `brew audit` pass, and it's installed here. The owner's test shortcut "LogiJuice
 test" is still in Shortcuts.
 
 **Next action:**
