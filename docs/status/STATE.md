@@ -47,10 +47,18 @@ and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05, and health
   shows after 3 full charges.
 
-**Delegated to Codex (owner, 2026-10-04).** It pushes CI by lifting and restoring the org `.yml` ruleset, and
-deletes the pre-scrub bundle. It also runs two hardware checks: a browser download approved with Open Anyway, and
-Shortcuts "Get Lowest Battery". The owner pastes Codex's results back,
-and juice-arch records them here and in the checklist. Signing stays unsigned (owner reconfirmed).
+**Codex results (2026-10-04, verified by juice-arch where possible).** The pre-scrub bundle is deleted (Spotlight
+doesn't find another copy). CI is live: `9178a6e`, `5542c52` and an empty trigger commit `da6ce00` are on `main`, run
+37170563500 passed both jobs, Actions is enabled for the repo, and ruleset 22105960 is back to `active`. The browser
+download was blocked until Open Anyway, after which the bundled `logijuice status` returned rc 0. Signing stays
+unsigned (owner reconfirmed).
+
+**Shortcuts actions can't run while unsigned.** Running "Get Lowest Battery" fails with "Shortcuts couldn't
+communicate with the app". `linkd` logs `Unable to get teamId` and then `Rejecting invalid client due to
+requiresValidatedBundle`. App Intents need a Team ID, which ad-hoc signing lacks. Task 18 only checked that the
+actions appear. Owner decision pending: drop the actions from unsigned builds and point the README at
+`logijuice status --json` in a Run Shell Script action, until signing exists. The owner's test shortcut "LogiJuice
+test" is still in Shortcuts.
 
 **Next action:**
 1. Owner: lift the org `.yml` ruleset, then juice-arch pushes `ci` and watches the first run.

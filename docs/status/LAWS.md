@@ -52,6 +52,8 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   swallowed.
 - **App extensions are linked with `-e _NSExtensionMain`**, as Xcode does. Without it the widget traps at launch and
   never reaches the gallery. `scripts/build-app.sh` refuses to package one that doesn't.
+- **App Intents only run in an app with a Team ID.** `linkd` rejects an ad-hoc-signed app (`requiresValidatedBundle`),
+  so the actions appear in Shortcuts but fail to run. A Shortcuts check must run an action, not just find it.
 - **App Intents metadata is built outside Xcode:** the App target's release flags emit Swift const values, and
   `build-app.sh` runs `appintentsmetadataprocessor`, refusing to package without `GetLowestBatteryIntent`.
 - **Releases are ad-hoc signed** (owner, 2026-10-04). The owner's personal name and RoleGauge are never used to
