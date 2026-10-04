@@ -24,6 +24,12 @@
 > logijuice is unofficial and not affiliated with or endorsed by Logitech. "Logitech", "Logi Bolt", "Unifying" and
 > "Logi Options+" are trademarks of Logitech.
 
+<p align="center">
+  <img src="docs/assets/menu.png" width="260" alt="The LogiJuice menu, listing Desk Mouse at 70% and MX Keys S at 95% above the Settings and Quit items">
+  &nbsp;
+  <img src="docs/assets/widgets.png" width="476" alt="The small widget with a green ring around 70% for Desk Mouse, and the medium widget listing Desk Mouse at 70% and MX Keys S at 95%">
+</p>
+
 ## Features
 
 - The menu bar icon is the outline of your lowest device, a mouse or a keyboard, filled to its battery level. By default it shows up only while a battery is low or charging. Pin a device in Settings to keep it in the menu bar.
