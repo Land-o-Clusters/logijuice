@@ -1,9 +1,9 @@
-# logijuice — design spec
+# logijuice design spec
 
 - **Date:** 2026-10-03
 - **Status:** draft, awaiting owner review
 - **Repo:** `~/Projects/logijuice` → later `Land-o-Clusters/logijuice` (private first)
-- **Platform:** macOS 14+, Apple Silicon and Intel, Swift package (layout modeled on Puddle)
+- **Platform:** macOS 14+ on Apple Silicon and Intel, as a Swift package laid out like Puddle
 
 > logijuice is unofficial and not affiliated with or endorsed by Logitech. "Logitech", "Logi Bolt",
 > "Unifying" and "Logi Options+" are Logitech trademarks.
@@ -11,14 +11,14 @@
 ## 1. Problem and intent
 
 Logitech keyboards and mice connected through a **Logi Bolt receiver** (instead of native Bluetooth)
-do not appear in macOS's battery UI. The only way to see their battery is to open Logi Options+, and
-its low-battery notice is a single, easily missed toast at 10%.
+do not appear in macOS's battery UI. To see their battery the owner has to open Logi Options+, and
+its low-battery notice is one easily missed toast at 10%.
 
-The owner uses the receiver in a USB-C hub that moves between Macs, which is exactly why Bluetooth
-is not an option: the receiver makes keyboard and mouse follow the hub with no re-pairing.
+The owner uses the receiver in a USB-C hub that moves between Macs. Bluetooth would mean re-pairing on
+every move, while the receiver makes keyboard and mouse follow the hub.
 
 **logijuice fills that one gap:** battery visibility and reliable low-battery warnings for
-receiver-connected Logitech devices. Hyper-simple on the surface, quietly clever underneath.
+receiver-connected Logitech devices. It should look simple and do its careful work out of sight.
 
 ### Success criteria
 
@@ -37,7 +37,7 @@ receiver-connected Logitech devices. Hyper-simple on the surface, quietly clever
 
 ## 2. Architecture
 
-One process: a menu-bar-only app (`LSUIElement`, no Dock icon) registered as a login item. It owns
+logijuice runs as one process, a menu-bar-only app (`LSUIElement`, hidden from the Dock) registered as a login item. It owns
 the receiver connection, alerting, the menu bar, settings and sync. The widget and the CLI are
 read-only consumers of a snapshot file the app publishes.
 
@@ -49,7 +49,7 @@ on macOS).
 
 | Target | Responsibility | Side effects |
 |---|---|---|
-| `JuiceHID` | HID++ transport and protocol: receiver discovery, device enumeration, feature lookup, battery, name/type, identity, event stream | USB HID |
+| `JuiceHID` | HID++ transport and protocol. Finds receivers and their devices, reads each device's features (battery, name/type, identity) and streams events | USB HID |
 | `JuiceCore` | Pure logic: models, alert engine, nudge scheduler, forecast, sync merge | none |
 | `JuiceStore` | Settings, reading history, snapshot publishing, iCloud Drive file I/O | disk |
 | `LogiJuice` (app) | Composition root, menu bar, settings window, notifications, moment signals, login item, App Intents | UI/system |
@@ -57,8 +57,8 @@ on macOS).
 | `logijuice` (CLI) | `status`, `devices`, `debug capture` | reads snapshot; `debug capture` opens HID |
 
 `JuiceCore` depends on nothing. `JuiceHID` and `JuiceStore` depend only on `JuiceCore` models. The app
-composes all of them. Every `JuiceCore` component is a value-in/value-out type that can be unit-tested
-without hardware, a clock, or a disk: the clock and the current settings are injected.
+composes all of them. Every `JuiceCore` component is a value-in/value-out type with the clock and the
+current settings injected, so unit tests don't need hardware, a real clock or a disk.
 
 ### Data flow
 
@@ -96,13 +96,13 @@ receiver event / wake / connect
 **Transport:** `IOHIDManager` matching the receiver's vendor-defined HID++ collection. Short (`0x10`,
 7 B) and long (`0x11`, 20 B) reports. Opened **non-exclusively** so Options+ keeps working.
 
-**Coexistence:** every request carries logijuice's own software ID in the low nibble of the
+**Coexistence:** every request holds logijuice's own software ID in the low nibble of the
 function byte (a fixed non-zero value distinct from Options+'s; chosen during bring-up by observing
 Options+ traffic). Replies with a foreign software ID are ignored. Events (software ID 0) are consumed
 by everyone.
 
-**Per device (indices 1–6 on the receiver):**
-1. Pairing slot info from the receiver (Bolt pairing registers, following Solaar's Bolt implementation)
+**Per device (indices 1 to 6 on the receiver):**
+1. Pairing slot info from the receiver (Bolt pairing registers, following Solaar's Bolt code)
    gives which slots are occupied, the model/wireless PID and the device kind, without waking the device.
 2. Root `0x0000` `getFeature` resolves feature indices, cached per device identity.
 3. `0x0005` Device Name & Type gives the marketing name ("MX Master 3S") and type (keyboard/mouse/…).
@@ -111,21 +111,21 @@ by everyone.
    Falls back to `0x1000` Battery Status. Devices that expose neither are shown as "battery not reported".
 
 **Events, no polling:** subscribe to receiver connection notifications (device wake/link up) and
-battery status broadcast events. On link-up, re-read battery. One low-frequency safety re-read
-(every 30 min; see docs/bringup-notes.md) covers missed events and receivers whose notification flags are off.
-Amended 2026-10-03 (owner): while a device charges it is re-read every 60 s, so the gauge fills as it charges.
+to the battery events that devices broadcast. On link-up, re-read battery. One low-frequency safety re-read
+(every 30 min, see docs/bringup-notes.md) covers missed events and receivers whose notification flags are off.
+Amended 2026-10-03 (owner): while a device charges it is re-read every 60 s. The gauge then fills as it charges.
 
-**Timeouts:** 2 s per request. A sleeping device does not answer; that is normal and not an error.
-The request is dropped and retried on the next link-up event. No request ever blocks the main thread.
+**Timeouts:** 2 s per request. A sleeping device does not answer. That is normal and not an error.
+The request is dropped and retried on the next link-up event. Requests never block the main thread.
 
 **Hotplug:** receiver attach/detach (the hub switching between Macs) is a first-class event: detach
-emits `ReceiverDeparted` (used by the "leaving this desk" nudge, §4); attach triggers full enumeration.
+emits `ReceiverDeparted` (used by the "leaving this desk" nudge, §4). Attach triggers full enumeration.
 
 **Unknowns to verify in the bring-up spike (task 0 of the plan):**
 - exact HID usage page/usage of the HID++ collection on the Bolt receiver under macOS
 - whether opening it triggers the Input Monitoring TCC prompt (expected: no, since it is vendor-defined)
 - Bolt pairing-register layout
-- which battery feature the owner's devices expose, and their percentage granularity
+- which battery feature the owner's devices expose, and their percentage step size
 
 `logijuice debug capture` records raw frames (request/response/event, timestamped) to a JSON file.
 Captures from the owner's devices become `JuiceHID` parser test fixtures.
@@ -155,7 +155,7 @@ A global profile, with optional per-device overrides. A profile is an ordered li
 | repeat | `.never` / `.everyHours(Int)` / `.daily` |
 | tintsIcon | bool (red menu bar icon) |
 
-**Defaults:** Low ≤20% · next moment · never · no tint. Very low ≤10% · now · never · red.
+**Defaults:** low ≤20% · next moment · never · no tint. Very low ≤10% · now · never · red.
 Critical ≤5% · now · daily · red.
 
 Devices that only report words map them as: `critical` → Critical level, `low` → Very low level,
@@ -184,19 +184,19 @@ Devices that only report words map them as: `critical` → Critical level, `low`
 - **max wait** elapsed (default 8 h), at which point it is delivered anyway
 
 A held nudge is dropped if the device starts charging. It is superseded if a `.now` level fires for
-the same device. Moment detection lives in the app. The scheduler itself is pure:
+the same device. The app detects moments. The scheduler itself is pure:
 `schedule(decision, now)`, `onMoment(kind, now) -> [Delivery]`, `onTick(now) -> [Delivery]`.
 
 ### Notification content
 
 Title: device nickname. Body: `12% · about 2 days left` (forecast clause only when confident).
-Actions: **Snooze 1 day**, **Open Logi Options+** (only if `/Applications/logioptionsplus.app` exists).
+Actions are **Snooze 1 day**, **Open Logi Options+** (only if `/Applications/logioptionsplus.app` exists).
 
 ## 5. `JuiceCore`: forecast
 
 - Input: the merged readings for one device (local + synced), percent-reporting devices only.
 - Segment history into **discharge runs**, split wherever charging occurs or the level rises.
-- Fit the **current** run with a Theil–Sen slope (robust to coarse steps and outliers) on calendar
+- Fit the **current** run with a Theil-Sen slope, which tolerates coarse steps and outliers, on calendar
   time, so nights and weekends are naturally included.
 - **Confident** when the current run spans ≥10 percentage points of drop **and** ≥2 days. Before that,
   borrow the previous run's slope if that one was confident. Otherwise the state is `.learning`.
@@ -231,10 +231,10 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 ### Menu bar (`MenuBarExtra`)
 
-- Mode: **Auto** (default: visible while any device is at or below its first enabled level, or is
+- Mode is **Auto** (default, visible while any device is at or below its first enabled level, or is
   charging), **Always**, **Never**.
 - Glyph (amended 2026-10-03, owner's choice): the lowest device's **own silhouette** (mouse, keyboard, …) used as its
-  battery gauge: the solid shape dimmed for "empty", solid up to the level (tall glyphs fill bottom→top, wide ones
+  battery gauge: the silhouette dimmed for "empty", solid up to the level (tall glyphs fill bottom→top, wide ones
   left→right). A battery glyph was rejected because it reads as the Mac's own battery. Red when any fired level has
   `tintsIcon`. The level appears as text beside it while the lowest device is alerting, and a bolt while it charges.
   While charging, the fill and the bolt are green (amended 2026-10-03, owner).
@@ -249,7 +249,7 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
    **Custom alerts** toggle that reveals that device's level overrides.
 2. **Alerts**: one row per level: `[toggle] Name · trigger · timing`. A collapsed **Advanced** group
    holds repeat, max wait, end-of-day time and the fully-charged toggle.
-3. **General**: menu bar mode, launch at login (`SMAppService`), iCloud sync, Open Logi Options+.
+3. **General**: menu bar mode and launch at login (`SMAppService`), plus iCloud sync and Open Logi Options+.
 
 ### Widget
 
@@ -271,7 +271,7 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 ### Snapshot file
 
-`~/Library/Application Support/logijuice/snapshot.json` (amended 2026-10-03; was the app-group container):
+`~/Library/Application Support/logijuice/snapshot.json` (amended 2026-10-03, was the app-group container):
 `{ schema: 1, generatedAt, receiverPresent, devices: [{ id, name, nickname, kind, level, charging,
 lastSeen, live, forecast }] }`. Written atomically. It is the only contract between the app, the
 widget and the CLI.
@@ -290,7 +290,7 @@ widget and the CLI.
 | iCloud Drive missing / file corrupt | Sync disabled with a reason, or the corrupt remote file skipped; local operation unaffected |
 | Clock jumps / sleep gaps | Forecast uses calendar time; the scheduler re-evaluates on wake |
 
-Logging uses `os.Logger` (subsystem `com.penguinspecz.logijuice`). No telemetry.
+Logging uses `os.Logger` (subsystem `com.penguinspecz.logijuice`) and never leaves the Mac.
 
 ## 9. Testing
 
@@ -300,14 +300,14 @@ Logging uses `os.Logger` (subsystem `com.penguinspecz.logijuice`). No telemetry.
   10% steps, outliers, charge mid-run, too-little data → `.learning`); `SyncMerge` (union, dedupe,
   newest-wins metadata, corrupt input).
 - **`JuiceHID`**: frame encode/decode and feature parsing against captured fixtures from the owner's
-  real devices; a fake transport for the request/timeout/software-ID-filtering logic.
-- **`JuiceStore`**: snapshot and sync file round-trips; atomic writes; schema version handling.
-- **Manual hardware checklist**: Options+ running and quit; hub switch away and back; sleep/wake;
-  charging start and finish; low battery (forced with a fake reading through a debug menu item).
+  real devices. A fake transport tests requests, timeouts and software-ID filtering.
+- **`JuiceStore`**: snapshot and sync files round-trip through atomic writes, with schema versions checked.
+- **Manual hardware checklist**: running with Options+ and without it, hub switch away and back, sleep/wake, and
+  charging start and finish. Low battery is forced with a fake reading through a debug menu item.
 
 ## 10. Work split for Codex handoffs
 
-The implementation plan tags each task:
+The plan tags each task:
 - **Codex-ready:** fully specified by tests or schemas, no hardware: `JuiceCore` (all of it),
   `JuiceStore`, the CLI, the widget, the settings UI, App Intents.
 - **Needs the Mac and hardware:** the bring-up spike, `JuiceHID` transport and enumeration, notification

@@ -1,77 +1,77 @@
-# logijuice — STATE
+# logijuice STATE
 
-What is true NOW. Replace §0 in place; never stack banners. Rules that hold always live in `LAWS.md`.
+What is true NOW. Replace §0 in place and never stack banners. Rules that hold always are in `LAWS.md`.
 
-## §0 Current state (2026-10-04 00:05 UTC)
+## §0 Current state (2026-10-04 00:30 UTC)
 
-**Widget/Shortcuts fix landed (`b8dfffb`):** the app's snapshot writes to the app-group container failed with EPERM
-(silently), so the widget and Shortcuts had no data. One snapshot now lives in Application Support; the widget reads
-it via a read-only sandbox exception; save errors are logged. Owner confirmed both widget sizes show live data.
+**Repo hygiene pass (owner asked "fix it all"):** `debug capture` now redacts serial numbers and unit IDs (`b5cf2c5`,
+verified on a hardware capture). `scripts/github-settings.sh` applied the description, topics, wiki and projects off,
+delete-on-merge and `main` protection. README, issue templates, spec, bring-up notes, checklist, LAWS and STATE pass
+Vale with 0 findings, and an agent is doing the same for the plan. CI is written and waits on the local `ci` branch
+(`e61cdfc`) because the org ruleset blocks `.yml` pushes.
 
-**Phase:** v1 feature-complete (plan Tasks 0–18 done, Task 19 Steps 1–2 done). Now in **Task 19 Step 3**, the manual
-checklist (`docs/manual-checklist.md`). Charging follow-up landed (`edfd79b`): a charging device's fill and bolt are
-green, and charging devices are re-read every 60 s so the fill rises. It still needs a real charge to verify.
+**Phase:** v1 feature-complete (plan Tasks 0 to 18 done, Task 19 Steps 1 and 2 done). Now in **Task 19 Step 3**, the
+manual checklist (`docs/manual-checklist.md`). The charging follow-up (`edfd79b`) makes a charging device's fill and
+bolt green and re-reads it every 60 s, which still needs a real charge to verify.
 
-**Verified (2026-10-03):**
-- `swift test` at `b8dfffb`: **151 passed, 0 failed**, rc 0 (Store 10, HID 34, Core 101, CLI 6). `scripts/build-app.sh`
-  rc 0 (universal, ad-hoc, widget with `_NSExtensionMain`, `Metadata.appintents`, icon). The icon was rendered offline in
-  light and dark: pale green on a dark bar, deeper green on a light one, idle gauges unchanged.
-- **Installed:** `/Applications/LogiJuice.app` built from `b8dfffb`, running. `logijuice status`: mouse 70%, keyboard
-  95%, both learning.
-- Owner-verified on hardware (earlier): receiver and both devices, notifications, Low nudge waits for a lock, widget in
-  the gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback, glass settings.
-- Key commits: spec `0f2a347`, plan `9286109`, bring-up `6426d0d`, app `48e85f2`, widget fix `cf291fc`, Lightspeed/
-  voltage/headset `8c261f2` (untested on hardware), battery health `71e9da1`, charging `edfd79b`.
-- **Secrets scrub done:** history rewritten with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`); all
-  SHAs here are post-rewrite. The pre-scrub bundle lives only in an old session scratchpad (real IDs; never push it).
-- Checklist: **passed** #1, #2, #7, #9, #10, #11, #12, #13, #14. #11 was owner-driven
-  (sleight can't reach the status item or Notification Center); evidence came from `state.json` and `usernoted` logs.
-  macOS silences banners with reason "display shared" while screen capture runs, so a missing banner ≠ a missing
-  alert: check `log show --predicate 'process == "usernoted" AND eventMessage CONTAINS "logijuice"'` first.
-  **Mon 2026-10-05:** #4, #5, #6, #15 (hub switch, sleep/wake, second Mac). #3 isn't testable (Options+ is a
-  KeepAlive agent). #8 comes on the next full charge.
+**Verified:**
+- `swift test` at `b5cf2c5` exits 0 with **155 of 155 passing** (Store 10, HID 34, Core 101, CLI 10).
+  `scripts/build-app.sh` rc 0 (universal, ad-hoc, widget with `_NSExtensionMain`, `Metadata.appintents`, icon).
+- **Installed:** `/Applications/LogiJuice.app` built from `b5cf2c5`, running. `logijuice status` shows the mouse at 70%
+  and the keyboard at 95%, both learning.
+- Widget fix (`b8dfffb`): the app's writes to the app-group container failed with EPERM, so the widget and Shortcuts
+  had no data. The snapshot moved to Application Support, and the owner confirmed both widget sizes show live data.
+- Owner-verified on hardware earlier: receiver and both devices, notifications, the Low nudge waiting for a lock, the
+  widget gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback and the glass settings window.
+- Key commits: spec `0f2a347`, plan `9286109`, bring-up `6426d0d`, app `48e85f2`, widget gallery fix `cf291fc`,
+  Lightspeed/voltage/headset `8c261f2` (untested on hardware), battery health `71e9da1`, charging `edfd79b`.
+- **Secrets scrub done:** history was rewritten with fakes (`TESTKEYS0001`, `TESTMOUSE001`, `A1B2C3D4`, `D4C3B2A1`), and
+  every SHA here is post-rewrite. The pre-scrub bundle exists only in an old session scratchpad with real IDs. Never
+  push it.
+- Checklist **passed** #1, #2, #7, #9 to #14. #11 was owner-driven, with evidence from `state.json` and `usernoted` logs.
+  **Mon 2026-10-05:** #4, #5, #6, #15 (hub switch, sleep/wake, second Mac). #3 can't be tested because Options+ is a
+  KeepAlive agent. #8 comes on the next full charge.
 
 **In flight:**
 - Branch `main`, HEAD = the commit adding this banner, pushed to `origin/main` (`Land-o-Clusters/logijuice`,
-  **private**). juice-arch works in the app-made worktree `claude/boot-juice-arch-*` and fast-forwards `main`.
-- **Test settings:** all reverted (debugMenu deleted, Test Mouse forgotten, nickname cleared).
-- **Background jobs:** none of ours. (A `log stream` with a display/powerd predicate belongs to another session; leave it.)
+  **private**, now protected against force-push and deletion). juice-arch works in the app-made worktree
+  `claude/boot-juice-arch-*` and fast-forwards `main`. Local branch `ci` holds the CI workflow, unpushed.
+- **Plan humanizer pass:** a background agent is rewriting prose in `docs/superpowers/plans/2026-10-03-logijuice.md`
+  until Vale reports 0. Review its diff (prose only, facts unchanged) before committing.
+- **Test settings:** all reverted. The debug menu is off, Test Mouse is forgotten and the nickname is cleared.
+- **Background jobs:** none of ours. A `log stream` with a display/powerd predicate belongs to another session, so
+  leave it alone.
 - **sleight** (owner's tool, `~/Projects/sleight`, owned by the "sleight arch" session) is installed for Claude Code at
-  user scope, now 0.1.1. 0.1.0 had approvals silently declined in the desktop Code tab; 0.1.1 asks via its own macOS
-  panel (Allow / Don't Allow, 5-min timeout). `/reload-plugins` does NOT respawn the MCP server, so it takes a **new
-  session**. Both findings were sent to "sleight arch".
-- Health tracking started 2026-10-03 22:24 UTC; the forecast leaves "learning" around Mon 2026-10-05; health shows after
-  3 full charges.
+  user scope, version 0.1.1. It asks for approval through its own macOS panel (Allow / Don't Allow, 5-minute timeout).
+  An upgrade takes a **new session**, because `/reload-plugins` doesn't respawn its MCP server.
+- Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05, and health
+  shows after 3 full charges.
 
 **Next action:**
-1. Optional, owner: run Shortcuts "Get Lowest Battery" once (same snapshot as the widget; not yet seen on hardware).
-2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
-3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
-4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
-   `build-app.sh`, make a release zip, fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
+1. When the plan agent reports, check `git diff` on the plan for changed facts or code, then commit it.
+2. Optional, owner: run Shortcuts "Get Lowest Battery" once. It reads the same snapshot as the widget but hasn't been
+   seen on hardware since the fix.
+3. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
+4. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
+5. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
+   `build-app.sh`, make a release zip and fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
    recreate the GitHub repo from the scrubbed history and make it public.
 
-**Repo hygiene (2026-10-04):** README rewritten with the humanizer skill and linted with Vale (`.vale.ini` copied
-from sleight; `vale sync` then `vale README.md .github` → 0 findings). Markdown issue templates for device reports and
-bugs. Code of conduct, contributing, security policy and PR template come from the org `.github` repo (community
-profile 100%). MIT LICENSE present. The org ruleset blocks every `*.yml`/`*.yaml` push, so no YAML issue forms or CI.
-
-**Go-public checklist** (after the Apple membership and the owner's yes; settings must be applied to the recreated
-repo, since the old one is deleted):
-- `debug capture --probe` must redact serial numbers and unit IDs before the README invites public uploads.
-- Enable private vulnerability reporting (the org SECURITY.md points reporters at it; private repos can't have it).
-- CI (owner: needs the ruleset lifted, and macOS runners cost minutes): `swift test`, `build-app.sh`, Vale.
-- Topics, disable wiki and projects, delete branches on merge, protect `main`.
+**Go-public checklist** (on the recreated repo):
+- Run `scripts/github-settings.sh`. Private vulnerability reporting is the step that only works once the repo is public.
+- CI: the owner lifts the org ruleset for `.yml`, then push branch `ci` (or cherry-pick `e61cdfc`). Public repos get
+  free macOS minutes, so turning it on after going public doesn't cost anything.
 
 **Open owner decisions:**
-- Going public: needs the Apple membership, then an explicit yes to delete+recreate and flip visibility.
-- Spec adjustments 1–9 (plan header) stand (presented 2026-10-03; owner proceeded).
-- Untested: a freshly powered receiver on a Mac without Options+ may send no events (mitigated by the 30-min re-read).
+- Going public needs the Apple membership, then an explicit yes to delete, recreate and flip visibility.
+- The org ruleset blocks `.yml` pushes. Lifting it (even briefly) is needed for CI.
+- Spec adjustments 1 to 9 (plan header) stand. They were presented 2026-10-03 and the owner proceeded.
+- Untested: a freshly powered receiver on a Mac without Options+ may not send events. The 30-minute re-read covers it.
 
 ## Reading List
 - `docs/superpowers/specs/2026-10-03-logijuice-design.md`: the spec (what and why).
 - `docs/superpowers/plans/2026-10-03-logijuice.md`: the plan (tasks, code, tests, Codex-ready/hardware labels).
 - `docs/bringup-notes.md`: real receiver behavior and byte layouts from Task 0.
 - `docs/status/LAWS.md`: what is true always.
-- `docs/manual-checklist.md`: the owner-run hardware checklist (live: #11/#13 pending, #4/#5/#6/#15 Monday).
+- `docs/manual-checklist.md`: the owner-run hardware checklist (#4, #5, #6, #15 on Monday, #8 on a full charge).
 - `README.md`: the user-facing summary, including the Supported hardware table (what is and isn't tested).
