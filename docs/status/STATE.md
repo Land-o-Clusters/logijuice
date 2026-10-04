@@ -23,7 +23,10 @@ and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
   touch docs, scripts and the cask).
 - Widget fix (`811426d`) and capture redaction (`191bad6`) were verified on hardware.
 - The README header follows sleight's layout and was checked on the GitHub page. Its centered app icon is
-  `docs/assets/logijuice-icon-*.png`, exported from `Resources/AppIcon.icns`.
+  `docs/assets/logijuice-icon-*.png`, exported from `Resources/AppIcon.icns`. Below it are the menu and widget screenshots
+  (`docs/assets/menu.png`, `widgets.png`, cropped from owner screenshots with the debug rows removed).
+- `docs/assets/social-preview.png` (1280×640) is for the owner to upload under the repo's Settings → Social preview,
+  which has no API.
 - Owner-verified on hardware earlier: receiver and both devices, notifications, the Low nudge waiting for a lock, the
   widget gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback and the glass settings window.
 - Key commits (post-rewrite): spec `48eeb46`, plan `03289df`, bring-up `c68e66c`, app `a987c91`, widget gallery fix
