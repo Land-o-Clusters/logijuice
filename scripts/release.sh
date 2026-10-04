@@ -6,7 +6,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-export LOGIJUICE_VERSION="${LOGIJUICE_VERSION:-0.1.0}"
+export LOGIJUICE_VERSION="${LOGIJUICE_VERSION:-0.1.1}"
+export LOGIJUICE_BUILD_NUMBER="${LOGIJUICE_BUILD_NUMBER:-2}"
 ZIP="$ROOT/dist/LogiJuice-$LOGIJUICE_VERSION.zip"
 
 swift test

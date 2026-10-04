@@ -63,7 +63,7 @@ LogiJuice needs macOS 14 or later.
 
 ### Download
 
-Get `LogiJuice-0.1.0.zip` from the [latest release](https://github.com/Land-o-Clusters/logijuice/releases/latest),
+Get the `LogiJuice-<version>.zip` file from the [latest release](https://github.com/Land-o-Clusters/logijuice/releases/latest),
 unzip it and move LogiJuice.app to Applications. The app isn't notarized by Apple, so macOS blocks the first launch.
 Open it once, then click Open Anyway in System Settings → Privacy & Security. macOS also blocks the `logijuice` command
 inside the app until you do.

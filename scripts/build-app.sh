@@ -6,8 +6,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 
-VERSION="${LOGIJUICE_VERSION:-0.1.0}"
-BUILD_NUMBER="${LOGIJUICE_BUILD_NUMBER:-1}"
+VERSION="${LOGIJUICE_VERSION:-0.1.1}"
+BUILD_NUMBER="${LOGIJUICE_BUILD_NUMBER:-2}"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
 ARCH_FLAGS=(--arch arm64 --arch x86_64)
 # Shortcuts actions only run in an app with a Team ID, so they're built only into signed apps.
