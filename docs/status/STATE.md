@@ -25,8 +25,8 @@ and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
 - The README header follows sleight's layout and was checked on the GitHub page. Its centered app icon is
   `docs/assets/logijuice-icon-*.png`, exported from `Resources/AppIcon.icns`. Below it are the menu and widget screenshots
   (`docs/assets/menu.png`, `widgets.png`, cropped from owner screenshots with the debug rows removed).
-- `docs/assets/social-preview.png` (1280×640) is for the owner to upload under the repo's Settings → Social preview,
-  which has no API.
+- The repo's social preview is `docs/assets/social-preview.png` (1280×640), uploaded through Helium with sleight on
+  2026-10-04. GraphQL `usesCustomOpenGraphImage` is true. GitHub has no API to set it.
 - Owner-verified on hardware earlier: receiver and both devices, notifications, the Low nudge waiting for a lock, the
   widget gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback and the glass settings window.
 - Key commits (post-rewrite): spec `48eeb46`, plan `03289df`, bring-up `c68e66c`, app `a987c91`, widget gallery fix
