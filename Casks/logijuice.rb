@@ -7,7 +7,7 @@ cask "logijuice" do
   desc "Unofficial battery levels and alerts for Logi Bolt receiver devices"
   homepage "https://github.com/Land-o-Clusters/logijuice"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "LogiJuice.app"
   binary "#{appdir}/LogiJuice.app/Contents/Resources/bin/logijuice"
