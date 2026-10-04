@@ -67,6 +67,10 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   word swaps. User-facing text is written to pass before it's committed.
 - **GitHub settings come from `scripts/github-settings.sh`**, re-run on any recreated repo. Community files (code of
   conduct, contributing, security, PR template) come from the org `.github` repo, so they aren't duplicated here.
+- **Commits are authored as `penguinspecz`** with the GitHub no-reply email, set in the repo's own git config (git
+  otherwise falls back to the macOS account's full name). The owner's legal name never goes into a commit.
+- **The public history is never rewritten.** `main` is protected against force-push. The one rewrite happened before
+  the repo went public (2026-10-04: scrubbed IDs, author name).
 - **The org ruleset blocks pushing any `*.yml`/`*.yaml`.** Issue templates are Markdown. CI waits on the local `ci`
   branch until the owner lifts the ruleset.
 
@@ -99,5 +103,5 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   under 32 KB. The handoff is written as work goes, not at clear time.
 - **Decisions are ruled and recorded** in a committed doc with a one-line rationale. The owner overrules explicitly.
 - **Owner-tier, always ask first:** creating, publishing, deleting or changing visibility of the GitHub repo, spending
-  money, any hardware write, and scope changes to the spec. Before going public, recreate the repo from scrubbed
-  history (GitHub keeps old SHAs fetchable after a force-push).
+  money, any hardware write, and scope changes to the spec. The repo is public since 2026-10-04,
+  recreated from scrubbed history.
