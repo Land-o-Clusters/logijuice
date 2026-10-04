@@ -6,8 +6,8 @@ What is true NOW. Replace §0 in place and never stack banners. Rules that hold 
 
 **Repo hygiene pass (owner asked "fix it all"):** `debug capture` now redacts serial numbers and unit IDs (`b5cf2c5`,
 verified on a hardware capture). `scripts/github-settings.sh` applied the description, topics, wiki and projects off,
-delete-on-merge and `main` protection. README, issue templates, spec, bring-up notes, checklist, LAWS and STATE pass
-Vale with 0 findings, and an agent is doing the same for the plan. CI is written and waits on the local `ci` branch
+delete-on-merge and `main` protection. README, issue templates and every doc under `docs/` (plan included) pass
+Vale with 0 findings. CI is written and waits on the local `ci` branch
 (`e61cdfc`) because the org ruleset blocks `.yml` pushes.
 
 **Phase:** v1 feature-complete (plan Tasks 0 to 18 done, Task 19 Steps 1 and 2 done). Now in **Task 19 Step 3**, the
@@ -36,8 +36,6 @@ bolt green and re-reads it every 60 s, which still needs a real charge to verify
 - Branch `main`, HEAD = the commit adding this banner, pushed to `origin/main` (`Land-o-Clusters/logijuice`,
   **private**, now protected against force-push and deletion). juice-arch works in the app-made worktree
   `claude/boot-juice-arch-*` and fast-forwards `main`. Local branch `ci` holds the CI workflow, unpushed.
-- **Plan humanizer pass:** a background agent is rewriting prose in `docs/superpowers/plans/2026-10-03-logijuice.md`
-  until Vale reports 0. Review its diff (prose only, facts unchanged) before committing.
 - **Test settings:** all reverted. The debug menu is off, Test Mouse is forgotten and the nickname is cleared.
 - **Background jobs:** none of ours. A `log stream` with a display/powerd predicate belongs to another session, so
   leave it alone.
@@ -48,12 +46,11 @@ bolt green and re-reads it every 60 s, which still needs a real charge to verify
   shows after 3 full charges.
 
 **Next action:**
-1. When the plan agent reports, check `git diff` on the plan for changed facts or code, then commit it.
-2. Optional, owner: run Shortcuts "Get Lowest Battery" once. It reads the same snapshot as the widget but hasn't been
+1. Optional, owner: run Shortcuts "Get Lowest Battery" once. It reads the same snapshot as the widget but hasn't been
    seen on hardware since the fix.
-3. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
-4. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
-5. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
+2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
+3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
+4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
    `build-app.sh`, make a release zip and fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
    recreate the GitHub repo from the scrubbed history and make it public.
 

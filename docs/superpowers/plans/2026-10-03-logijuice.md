@@ -1,12 +1,12 @@
-# logijuice Implementation Plan
+# logijuice Build Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to work through this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build LogiJuice, a macOS menu bar app, widget and command-line tool that shows battery levels and sends reliable low-battery alerts for Logitech devices connected through a Logi Bolt (or Unifying) receiver.
+**Goal:** build LogiJuice, which shows battery levels and sends reliable low-battery alerts for Logitech devices connected through a Logi Bolt (or Unifying) receiver. It is a menu bar app for macOS, plus a widget and a command-line tool.
 
-**Architecture:** One Swift package. The pure logic (`JuiceCore`) is unit-tested without hardware. A HID++ 2.0 layer (`JuiceHID`) talks to the receiver through `IOHIDManager`, and a persistence layer (`JuiceStore`) writes JSON files. One menu-bar-only app ties them together and publishes a snapshot file that the WidgetKit extension and the CLI read. Cross-Mac sync works through one JSON file per Mac in iCloud Drive.
+**Architecture:** the code is one Swift package. The pure logic (`JuiceCore`) is unit-tested without hardware. A HID++ 2.0 layer (`JuiceHID`) talks to the receiver through `IOHIDManager`, and a persistence layer (`JuiceStore`) writes JSON files. One menu-bar-only app ties them together and publishes a snapshot file that the WidgetKit extension and the CLI read. Cross-Mac sync works through one JSON file per Mac in iCloud Drive.
 
-**Tech Stack:** Swift 5.10 language mode (Swift 6.4 toolchain), SwiftPM, SwiftUI, AppKit, IOKit HID, WidgetKit, UserNotifications, ServiceManagement, AppIntents, XCTest. No third-party dependencies.
+**Tech Stack:** the code uses Swift 5.10 language mode (Swift 6.4 toolchain), SwiftPM, SwiftUI, AppKit, IOKit HID, WidgetKit, UserNotifications, ServiceManagement, AppIntents and XCTest. No third-party dependencies.
 
 **Spec:** `docs/superpowers/specs/2026-10-03-logijuice-design.md` (read it first; this plan argues from it)
 
@@ -22,12 +22,12 @@
 - No telemetry and no network traffic. The only data leaving the Mac is the owner's own iCloud Drive file.
 - Ad-hoc signing (`codesign --sign -`) by default. `SIGNING_IDENTITY` env var switches to Developer ID signing later.
 - README carries: "logijuice is unofficial and not affiliated with or endorsed by Logitech."
-- **Commits carry their pathspec** (`git commit -m "…" -- <paths>`; `git add --` first only so new files are tracked). Never a bare commit, never `git add -A`. Run checks bare and commit only on exit code 0.
+- **Commit with an explicit pathspec** (`git commit -m "…" -- <paths>`). Run `git add --` first only so new files are tracked. Never a bare commit, never `git add -A`. Run checks bare and commit only on exit code 0.
 - Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` when an agent commits.
 
 ## Spec adjustments made while planning (owner should confirm)
 
-1. **Device discovery** probes slots 1–6 and listens for connection notifications instead of reading Bolt pairing registers. Bolt's register layout is unverified and not needed: a sleeping device simply appears when it first wakes, and history keeps it after that.
+1. **Device discovery** probes slots 1 to 6 and listens for connection notifications instead of reading Bolt pairing registers. Bolt's register layout is unverified and not needed: a sleeping device simply appears when it first wakes, and history keeps it after that.
 2. **Device identity** order is serial number, then the 0x0003 unit ID (unique per device), then `wpid:0000:slot:N`.
 3. **Word-only batteries** map to an equivalent percent (critical 5, low 10, good 50, full 100) and go through the normal percent triggers. With default thresholds that gives exactly the spec's mapping, and it also respects custom thresholds.
 4. **Nicknames and per-device alert overrides** live on the synced `DeviceRecord`, not in `Settings`, so they propagate across Macs with newest-wins.
@@ -39,18 +39,18 @@
 
 ## Review Focus
 
-1. **Hub switched away mid-request.** The receiver vanishes while a request is waiting. The request must fail promptly with `.closed`, with no hang or crash, and the app must show "not connected here". Test: Task 11 `testCloseFailsPendingRequest`.
-2. **Nonsense battery values from a device.** A state of charge of 0 or over 100, or an error status byte, must never produce a fake "0%" alert. Fall back to the level word, or drop the reading. Tests: Task 10 `testUnifiedRejectsOutOfRangePercent`, `testBatteryStatusRejectsErrorStatus`.
-3. **Out-of-order or duplicate readings.** Synced readings arrive late and clocks change, but the forecast and the merge must give the same answer regardless of input order. Tests: Task 5 `testUnsortedInputGivesSameForecast`, Task 6 `testUnionDedupesSameSecond`.
-4. **Relaunch after an alert already fired.** A login item restart or a crash must not re-fire alerts that already went out. Test: Task 8 `testLocalStateRoundTripPreservesFiredLevels`.
-5. **Fresh install with no data.** The CLI says "No data yet" (exit 1). Auto mode hides the menu bar icon when there are no devices. An empty nickname shows the hardware name. Tests: Task 9 `testStatusWithoutSnapshotFails`, Task 7 `testAutoHiddenWithNoDevices`, `testEmptyNicknameFallsBackToName`.
+1. **Hub switched away mid-request.** The receiver vanishes while a request is waiting. The request must fail promptly with `.closed` instead of hanging or crashing. The app must show "not connected here". Task 11 tests this in `testCloseFailsPendingRequest`.
+2. **Nonsense battery values from a device.** A state of charge of 0 or over 100, or an error status byte, must never produce a fake "0%" alert. Fall back to the level word, or drop the reading. Task 10 tests this in `testUnifiedRejectsOutOfRangePercent` and `testBatteryStatusRejectsErrorStatus`.
+3. **Out-of-order or duplicate readings.** Synced readings arrive late and clocks change, but the forecast and the merge must give the same answer regardless of input order. Task 5 tests this in `testUnsortedInputGivesSameForecast`, and Task 6 in `testUnionDedupesSameSecond`.
+4. **Relaunch after an alert already fired.** A login item restart or a crash must not re-fire alerts that already went out. Task 8 tests this in `testLocalStateRoundTripPreservesFiredLevels`.
+5. **Fresh install before any data exists.** The CLI says "No data yet" (exit 1). Auto mode hides the menu bar icon when there are no devices. An empty nickname shows the hardware name. Task 9 tests this in `testStatusWithoutSnapshotFails`, and Task 7 in `testAutoHiddenWithNoDevices` and `testEmptyNicknameFallsBackToName`.
 
 ## Task map and Codex handoff labels
 
 | # | Task | Label | Depends on |
 |---|---|---|---|
-| 0 | HID++ bring-up spike (throwaway) | **Mac + hardware** | — |
-| 1 | Package scaffold and core models | Codex-ready | — |
+| 0 | HID++ bring-up spike (throwaway) | **Mac + hardware** | none |
+| 1 | Package scaffold and core models | Codex-ready | none |
 | 2 | Alert profile and settings | Codex-ready | 1 |
 | 3 | Alert engine | Codex-ready | 2 |
 | 4 | Nudge scheduler | Codex-ready | 3 |
@@ -70,7 +70,7 @@
 | 18 | Shortcuts actions | **Mac** | 14 |
 | 19 | README, cask, manual checklist run | Codex (docs) + **Mac** (checklist) | all |
 
-Two independent tracks can run in parallel after Task 1: **Core** (2→3→4, 5, 6 → 7 → 8 → 9) and **HID** (10 → 11 → 12). If both tracks edit `Package.swift` at once, merge the target lists; every task shows the full file for its own track.
+After Task 1, the **Core** track (2→3→4, 5, 6 → 7 → 8 → 9) and the **HID** track (10 → 11 → 12) are independent and can run in parallel. If both tracks edit `Package.swift` at once, merge the target lists. Every task shows the full file for its own track.
 
 ---
 
@@ -82,7 +82,7 @@ Answers spec §3's unknowns on the owner's real receiver before any `JuiceHID` c
 - Create: `spikes/hidpp-probe.swift` (deleted in Step 6)
 - Create: `docs/bringup-notes.md`
 
-- [x] **Step 1: Write the probe**
+- [x] **Step 1: write the probe**
 
 ```swift
 // spikes/hidpp-probe.swift — THROWAWAY. Run: swift spikes/hidpp-probe.swift
@@ -142,12 +142,12 @@ print("\n--- Passive listen 60 s: switch a device off/on, plug/unplug its charge
 pump(60)
 ```
 
-- [x] **Step 2: Run it with Logi Options+ running**
+- [x] **Step 2: run it with Logi Options+ running**
 
 Run: `export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer && swift spikes/hidpp-probe.swift | tee /tmp/logijuice-probe-optionsplus.txt`
 Expected: the device list includes PID `0xC548` with page `0xFF00`. Some `IN` lines echo our requests with the low nibble `A` in byte 3. During the 60 s listen, power-cycle the mouse and plug in its charging cable.
 
-- [x] **Step 3: For each slot that answered, send the battery read using the index it reported**
+- [x] **Step 3: for each slot that answered, send the battery read using the index it reported**
 
 Edit the bottom of the probe to add, for the slot and index you saw (example: slot 1, 0x1004 at index 0x08):
 ```swift
@@ -156,11 +156,11 @@ send(long(1, 0x08, 0x1, [])); pump(0.4)   // 0x1004 getStatus
 ```
 If 0x1004 isn't present, use the 0x1000 index with function 0 instead. Run again.
 
-- [x] **Step 4: Run once with Options+ quit**
+- [x] **Step 4: run once with Options+ quit**
 
 Quit Logi Options+ (menu bar → Quit, and `killall logioptionsplus_agent 2>/dev/null`). Run again into `/tmp/logijuice-probe-plain.txt`. Then reopen Options+.
 
-- [x] **Step 5: Write `docs/bringup-notes.md` answering every question with evidence lines**
+- [x] **Step 5: write `docs/bringup-notes.md` answering every question with evidence lines**
 
 ```markdown
 # HID++ bring-up notes (Task 0)
@@ -187,7 +187,7 @@ Quit Logi Options+ (menu bar → Quit, and `killall logioptionsplus_agent 2>/dev
 - `HIDPPInterface.usage` constant for long reports: `0x0002` / other: ___
 ```
 
-- [x] **Step 6: Delete the probe and commit the notes**
+- [x] **Step 6: delete the probe and commit the notes**
 
 ```bash
 git rm -q --cached spikes/hidpp-probe.swift 2>/dev/null; rm -rf spikes
@@ -195,7 +195,7 @@ git add -- docs/bringup-notes.md
 git commit -m "Record HID++ bring-up findings for the Bolt receiver" -- docs/bringup-notes.md
 ```
 
-**If a finding contradicts this plan** (for example, the report ID is not byte 0, or no 0x41 notifications arrive unless a register is written), stop and raise it with the owner before Tasks 10–13. Writing receiver registers would break the read-only constraint.
+**If a finding contradicts this plan** (such as a report ID other than byte 0, or 0x41 notifications that arrive only after a register is written), stop and raise it with the owner before Tasks 10 to 13. Writing receiver registers would break the read-only constraint.
 
 ---
 
@@ -209,7 +209,7 @@ git commit -m "Record HID++ bring-up findings for the Bolt receiver" -- docs/bri
 **Interfaces:**
 - Produces: `DeviceID` (`.serial(_:)`, `.unit(_:)`, `.slot(wpid:slot:)`, `rawValue`), `DeviceKind` (`init(hidppType:)`), `LevelWord`, `BatteryLevel` (`.percent(Int)`, `.word(LevelWord)`, `equivalentPercent`, `isFull`), `ReadingSource` (`.local`, `.synced(macID:)`), `Reading(device:level:charging:observedAt:source:)`, `DeviceInfo(id:name:kind:)`, `ForecastResult` (`.learning`, `.estimate(daysLeft:emptyAt:)`, `.unavailable`), `JuiceJSON.encoder/.prettyEncoder/.decoder`.
 
-- [x] **Step 1: Create the package files**
+- [x] **Step 1: create the package files**
 
 `Package.swift`:
 ```swift
@@ -240,7 +240,7 @@ dist/
 cp ~/Projects/puddle/LICENSE LICENSE
 ```
 
-- [x] **Step 2: Write the failing test**
+- [x] **Step 2: write the failing test**
 
 `Tests/JuiceCoreTests/ModelsTests.swift`:
 ```swift
@@ -305,12 +305,12 @@ final class ModelsTests: XCTestCase {
 }
 ```
 
-- [x] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: run the test to verify it fails**
 
 Run: `export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer && swift test --filter JuiceCoreTests.ModelsTests`
 Expected: FAIL. `JuiceCore` has no source files yet, so SwiftPM stops before compiling with `unable to resolve module dependency: 'JuiceCore'` (or "target 'JuiceCore' … has no sources"). That is the correct red for this step.
 
-- [x] **Step 4: Implement**
+- [x] **Step 4: write the code**
 
 `Sources/JuiceCore/JuiceJSON.swift`:
 ```swift
@@ -510,12 +510,12 @@ public enum ForecastResult: Hashable, Sendable, Codable {
 }
 ```
 
-- [x] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.ModelsTests`
 Expected: PASS (6 tests).
 
-- [x] **Step 6: Commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add -- Package.swift .gitignore LICENSE Sources Tests
@@ -532,9 +532,9 @@ git commit -m "Scaffold package and core models" -- Package.swift .gitignore LIC
 
 **Interfaces:**
 - Consumes: `Reading`, `BatteryLevel.equivalentPercent`, `ForecastResult` (Task 1).
-- Produces: `Trigger` (`.percentAtOrBelow(Int)`, `.forecastDaysAtOrBelow(Double)`), `Timing` (`.now`, `.nextMoment`), `RepeatPolicy` (`.never`, `.everyHours(Int)`, `.daily`, `interval: TimeInterval?`), `AlertLevel(id:name:enabled:trigger:timing:repeatPolicy:tintsIcon:)`, `AlertProfile(levels:)` with `.default` and `isTriggered(_:by:forecast:) -> Bool`, `MenuBarMode` (`.auto`, `.always`, `.never`), `Settings` (fields below; `init()` gives defaults; decodes missing keys as defaults).
+- Produces: `Trigger` (`.percentAtOrBelow(Int)`, `.forecastDaysAtOrBelow(Double)`), `Timing` (`.now`, `.nextMoment`), `RepeatPolicy` (`.never`, `.everyHours(Int)`, `.daily`, `interval: TimeInterval?`), `AlertLevel(id:name:enabled:trigger:timing:repeatPolicy:tintsIcon:)`, `AlertProfile(levels:)` with `.default` and `isTriggered(_:by:forecast:) -> Bool`, `MenuBarMode` (`.auto`, `.always`, `.never`), `Settings` (fields below, with `init()` giving defaults and missing keys decoding as defaults).
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/AlertProfileTests.swift`:
 ```swift
@@ -607,12 +607,12 @@ final class AlertProfileTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.AlertProfileTests`
 Expected: FAIL to compile with "cannot find 'AlertProfile' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/AlertProfile.swift`:
 ```swift
@@ -732,12 +732,12 @@ public struct Settings: Hashable, Sendable, Codable {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.AlertProfileTests`
 Expected: PASS (6 tests).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore Tests/JuiceCoreTests
@@ -753,7 +753,7 @@ git commit -m "Add alert profile and settings models" -- Sources/JuiceCore Tests
 - Test: `Tests/JuiceCoreTests/AlertEngineTests.swift`
 
 **Interfaces:**
-- Consumes: `Reading`, `ForecastResult`, `AlertProfile`, `AlertLevel`, `RepeatPolicy.interval`, `Timing` (Tasks 1–2).
+- Consumes: `Reading`, `ForecastResult`, `AlertProfile`, `AlertLevel`, `RepeatPolicy.interval`, `Timing` (Tasks 1 and 2).
 - Produces:
   - `DeviceAlertState` (`firedAt: [String: Date]`, `snoozedUntil: Date?`, `snoozeSeverity: Int?`, `wasCharging: Bool`, `init()`), Codable.
   - `AlertKind` (`.level(id: String, name: String, timing: Timing, severity: Int, isRepeat: Bool)`, `.fullyCharged`), Codable.
@@ -762,7 +762,7 @@ git commit -m "Add alert profile and settings models" -- Sources/JuiceCore Tests
   - `AlertEngine.snooze(_:profile:now:duration:) -> DeviceAlertState` (default duration 86 400 s)
   - `AlertEngine.rearmMargin == 5`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/AlertEngineTests.swift`:
 ```swift
@@ -913,12 +913,12 @@ final class AlertEngineTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.AlertEngineTests`
 Expected: FAIL to compile with "cannot find 'DeviceAlertState' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/AlertEngine.swift`:
 ```swift
@@ -1025,12 +1025,12 @@ public enum AlertEngine {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.AlertEngineTests`
 Expected: PASS (13 tests).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore/AlertEngine.swift Tests/JuiceCoreTests/AlertEngineTests.swift
@@ -1057,7 +1057,7 @@ git commit -m "Add alert engine with escalation, hysteresis, repeat and snooze" 
     - `dropPending(for:)`
     - `static nextEndOfDay(after:hour:minute:calendar:) -> Date`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/NudgeSchedulerTests.swift`:
 ```swift
@@ -1140,12 +1140,12 @@ final class NudgeSchedulerTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.NudgeSchedulerTests`
 Expected: FAIL to compile with "cannot find 'NudgeScheduler' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/NudgeScheduler.swift`:
 ```swift
@@ -1215,12 +1215,12 @@ public struct NudgeScheduler: Hashable, Sendable, Codable {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.NudgeSchedulerTests`
 Expected: PASS (8 tests).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore/NudgeScheduler.swift Tests/JuiceCoreTests/NudgeSchedulerTests.swift
@@ -1243,11 +1243,11 @@ git commit -m "Add natural-moment nudge scheduler" -- Sources/JuiceCore/NudgeSch
 - Sort the readings by time.
 - If the latest reading is a word, return `.unavailable`. If it's charging, or there are no readings, return `.learning`.
 - Split into discharge runs at every charging reading, or when a rise of 10 or more points happens without the charging flag.
-- A run is confident when it has dropped at least 10 points over at least 2 days. Its slope is the Theil–Sen estimate over at most its last 500 points.
+- A run is confident when it has dropped at least 10 points over at least 2 days. Its slope is the Theil-Sen estimate over at most its last 500 points.
 - Use the current run's slope if confident. Otherwise use the most recent earlier confident run's slope. Otherwise return `.learning`.
 - Calculation: `emptyAt = latest.time + latest% / -slope` days, and `daysLeft = max(0, emptyAt - now)`.
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/ForecasterTests.swift`:
 ```swift
@@ -1332,12 +1332,12 @@ final class ForecasterTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.ForecasterTests`
 Expected: FAIL to compile with "cannot find 'Forecaster' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/Forecaster.swift`:
 ```swift
@@ -1425,12 +1425,12 @@ public enum Forecaster {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.ForecasterTests`
 Expected: PASS (11 tests).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore/Forecaster.swift Tests/JuiceCoreTests/ForecasterTests.swift
@@ -1446,14 +1446,14 @@ git commit -m "Add Theil-Sen battery forecaster" -- Sources/JuiceCore/Forecaster
 - Test: `Tests/JuiceCoreTests/SyncMergeTests.swift`
 
 **Interfaces:**
-- Consumes: `Reading`, `DeviceInfo`, `AlertProfile` (Tasks 1–2).
+- Consumes: `Reading`, `DeviceInfo`, `AlertProfile` (Tasks 1 and 2).
 - Produces:
   - `History.appending(_:to:now:) -> [Reading]`, `History.trim(_:now:) -> [Reading]`, `History.retention` (90 days), `History.maxReadings` (2000)
   - `DeviceRecord(info:nickname:alertOverride:metaUpdatedAt:readings:)`, with `displayName`
   - `SyncFile(schema:macID:macName:updatedAt:devices:)`, with `SyncFile.currentSchema == 1`
   - `SyncMerge.merge(local:remotes:now:) -> [DeviceRecord]`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/SyncMergeTests.swift`:
 ```swift
@@ -1546,12 +1546,12 @@ final class SyncMergeTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.SyncMergeTests`
 Expected: FAIL to compile with "cannot find 'DeviceRecord' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/History.swift`:
 ```swift
@@ -1677,12 +1677,12 @@ public enum SyncMerge {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests.SyncMergeTests`
 Expected: PASS (9 tests).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore Tests/JuiceCoreTests/SyncMergeTests.swift
@@ -1698,7 +1698,7 @@ git commit -m "Add reading history and cross-Mac sync merge" -- Sources/JuiceCor
 - Test: `Tests/JuiceCoreTests/SnapshotFormatTests.swift`
 
 **Interfaces:**
-- Consumes: `DeviceRecord`, `Forecaster`, `DeviceAlertState`, `AlertProfile`, `MenuBarMode`, `Delivery`, `Moment` (Tasks 2–6).
+- Consumes: `DeviceRecord`, `Forecaster`, `DeviceAlertState`, `AlertProfile`, `MenuBarMode`, `Delivery`, `Moment` (Tasks 2 to 6).
 - Produces:
   - `SnapshotDevice` (`id, name, nickname, kind, level: BatteryLevel?, charging, lastSeen: Date?, live, forecast, alerting, tinted`, plus `displayName`)
   - `Snapshot` (`schema`, `generatedAt`, `receiverPresent`, `devices`, plus `lowest`, `.empty`, `.preview`, `currentSchema == 1`)
@@ -1708,7 +1708,7 @@ git commit -m "Add reading history and cross-Mac sync merge" -- Sources/JuiceCor
   - `NotificationText(title:body:identifier:)`
   - `DeviceKind.symbolName`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceCoreTests/SnapshotFormatTests.swift`:
 ```swift
@@ -1845,12 +1845,12 @@ final class SnapshotFormatTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCoreTests.SnapshotFormatTests`
 Expected: FAIL to compile with "cannot find 'SnapshotBuilder' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceCore/Snapshot.swift`:
 ```swift
@@ -2085,12 +2085,12 @@ extension DeviceKind {
 }
 ```
 
-- [x] **Step 4: Run all core tests to verify they pass**
+- [x] **Step 4: run all core tests to verify they pass**
 
 Run: `swift test --filter JuiceCoreTests`
 Expected: PASS (66 JuiceCore tests, including 12 new).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceCore Tests/JuiceCoreTests/SnapshotFormatTests.swift
@@ -2107,7 +2107,7 @@ git commit -m "Add snapshot, formatting and menu bar policy" -- Sources/JuiceCor
 - Test: `Tests/JuiceStoreTests/StoreTests.swift`
 
 **Interfaces:**
-- Consumes: `Settings`, `DeviceRecord`, `DeviceAlertState`, `NudgeScheduler`, `Snapshot`, `SyncFile`, `JuiceJSON` (Tasks 1–7).
+- Consumes: `Settings`, `DeviceRecord`, `DeviceAlertState`, `NudgeScheduler`, `Snapshot`, `SyncFile`, `JuiceJSON` (Tasks 1 to 7).
 - Produces:
   - `JuicePaths(appSupport:groupContainer:iCloudFolder:)` and `.standard()`. Properties: `settingsURL`, `stateURL`, `snapshotURL` (group container), `cliSnapshotURL` (app support). `JuicePaths.appGroupID`.
   - `JSONFileStore<Value>(url:)` with `load(default:)`, `save(_:) throws`, `read() -> Value?`
@@ -2117,7 +2117,7 @@ git commit -m "Add snapshot, formatting and menu bar policy" -- Sources/JuiceCor
   - `SyncStore(folder:macID:)` with `isAvailable`, `ownURL`, `writeOwn(_:) throws`, `readOthers() -> [SyncFile]`
   - `MacIdentity.hardwareUUID()`, `MacIdentity.name()`
 
-- [x] **Step 1: Add the target**
+- [x] **Step 1: add the target**
 
 `Package.swift`:
 ```swift
@@ -2136,7 +2136,7 @@ let package = Package(
 )
 ```
 
-- [x] **Step 2: Write the failing test**
+- [x] **Step 2: write the failing test**
 
 `Tests/JuiceStoreTests/StoreTests.swift`:
 ```swift
@@ -2226,12 +2226,12 @@ final class StoreTests: XCTestCase {
 }
 ```
 
-- [x] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: run the test to verify it fails**
 
 Run: `swift test --filter JuiceStoreTests`
 Expected: FAIL. With no `Sources/JuiceStore` directory yet, SwiftPM reports that the target has no sources, or the compiler reports that it can't find `SettingsStore`.
 
-- [x] **Step 4: Implement**
+- [x] **Step 4: write the code**
 
 `Sources/JuiceStore/JuicePaths.swift`:
 ```swift
@@ -2385,12 +2385,12 @@ public enum MacIdentity {
 }
 ```
 
-- [x] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceStoreTests`
 Expected: PASS (9 tests).
 
-- [x] **Step 6: Commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add -- Package.swift Sources/JuiceStore Tests/JuiceStoreTests
@@ -2410,7 +2410,7 @@ git commit -m "Add JSON stores, sync folder store and Mac identity" -- Package.s
 - Consumes: `SnapshotStore`, `JuicePaths.cliSnapshotURL`, `Format.statusLine`, `Format.seen`, `JuiceJSON.prettyEncoder`.
 - Produces: `CLI.run(_ args: [String], snapshotURL: URL, now: Date, out: (String) -> Void, err: (String) -> Void) -> Int32` and `CLI.usage`. Product `logijuice-cli`.
 
-- [x] **Step 1: Add the targets**
+- [x] **Step 1: add the targets**
 
 `Package.swift`:
 ```swift
@@ -2435,7 +2435,7 @@ let package = Package(
 )
 ```
 
-- [x] **Step 2: Write the failing test**
+- [x] **Step 2: write the failing test**
 
 `Tests/JuiceCLIKitTests/CLITests.swift`:
 ```swift
@@ -2499,12 +2499,12 @@ final class CLITests: XCTestCase {
 }
 ```
 
-- [x] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: run the test to verify it fails**
 
 Run: `swift test --filter JuiceCLIKitTests`
 Expected: FAIL. `JuiceCLIKit` has no source files yet, so SwiftPM stops with `unable to resolve module dependency: 'JuiceCLIKit'` (or a no-sources error). That is the correct red for this step.
 
-- [x] **Step 4: Implement**
+- [x] **Step 4: write the code**
 
 `Sources/JuiceCLIKit/CLI.swift`:
 ```swift
@@ -2575,12 +2575,12 @@ let code = CLI.run(
 exit(code)
 ```
 
-- [x] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceCLIKitTests && swift build --product logijuice-cli && .build/debug/logijuice-cli status; echo "exit $?"`
 Expected: tests PASS (6). The CLI prints `No data yet. Is LogiJuice running?` and `exit 1`.
 
-- [x] **Step 6: Commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add -- Package.swift Sources/JuiceCLIKit Sources/LogiJuiceCLI Tests/JuiceCLIKitTests
@@ -2606,7 +2606,7 @@ The byte layouts below follow Logitech's HID++ 2.0 feature documentation as impl
   - `BatteryReport(level:charging:)`, `DeviceInformation(unitID:serialSupported:)`, `ConnectionNotice(slot:linkUp:wpid:)`
   - `FeatureParsers`: `featureIndex(fromGetFeature:)`, `unifiedBatteryPercentSupported(_:)`, `unifiedBatteryStatus(_:percentSupported:)`, `batteryStatus(_:)`, `nameChunk(_:remaining:)`, `deviceInformation(_:)`, `serialNumber(_:)`, `connectionNotice(_:)`
 
-- [x] **Step 1: Add the target**
+- [x] **Step 1: add the target**
 
 Add these to `Package.swift` `targets` (keep everything already there):
 ```swift
@@ -2614,7 +2614,7 @@ Add these to `Package.swift` `targets` (keep everything already there):
     .testTarget(name: "JuiceHIDTests", dependencies: ["JuiceHID", "JuiceCore"]),
 ```
 
-- [x] **Step 2: Write the failing test**
+- [x] **Step 2: write the failing test**
 
 `Tests/JuiceHIDTests/FrameAndParserTests.swift`:
 ```swift
@@ -2736,12 +2736,12 @@ final class FrameAndParserTests: XCTestCase {
 }
 ```
 
-- [x] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: run the test to verify it fails**
 
 Run: `swift test --filter JuiceHIDTests.FrameAndParserTests`
 Expected: FAIL. `JuiceHID` has no source files yet, so SwiftPM stops with `unable to resolve module dependency: 'JuiceHID'` (or a no-sources error). That is the correct red for this step.
 
-- [x] **Step 4: Implement**
+- [x] **Step 4: write the code**
 
 `Sources/JuiceHID/HIDPPFrame.swift`:
 ```swift
@@ -2911,12 +2911,12 @@ public enum FeatureParsers {
 }
 ```
 
-- [x] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceHIDTests.FrameAndParserTests`
 Expected: PASS (13 tests).
 
-- [x] **Step 6: Commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add -- Package.swift Sources/JuiceHID Tests/JuiceHIDTests
@@ -2944,7 +2944,7 @@ git commit -m "Add HID++ frame codec and feature parsers" -- Package.swift Sourc
     - `close()`
   - Requests are serialized. A reply with a foreign software ID is ignored.
 
-- [x] **Step 1: Write the test helper and the failing test**
+- [x] **Step 1: write the test helper and the failing test**
 
 `Tests/JuiceHIDTests/FakeChannel.swift`:
 ```swift
@@ -3103,12 +3103,12 @@ final class RequestBrokerTests: XCTestCase {
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceHIDTests.RequestBrokerTests`
 Expected: FAIL to compile with "cannot find type 'ReportChannel' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceHID/RequestBroker.swift`:
 ```swift
@@ -3264,12 +3264,12 @@ public actor RequestBroker {
 }
 ```
 
-- [x] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: run the tests to verify they pass**
 
 Run: `swift test --filter JuiceHIDTests.RequestBrokerTests`
 Expected: PASS (8 tests). If the compiler rejects mutating `pending` inside the `withCheckedThrowingContinuation` closure, add `isolation: #isolation` as the first argument (Swift 6 toolchains support it), then rerun.
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceHID/RequestBroker.swift Tests/JuiceHIDTests
@@ -3292,7 +3292,7 @@ git commit -m "Add HID++ request broker with software-ID routing" -- Sources/Jui
   - `SessionEvent` (`.battery(slot: UInt8, BatteryReport)`, `.linkUp(slot: UInt8)`, `.linkDown(slot: UInt8)`), Equatable
   - `actor ReceiverSession(broker:)`, with `identify(slot:) async -> SlotInfo?`, `readBattery(_:) async -> BatteryReport?`, and `static interpret(_:slots:) -> SessionEvent?`
 
-- [x] **Step 1: Write the failing test**
+- [x] **Step 1: write the failing test**
 
 `Tests/JuiceHIDTests/ReceiverSessionTests.swift`:
 ```swift
@@ -3387,12 +3387,12 @@ func XCTUnwrapAsync<T>(_ value: T?, file: StaticString = #filePath, line: UInt =
 }
 ```
 
-- [x] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: run the test to verify it fails**
 
 Run: `swift test --filter JuiceHIDTests.ReceiverSessionTests`
 Expected: FAIL to compile with "cannot find 'ReceiverSession' in scope".
 
-- [x] **Step 3: Implement**
+- [x] **Step 3: write the code**
 
 `Sources/JuiceHID/ReceiverSession.swift`:
 ```swift
@@ -3520,12 +3520,12 @@ public actor ReceiverSession {
 }
 ```
 
-- [x] **Step 4: Run all HID tests to verify they pass**
+- [x] **Step 4: run all HID tests to verify they pass**
 
 Run: `swift test --filter JuiceHIDTests`
 Expected: PASS (all, including 6 new).
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Sources/JuiceHID/ReceiverSession.swift Tests/JuiceHIDTests/ReceiverSessionTests.swift
@@ -3542,14 +3542,14 @@ git commit -m "Add receiver session: identify devices, read and interpret batter
 - Create: `Tests/JuiceHIDTests/Fixtures/owner-mouse.json` (recorded), `Tests/JuiceHIDTests/ReplayTests.swift`
 
 **Interfaces:**
-- Consumes: `ReportChannel`, `HIDPPError`, `RequestBroker`, `ReceiverSession` (Tasks 11–12), plus `docs/bringup-notes.md` (Task 0).
+- Consumes: `ReportChannel`, `HIDPPError`, `RequestBroker`, `ReceiverSession` (Tasks 11 and 12), plus `docs/bringup-notes.md` (Task 0).
 - Produces:
   - `HIDPPInterface` (`vendorID`, `receiverProductIDs`, `usagePage`)
   - `IOHIDReceiverChannel(devices:) throws` (a `ReportChannel`; `devices`, `close()`)
   - `ReceiverMonitor()` with `onArrive: ((IOHIDReceiverChannel) -> Void)?`, `onDepart: (() -> Void)?`, `start()`
   - `DebugCapture.run(arguments:) -> Int32`
 
-- [x] **Step 1: Implement the IOHID channel and monitor**
+- [x] **Step 1: write the IOHID channel and monitor**
 
 `Sources/JuiceHID/IOHIDReceiver.swift`:
 ```swift
@@ -3691,9 +3691,9 @@ public final class ReceiverMonitor {
 }
 ```
 
-If `docs/bringup-notes.md` shows a single collection carrying both report IDs, no code change is needed: `send` falls back to the first opened device. If it shows the report ID is **not** byte 0 of `IN` data, the prepend in the callback already handles it.
+If `docs/bringup-notes.md` shows one collection with both report IDs, no code change is needed: `send` falls back to the first opened device. If it shows the report ID is **not** byte 0 of `IN` data, the prepend in the callback already handles it.
 
-- [x] **Step 2: Implement `debug capture`**
+- [x] **Step 2: add `debug capture`**
 
 `Package.swift`: change the JuiceCLIKit target to
 ```swift
@@ -3826,14 +3826,14 @@ let code = CLI.run(
 exit(code)
 ```
 
-- [x] **Step 3: Build and run a live probe against the owner's receiver**
+- [x] **Step 3: build and run a live probe against the owner's receiver**
 
 Run: `swift build --product logijuice-cli && .build/debug/logijuice-cli debug capture --seconds 20 --probe --out Tests/JuiceHIDTests/Fixtures/owner-mouse.json`
 Expected: a line per paired device such as `slot 1: MX Master 3S mouse sn:… unified(index: 8, percent: true)`, then `battery: Optional(BatteryReport(level: .percent(NN), charging: false))`. If the mouse is asleep, move it and rerun. Logi Options+ keeps working while this runs: check that its window still shows the battery.
 
 If identify returns nil for an awake device, compare the `out`/`in` lines with `docs/bringup-notes.md` and fix the parser or layout in Task 10/12 (with its test) before continuing.
 
-- [x] **Step 4: Write a replay test from the recorded capture**
+- [x] **Step 4: write a replay test from the recorded capture**
 
 `Tests/JuiceHIDTests/ReplayTests.swift`:
 ```swift
@@ -3896,14 +3896,14 @@ Add the fixture resources to the test target in `Package.swift`:
     .testTarget(name: "JuiceHIDTests", dependencies: ["JuiceHID", "JuiceCore"], resources: [.copy("Fixtures")]),
 ```
 
-Note: identify sends requests in a fixed order, so it re-issues the same `out` frames as the probe. The ReplayChannel matches by exact bytes, which is why the recording used `--probe`.
+Note: identify sends requests in a fixed order, so it re-issues the same `out` frames as the probe. The recording used `--probe` because the ReplayChannel matches by exact bytes.
 
-- [x] **Step 5: Run the full test suite**
+- [x] **Step 5: run the full test suite**
 
 Run: `swift test`
 Expected: PASS (all targets, including `ReplayTests`).
 
-- [x] **Step 6: Commit**
+- [x] **Step 6: commit**
 
 ```bash
 git add -- Package.swift Sources Tests/JuiceHIDTests
@@ -3921,13 +3921,13 @@ git commit -m "Add IOHID receiver channel, hotplug monitor, debug capture and re
 
 **Interfaces:**
 - Consumes: everything in `JuiceCore`, `JuiceStore`, `JuiceHID`.
-- Produces (used by Tasks 15–18):
+- Produces (used by Tasks 15 to 18):
   - `AppModel.shared`, with `settings` (published, settable), `snapshot` (published), `receiverPresent`, `notifier`, `mergedRecords`, `menuBarVisible`, `iconTinted`
   - Methods: `setNickname(_:for:)`, `alertOverride(for:) -> AlertProfile?`, `setAlertOverride(_:for:)`, `publish()`, `saveNow()`, `simulateLowBattery(percent:)`
   - `SettingsWindowController.shared.show()`, `OptionsPlus.isInstalled` / `.open()`
   - App bundle at `dist/LogiJuice.app`
 
-- [x] **Step 1: Add the app target**
+- [x] **Step 1: add the app target**
 
 `Package.swift` (full; merge any targets from parallel tasks):
 ```swift
@@ -3963,7 +3963,7 @@ let package = Package(
 )
 ```
 
-- [x] **Step 2: Write the app sources**
+- [x] **Step 2: write the app sources**
 
 `App/OptionsPlus.swift`:
 ```swift
@@ -4475,7 +4475,7 @@ struct MenuContent: View {
 }
 ```
 
-**Amendment (2026-10-03, owner):** the menu bar label is a device-silhouette gauge, not a battery glyph. See
+**Amendment (2026-10-03, owner):** the menu bar label switched from a battery glyph to a device-silhouette gauge. See
 `App/MenuBarIcon.swift`, `MenuBarLabel` in `App/MenuContent.swift`, and `Format.menuBarText` /
 `DeviceKind.gaugeSymbols` (tested in `SnapshotFormatTests`). The `MenuBarLabel` code above is superseded.
 
@@ -4577,7 +4577,7 @@ struct LogiJuiceApp: App {
 </plist>
 ```
 
-- [x] **Step 3: Write the build script**
+- [x] **Step 3: write the build script**
 
 `scripts/build-app.sh` (it already handles the widget, which Task 17 adds):
 ```bash
@@ -4661,7 +4661,7 @@ echo "$APP"
 
 Run: `chmod +x scripts/build-app.sh`
 
-- [x] **Step 4: Build, run and verify on the owner's Mac**
+- [x] **Step 4: build, run and verify on the owner's Mac**
 
 Run: `swift test && scripts/build-app.sh && open dist/LogiJuice.app`
 Expected:
@@ -4677,7 +4677,7 @@ Expected:
 
 Record any failure with its log lines before changing code.
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- Package.swift App Config scripts
@@ -4696,7 +4696,7 @@ git commit -m "Add LogiJuice menu bar app: receiver wiring, alerts, nudges, noti
 - Consumes: `SyncStore`, `SyncFile`, `MacIdentity`, `AppModel.remoteFiles`, `AppModel.publish()`.
 - Produces: `AppModel.syncAvailable: Bool` (used by Task 16).
 
-- [x] **Step 1: Write the coordinator**
+- [x] **Step 1: write the coordinator**
 
 `App/SyncCoordinator.swift`:
 ```swift
@@ -4756,7 +4756,7 @@ final class SyncCoordinator {
 }
 ```
 
-- [x] **Step 2: Wire it into `AppModel`**
+- [x] **Step 2: wire it into `AppModel`**
 
 In `App/AppModel.swift`:
 
@@ -4811,17 +4811,17 @@ In `mutateMeta`, after `saveSoon()`:
     if settings.syncEnabled { sync.write(records: state.records, force: true) }
 ```
 
-- [x] **Step 3: Build and verify**
+- [x] **Step 3: build and verify**
 
 Run: `swift test && scripts/build-app.sh && open dist/LogiJuice.app`
 Expected:
-1. `ls ~/Library/Mobile\ Documents/com~apple~CloudDocs/logijuice/` shows `<hardware-UUID>.json` after the first reading (write at most every 5 minutes; switching the hub away forces one).
-2. On a second Mac with the same build, after switching the hub over, the first Mac's device shows "seen …" with the readings from the second Mac within about 2 to 5 minutes, and **only the Mac holding the receiver** posts notifications.
+1. `ls ~/Library/Mobile\ Documents/com~apple~CloudDocs/logijuice/` shows `<hardware-UUID>.json` after the first reading (it writes at most every 5 minutes, and switching the hub away forces a write).
+2. On a second Mac with the same build, after switching the hub over, the first Mac's device shows "seen …" with the readings from the second Mac within about 2 to 5 minutes. Only **the Mac holding the receiver** posts notifications.
 3. Renaming a device (Task 16 adds the field; for now edit via a debugger, or check after Task 16) propagates.
 
 If only one Mac is available, copy your own file to `TEST-OTHER.json` in that folder, with its `macID` changed to `TEST-OTHER` and one reading's time edited. Confirm that reading appears tagged `synced:TEST-OTHER` in `logijuice status --json`, then delete the file.
 
-- [x] **Step 4: Commit**
+- [x] **Step 4: commit**
 
 ```bash
 git add -- App
@@ -4841,7 +4841,7 @@ git commit -m "Wire iCloud Drive sync: throttled own-file writes, remote polling
 - Consumes: the `AppModel` settings-window API (Task 14), `AppModel.syncAvailable` (Task 15), `Notifier.authorized`, `OptionsPlus`.
 - Produces: `LoginItem.isEnabled`, `LoginItem.set(_:)`.
 
-- [x] **Step 1: Write the login item helper**
+- [x] **Step 1: write the login item helper**
 
 `App/LoginItem.swift`:
 ```swift
@@ -4871,7 +4871,7 @@ In `App/AppModel.swift` `start()`, as the first line:
     }
 ```
 
-- [x] **Step 2: Write the level editor**
+- [x] **Step 2: write the level editor**
 
 `App/AlertLevelEditor.swift`:
 ```swift
@@ -4955,7 +4955,7 @@ struct TriggerEditor: View {
 }
 ```
 
-- [x] **Step 3: Replace `SettingsView`**
+- [x] **Step 3: replace `SettingsView`**
 
 In `App/SettingsWindow.swift`, replace the `SettingsView` struct with:
 ```swift
@@ -5068,19 +5068,19 @@ struct DeviceSettingsRow: View {
 }
 ```
 
-- [x] **Step 4: Build and check visually**
+- [x] **Step 4: build and check visually**
 
 Run: `swift test && scripts/build-app.sh && open dist/LogiJuice.app` then open Settings from the menu (or relaunch the app).
 Expected:
-1. Three sections. Devices lists each device with an editable nickname. Rename the mouse and press Return; the menu dropdown shows the new name.
-2. Alerts shows three rows matching the defaults. Toggling Low off, then simulating 15% (debug menu), sends no notification.
+1. Three sections. Devices lists each device with an editable nickname. After you rename the mouse and press Return, the menu dropdown shows the new name.
+2. Alerts shows three rows matching the defaults. With Low toggled off, simulating 15% (debug menu) doesn't send a notification.
 3. Advanced reveals repeat, red-icon, max wait, end of day and fully charged.
-4. "Custom alerts for this device" reveals a per-device level list. Changing it doesn't change the global list.
+4. "Custom alerts for this device" reveals a per-device level list, and edits to it leave the global list unchanged.
 5. Launch at login appears ON in System Settings → General → Login Items.
 6. Quit and relaunch: every change persisted (`settings.json` and `state.json`).
 7. Take a screenshot of the window in light and dark mode for the owner.
 
-- [x] **Step 5: Commit**
+- [x] **Step 5: commit**
 
 ```bash
 git add -- App
@@ -5099,7 +5099,7 @@ git commit -m "Add settings window: devices, alert levels, general options, logi
 - Consumes: `SnapshotStore`, `JuicePaths.snapshotURL`, `Snapshot`, `SnapshotDevice`, `Format`, `DeviceKind.symbolName`.
 - Produces: the `LogiJuiceWidgetExtension` product, bundled by `scripts/build-app.sh` (already handled).
 
-- [x] **Step 1: Add the target and product**
+- [x] **Step 1: add the target and product**
 
 In `Package.swift` add to `products`:
 ```swift
@@ -5115,7 +5115,7 @@ and to `targets`:
       linkerSettings: [.linkedFramework("WidgetKit")]),
 ```
 
-- [x] **Step 2: Write the widget**
+- [x] **Step 2: write the widget**
 
 `WidgetExtension/LogiJuiceWidget.swift`:
 ```swift
@@ -5301,7 +5301,7 @@ struct LogiJuiceWidgets: WidgetBundle {
 </plist>
 ```
 
-- [x] **Step 3: Build and verify on the Mac**
+- [x] **Step 3: build and verify on the Mac**
 
 Run: `swift test && scripts/build-app.sh && cp -R dist/LogiJuice.app /Applications/ && open /Applications/LogiJuice.app`
 Expected:
@@ -5311,9 +5311,9 @@ Expected:
 4. Simulate 8% (debug menu): the widgets update within seconds and the ring turns red.
 5. Clicking a widget opens the LogiJuice settings window.
 
-The widget only registers when the app runs from `/Applications` (or another standard location), which is why it's copied there. If the widget doesn't show up, run `pluginkit -m -p com.apple.widgetkit-extension | grep logijuice` and check the extension is registered.
+The app is copied to `/Applications` because the widget only registers when the app runs from there (or another standard location). If the widget is missing, run `pluginkit -m -p com.apple.widgetkit-extension | grep logijuice` and check the extension is registered.
 
-- [x] **Step 4: Commit**
+- [x] **Step 4: commit**
 
 ```bash
 git add -- Package.swift WidgetExtension Config
@@ -5332,7 +5332,7 @@ git commit -m "Add small and medium battery widgets" -- Package.swift WidgetExte
 - Consumes: `SnapshotStore`, `JuicePaths.snapshotURL`, `Format`.
 - Produces: the "Get Device Battery" and "Get Lowest Battery" actions.
 
-- [x] **Step 1: Write the intents**
+- [x] **Step 1: write the intents**
 
 In `Package.swift`, add `.linkedFramework("AppIntents")` to the `LogiJuice` target's `linkerSettings`.
 
@@ -5407,13 +5407,13 @@ struct LogiJuiceShortcuts: AppShortcutsProvider {
 }
 ```
 
-- [x] **Step 2: Build and check whether Shortcuts sees the actions**
+- [x] **Step 2: build and check whether Shortcuts sees the actions**
 
 Run: `scripts/build-app.sh && rm -rf /Applications/LogiJuice.app && cp -R dist/LogiJuice.app /Applications/ && open /Applications/LogiJuice.app`
 Then open Shortcuts.app, create a new shortcut and search the action library for "LogiJuice".
 Expected: "Get Device Battery" and "Get Lowest Battery" are listed. Running "Get Lowest Battery" shows the same line as `logijuice status` for the lowest device.
 
-- [x] **Step 3: Decide**
+- [x] **Step 3: decide**
 
 - **If the actions appear:** commit.
   ```bash
@@ -5429,7 +5429,7 @@ Expected: "Get Device Battery" and "Get Lowest Battery" are listed. Running "Get
 **Files:**
 - Create: `README.md`, `Casks/logijuice.rb`, `docs/manual-checklist.md`
 
-- [x] **Step 1: Write the README**
+- [x] **Step 1: write the README**
 
 `README.md`:
 ````markdown
@@ -5484,7 +5484,7 @@ No telemetry and no network access. Data stays in `~/Library/Application Support
 MIT
 ````
 
-- [x] **Step 2: Write the cask**
+- [x] **Step 2: write the cask**
 
 `Casks/logijuice.rb`:
 ```ruby
@@ -5514,7 +5514,7 @@ end
 
 `sha256 :no_check` is replaced with the real hash when the first release zip exists (`shasum -a 256 LogiJuice-0.1.0.zip`). No release is published in this plan.
 
-- [ ] **Step 3: Write and run the manual checklist**
+- [ ] **Step 3: write and run the manual checklist**
 
 `docs/manual-checklist.md`:
 ```markdown
@@ -5541,9 +5541,9 @@ Run on the owner's Mac with the Bolt receiver, a percent-reporting mouse and key
 | 15 | Second Mac (if available) | Other Mac shows synced readings; only the Mac with the receiver alerts | |
 ```
 
-Go through every row on the Mac and fill in the Result column. Fix failures through the owning task's tests before marking them as passing.
+Go through every row on the Mac and fill in the Result column. Fix each failure through the tests of the task responsible for that feature before marking it as passing.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 4: commit**
 
 ```bash
 git add -- README.md Casks docs/manual-checklist.md
