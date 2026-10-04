@@ -22,8 +22,8 @@ and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
 - **Installed:** `/Applications/LogiJuice.app` runs the same app code as 0.1.0 (built at `191bad6`; later commits only
   touch docs, scripts and the cask).
 - Widget fix (`811426d`) and capture redaction (`191bad6`) were verified on hardware.
-- README header follows sleight's layout: centered app icon (`docs/assets/logijuice-icon-*.png`, exported from
-  `Resources/AppIcon.icns`), badges and section links. Checked on the GitHub page.
+- The README header follows sleight's layout and was checked on the GitHub page. Its centered app icon is
+  `docs/assets/logijuice-icon-*.png`, exported from `Resources/AppIcon.icns`.
 - Owner-verified on hardware earlier: receiver and both devices, notifications, the Low nudge waiting for a lock, the
   widget gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback and the glass settings window.
 - Key commits (post-rewrite): spec `48eeb46`, plan `03289df`, bring-up `c68e66c`, app `a987c91`, widget gallery fix
