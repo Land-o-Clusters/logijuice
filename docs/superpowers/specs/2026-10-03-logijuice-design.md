@@ -315,8 +315,9 @@ The plan tags each task:
 
 ## 11. Later (explicitly out of v1)
 
-- Developer ID signing and notarization, when the repo goes public. `build-app.sh` already takes `SIGNING_IDENTITY`,
-  but notarization and the release zip still have to be added.
+- Developer ID signing and notarization, once the owner settles a signing entity (decided 2026-10-04: v1 releases
+  are ad-hoc signed, and going public doesn't wait for this). `build-app.sh` already takes `SIGNING_IDENTITY`;
+  notarization still has to be added.
 - Official Homebrew cask (requires notarization); v1 uses a cask in the repo, like Puddle
 - Native-Bluetooth Logitech devices
 

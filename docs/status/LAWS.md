@@ -54,8 +54,12 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   never reaches the gallery. `scripts/build-app.sh` refuses to package one that doesn't.
 - **App Intents metadata is built outside Xcode:** the App target's release flags emit Swift const values, and
   `build-app.sh` runs `appintentsmetadataprocessor`, refusing to package without `GetLowestBatteryIntent`.
-- Ad-hoc signing by default. `SIGNING_IDENTITY` switches to Developer ID later. Nothing may depend on an Apple Developer
-  membership until the owner buys one.
+- **Releases are ad-hoc signed** (owner, 2026-10-04). The owner's personal name and RoleGauge are never used to
+  sign. Developer ID signing waits until the owner settles a neutral signing entity, and `SIGNING_IDENTITY` switches
+  to it then. Going public doesn't depend on it. `scripts/release.sh` builds the zip and publishes nothing.
+- **A downloaded release is blocked until the user approves it**, including the bundled CLI (Gatekeeper kills it with
+  exit 137 while the bundle is quarantined). The download instructions say to open the app once, via Open Anyway,
+  before using `logijuice`.
 
 ## Repo
 - **Docs pass Vale.** `.vale.ini` uses the `ai-tells` pack pinned like sleight's. Run `vale sync` once, then

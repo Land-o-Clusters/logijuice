@@ -2,7 +2,12 @@
 
 What is true NOW. Replace §0 in place and never stack banners. Rules that hold always are in `LAWS.md`.
 
-## §0 Current state (2026-10-04 00:30 UTC)
+## §0 Current state (2026-10-04 00:45 UTC)
+
+**Unsigned releases (owner, 2026-10-04):** no Developer ID until the owner settles a neutral signing entity (not their
+name, not RoleGauge). Going public no longer waits on Apple. `scripts/release.sh` builds `dist/LogiJuice-0.1.0.zip`
+(rc 0, 155 tests). The unzipped bundle verifies, and Gatekeeper rejects it while quarantined, as expected for an
+unnotarized app (the user clicks Open Anyway).
 
 **Repo hygiene pass (owner asked "fix it all"):** `debug capture` now redacts serial numbers and unit IDs (`b5cf2c5`,
 verified on a hardware capture). `scripts/github-settings.sh` applied the description, topics, wiki and projects off,
@@ -50,17 +55,21 @@ bolt green and re-reads it every 60 s, which still needs a real charge to verify
    seen on hardware since the fix.
 2. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`).
 3. Mon 2026-10-05: #4, #5, #6, #15 with the owner.
-4. When the owner says the Apple Developer membership is bought: wire `SIGNING_IDENTITY` and notarization into
-   `build-app.sh`, make a release zip and fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
-   recreate the GitHub repo from the scrubbed history and make it public.
+4. Going public, each step **with an explicit owner yes**: delete and recreate the GitHub repo from the scrubbed
+   history, make it public, then publish release v0.1.0 (see the checklist below).
 
 **Go-public checklist** (on the recreated repo):
+- Run `scripts/release.sh`, attach the zip to release v0.1.0, and set the printed `sha256` in `Casks/logijuice.rb`.
+- Add download instructions to the README. A downloaded app has to be opened once via Open Anyway before the CLI runs.
+- First real download test: after Open Anyway, the app launches and the bundled `logijuice` runs (not yet verified).
 - Run `scripts/github-settings.sh`. Private vulnerability reporting is the step that only works once the repo is public.
 - CI (owner decided 2026-10-04 to wait until public, when macOS minutes are free): the owner lifts the org ruleset
   for `.yml`, then push branch `ci` (or cherry-pick `e61cdfc`).
 
 **Open owner decisions:**
-- Going public needs the Apple membership, then an explicit yes to delete, recreate and flip visibility.
+- Going public needs an explicit yes to delete, recreate and flip visibility, and another to publish the release.
+- Signing entity: the owner may give the planned RoleGauge LLC a neutral legal name so open-source projects can sign
+  under it (to check with their advisor). Until then, releases stay ad-hoc signed.
 - Spec adjustments 1 to 9 (plan header) stand. They were presented 2026-10-03 and the owner proceeded.
 - Untested: a freshly powered receiver on a Mac without Options+ may not send events. The 30-minute re-read covers it.
 
