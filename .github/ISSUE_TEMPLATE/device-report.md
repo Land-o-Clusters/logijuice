@@ -14,5 +14,5 @@ labels: hardware
 
 **macOS version**:
 
-**Capture**: run `logijuice debug capture --seconds 30 --probe` and attach `logijuice-capture.json`. The file
-includes your devices' serial numbers, so leave it out if you'd rather not share them.
+**Capture**: run `logijuice debug capture --seconds 30 --probe` and attach `logijuice-capture.json`. Serial numbers
+and unit IDs are removed from the file.

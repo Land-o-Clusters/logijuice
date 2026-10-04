@@ -1,7 +1,10 @@
 import Foundation
+import JuiceCore
 import JuiceHID
+import JuiceStore
 
-/// `logijuice debug capture [--seconds N] [--out FILE] [--probe]` — records raw HID++ frames (spec §3).
+/// `logijuice debug capture [--seconds N] [--out FILE] [--probe]` — records raw HID++ frames (spec §3), with device
+/// serial numbers and unit IDs redacted (`CaptureRedactor`).
 public enum DebugCapture {
   struct Frame: Codable {
     var t: Double
@@ -14,19 +17,25 @@ public enum DebugCapture {
     var frames: [Frame]
   }
 
+  /// Raw frames stay in memory; only the redacted form is written. They aren't printed live, because a pasted
+  /// terminal log would carry the same identifiers.
   final class Log: @unchecked Sendable {
     private let lock = NSLock()
     private let start = Date()
-    private(set) var frames: [Frame] = []
+    private var frames: [(t: Double, raw: CaptureRedactor.RawFrame)] = []
 
     func add(_ dir: String, _ bytes: [UInt8]) {
-      let frame = Frame(t: Date().timeIntervalSince(start), dir: dir,
-                        hex: bytes.map { String(format: "%02X", $0) }.joined(separator: " "))
-      lock.withLock { frames.append(frame) }
-      print("\(dir) \(frame.hex)")
+      let t = Date().timeIntervalSince(start)
+      lock.withLock { frames.append((t, CaptureRedactor.RawFrame(dir: dir, bytes: bytes))) }
     }
 
-    var snapshot: [Frame] { lock.withLock { frames } }
+    func redacted(knownIDs: [String]) -> [Frame] {
+      let all = lock.withLock { frames }
+      let clean = CaptureRedactor.redact(all.map(\.raw), knownIDs: knownIDs)
+      return zip(all, clean).map { entry, frame in
+        Frame(t: entry.t, dir: frame.dir, hex: frame.bytes.map { String(format: "%02X", $0) }.joined(separator: " "))
+      }
+    }
   }
 
   final class RecordingChannel: ReportChannel, @unchecked Sendable {
@@ -74,7 +83,7 @@ public enum DebugCapture {
         Task {
           for slot in UInt8(1)...6 {
             if let info = await session.identify(slot: slot) {
-              print("slot \(slot): \(info.info.name) \(info.info.kind) \(info.info.id) \(info.battery)")
+              print("slot \(slot): \(info.info.name) \(info.info.kind) \(CaptureRedactor.redactID(info.info.id.rawValue)) \(info.battery)")
               print("battery:", String(describing: await session.readBattery(info)))
             }
           }
@@ -94,8 +103,10 @@ public enum DebugCapture {
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       encoder.dateEncodingStrategy = .iso8601
-      try encoder.encode(Capture(capturedAt: Date(), frames: log.snapshot)).write(to: out)
-      print("Wrote \(log.snapshot.count) frames to \(out.path)")
+      let known = SnapshotStore(url: JuicePaths.standard().snapshotURL).read()?.devices.map(\.id.rawValue) ?? []
+      let frames = log.redacted(knownIDs: known)
+      try encoder.encode(Capture(capturedAt: Date(), frames: frames)).write(to: out)
+      print("Wrote \(frames.count) frames to \(out.path), with serial numbers and unit IDs redacted")
       return 0
     } catch {
       FileHandle.standardError.write(Data("Could not write capture: \(error)\n".utf8))

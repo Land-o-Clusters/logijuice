@@ -29,7 +29,7 @@ it, and that path is untested. Devices without any of the three, such as some ga
 show "battery not reported". Bluetooth connections aren't handled, because macOS already shows those devices.
 
 To help test a receiver or device marked untested, run `logijuice debug capture --seconds 30 --probe` and attach the
-file to an issue. The file includes your devices' serial numbers, so share it only if you're comfortable with that.
+file to an issue. logijuice removes your devices' serial numbers and unit IDs from the file before writing it.
 
 ## Install from source
 
