@@ -3,3 +3,5 @@
 dist/
 *.xcuserdata
 .DS_Store
+.vale/styles/
+.claude/worktrees/

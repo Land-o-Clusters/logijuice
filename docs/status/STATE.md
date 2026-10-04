@@ -51,6 +51,18 @@ green, and charging devices are re-read every 60 s so the fill rises. It still n
    `build-app.sh`, make a release zip, fill in the cask `sha256`. Then, **with an explicit owner yes**, delete and
    recreate the GitHub repo from the scrubbed history and make it public.
 
+**Repo hygiene (2026-10-04):** README rewritten with the humanizer skill and linted with Vale (`.vale.ini` copied
+from sleight; `vale sync` then `vale README.md .github` → 0 findings). Markdown issue templates for device reports and
+bugs. Code of conduct, contributing, security policy and PR template come from the org `.github` repo (community
+profile 100%). MIT LICENSE present. The org ruleset blocks every `*.yml`/`*.yaml` push, so no YAML issue forms or CI.
+
+**Go-public checklist** (after the Apple membership and the owner's yes; settings must be applied to the recreated
+repo, since the old one is deleted):
+- `debug capture --probe` must redact serial numbers and unit IDs before the README invites public uploads.
+- Enable private vulnerability reporting (the org SECURITY.md points reporters at it; private repos can't have it).
+- CI (owner: needs the ruleset lifted, and macOS runners cost minutes): `swift test`, `build-app.sh`, Vale.
+- Topics, disable wiki and projects, delete branches on merge, protect `main`.
+
 **Open owner decisions:**
 - Going public: needs the Apple membership, then an explicit yes to delete+recreate and flip visibility.
 - Spec adjustments 1–9 (plan header) stand (presented 2026-10-03; owner proceeded).

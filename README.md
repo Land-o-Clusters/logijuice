@@ -1,40 +1,39 @@
 # logijuice 🔋🐧
 
-Battery levels and low-battery alerts for Logitech keyboards and mice connected through a **Logi Bolt** (or Unifying) receiver, which macOS's own battery UI can't see.
+Battery levels and low-battery alerts on macOS for Logitech keyboards and mice that connect through a Logi Bolt or Unifying receiver. macOS's own battery menu doesn't show these devices.
 
 > logijuice is unofficial and not affiliated with or endorsed by Logitech. "Logitech", "Logi Bolt", "Unifying" and "Logi Options+" are trademarks of Logitech.
 
-## What it does
+## Features
 
-- **Stays out of the way.** The menu bar icon appears only when a battery is low or charging (or always, if you prefer).
-- **Escalating alerts, all customizable.**
-  - Low (20%) waits for a natural moment: screen lock, end of day, before sleep, or when your hub switches away ("Leaving this desk?").
-  - Very low (10%) and Critical (5%) alert right away. Critical repeats daily until you charge.
-- **Time-left forecast.** It learns each device's real drain rate: "~9 days left".
-- **Widgets.** Small and medium desktop and Notification Center widgets.
-- **Works across Macs.** Readings sync through your own iCloud Drive, so a hub-switching setup still shows recent values, and only the Mac holding the receiver alerts you.
-- **Plays nicely with Logi Options+.** logijuice only *reads* battery information and never changes device settings.
-- **Scriptable.** `logijuice status --json`.
+- The menu bar icon is the outline of your lowest device, a mouse or a keyboard, filled to its battery level. By default it shows up only while a battery is low or charging. Pin a device in Settings to keep it in the menu bar.
+- Alerts escalate, and you can rename, retime or turn off each level. Low (20%) waits up to 8 hours for a natural break like a screen lock or sleep, and also alerts at the end of your day or when your hub moves to another Mac ("Leaving this desk?"). Very low (10%) and Critical (5%) alert right away, and Critical repeats daily until you charge.
+- The forecast learns how fast each device drains and shows the time left, such as "~9 days". The first estimate takes about two days of use.
+- After three full charges, Settings shows an estimated battery health, worked out from how long each charge lasted because the receiver doesn't report capacity or charge cycles.
+- Small and medium widgets work on the desktop and in Notification Center.
+- Readings sync through your own iCloud Drive, so a Mac without the receiver still shows recent values. Only the Mac that has the receiver sends alerts.
+- logijuice reads battery information and never changes a device setting, so it runs alongside Logi Options+.
+- For scripts, there is `logijuice status --json` and two Shortcuts actions, Get Device Battery and Get Lowest Battery.
 
 ## Supported hardware
 
 | Receiver | Status |
 |---|---|
-| **Logi Bolt** (`C548`) | Tested: MX Keys S, MX Master 3S |
-| **Unifying** (`C52B`, `C532`) | Same protocol, not yet tested |
-| **Lightspeed** (gaming: `C539`, `C53A`, `C53D`, `C53F`, `C541`, `C545`, `C547`) | Not yet tested |
+| Logi Bolt (`C548`) | Tested with MX Keys S and MX Master 3S |
+| Unifying (`C52B`, `C532`) | Same protocol, not yet tested |
+| Lightspeed, for gaming devices (`C539`, `C53A`, `C53D`, `C53F`, `C541`, `C545`, `C547`) | Not yet tested |
 
-A device works if it reports battery through HID++ feature 0x1004 (percentage), 0x1000, or 0x1001. Feature 0x1001
-reports voltage; logijuice converts it to a percentage with a typical lithium-ion curve, which is common on G-series
-mice and untested. Devices without any of these (some gaming headsets, older AA models) are listed as "battery not
-reported". Bluetooth-connected devices aren't handled, because macOS already shows those.
+A device works if it reports its battery through HID++ feature 0x1004 (percentage), 0x1000 or 0x1001. Feature 0x1001
+reports a voltage, which logijuice converts to a percentage with a typical lithium-ion curve. G-series mice often use
+it, and that path is untested. Devices without any of the three, such as some gaming headsets and older AA models,
+show "battery not reported". Bluetooth connections aren't handled, because macOS already shows those devices.
 
-Have a device or receiver marked untested? `logijuice debug capture --seconds 30 --probe` records what it reports.
-Please open an issue with the file.
+To help test a receiver or device marked untested, run `logijuice debug capture --seconds 30 --probe` and attach the
+file to an issue. The file includes your devices' serial numbers, so share it only if you're comfortable with that.
 
-## Install (from source)
+## Install from source
 
-Requirements: macOS 14+, Xcode (full install).
+You need macOS 14 or later and a full Xcode install.
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
@@ -44,7 +43,7 @@ cp -R dist/LogiJuice.app /Applications/
 open /Applications/LogiJuice.app
 ```
 
-The app is ad-hoc signed. On first launch, macOS may ask you to approve it in **System Settings → Privacy & Security → Open Anyway**.
+The app is ad-hoc signed, so macOS may block the first launch. Approve it in System Settings → Privacy & Security → Open Anyway.
 
 ## Command line
 
@@ -56,10 +55,16 @@ logijuice devices
 logijuice debug capture --seconds 30 --probe   # raw HID++ frames, for bug reports
 ```
 
+## Uninstall
+
+Quit LogiJuice from its menu and delete `/Applications/LogiJuice.app`. Its data is in
+`~/Library/Application Support/logijuice/` and, if sync was on, `iCloud Drive/logijuice/`.
+
 ## Privacy
 
-No telemetry and no network access. Data stays in `~/Library/Application Support/logijuice/` and (if sync is on) `iCloud Drive/logijuice/`.
+logijuice doesn't send telemetry or open network connections. Its data stays in
+`~/Library/Application Support/logijuice/` and, when sync is on, in your own `iCloud Drive/logijuice/`.
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
