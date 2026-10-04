@@ -47,6 +47,11 @@ and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05, and health
   shows after 3 full charges.
 
+**Delegated to Codex (owner, 2026-10-04).** It pushes CI by lifting and restoring the org `.yml` ruleset, and
+deletes the pre-scrub bundle. It also runs two hardware checks: a browser download approved with Open Anyway, and
+Shortcuts "Get Lowest Battery". The owner pastes Codex's results back,
+and juice-arch records them here and in the checklist. Signing stays unsigned (owner reconfirmed).
+
 **Next action:**
 1. Owner: lift the org `.yml` ruleset, then juice-arch pushes `ci` and watches the first run.
 2. Owner, optional: download the zip in a browser and approve it with Open Anyway, then run `logijuice status` from
