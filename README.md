@@ -1,8 +1,28 @@
-# logijuice 🔋🐧
+<p align="center"><img src="docs/assets/logijuice-icon-256.png" width="128" height="128" alt="LogiJuice icon: a white mouse silhouette on an orange tile, filled about 70% like a battery gauge"></p>
 
-Battery levels and low-battery alerts on macOS for Logitech keyboards and mice that connect through a Logi Bolt or Unifying receiver. macOS's own battery menu doesn't show these devices.
+<h1 align="center">logijuice</h1>
+<p align="center"><strong>Battery levels and low-battery alerts for Logitech mice and keyboards on a Logi Bolt receiver.</strong></p>
+<p align="center">A menu bar app for macOS, with a widget and a command-line tool. macOS's own battery menu doesn't show these devices.</p>
 
-> logijuice is unofficial and not affiliated with or endorsed by Logitech. "Logitech", "Logi Bolt", "Unifying" and "Logi Options+" are trademarks of Logitech.
+<p align="center">
+  <a href="https://github.com/Land-o-Clusters/logijuice/releases/latest"><img alt="latest release" src="https://img.shields.io/github/v/release/Land-o-Clusters/logijuice?color=FF841C&label=release"></a>
+  <img alt="license MIT" src="https://img.shields.io/badge/license-MIT-FF841C">
+  <img alt="platform macOS 14 or later" src="https://img.shields.io/badge/platform-macOS%2014%2B-3E4A56">
+  <img alt="status unofficial" src="https://img.shields.io/badge/status-unofficial-3E4A56">
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> ·
+  <a href="#supported-hardware">Supported hardware</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#command-line">Command line</a> ·
+  <a href="#uninstall">Uninstall</a> ·
+  <a href="#privacy">Privacy</a>
+</p>
+
+> [!IMPORTANT]
+> logijuice is unofficial and not affiliated with or endorsed by Logitech. "Logitech", "Logi Bolt", "Unifying" and
+> "Logi Options+" are trademarks of Logitech.
 
 ## Features
 
