@@ -31,9 +31,29 @@ show "battery not reported". Bluetooth connections aren't handled, because macOS
 To help test a receiver or device marked untested, run `logijuice debug capture --seconds 30 --probe` and attach the
 file to an issue. logijuice removes your devices' serial numbers and unit IDs from the file before writing it.
 
-## Install from source
+## Install
 
-You need macOS 14 or later and a full Xcode install.
+LogiJuice needs macOS 14 or later.
+
+### Download
+
+Get `LogiJuice-0.1.0.zip` from the [latest release](https://github.com/Land-o-Clusters/logijuice/releases/latest),
+unzip it and move LogiJuice.app to Applications. The app isn't notarized by Apple, so macOS blocks the first launch.
+Open it once, then click Open Anyway in System Settings → Privacy & Security. macOS also blocks the `logijuice` command
+inside the app until you do.
+
+### Homebrew
+
+```sh
+brew tap Land-o-Clusters/logijuice https://github.com/Land-o-Clusters/logijuice
+brew install --cask logijuice
+```
+
+The same Open Anyway step applies on first launch.
+
+### Build from source
+
+You need a full Xcode install. A build made on your own Mac launches without the Open Anyway step.
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
@@ -42,8 +62,6 @@ scripts/build-app.sh
 cp -R dist/LogiJuice.app /Applications/
 open /Applications/LogiJuice.app
 ```
-
-The app is ad-hoc signed, so macOS may block the first launch. Approve it in System Settings → Privacy & Security → Open Anyway.
 
 ## Command line
 
