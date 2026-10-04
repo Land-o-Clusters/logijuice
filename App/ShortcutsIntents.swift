@@ -1,3 +1,7 @@
+// Shortcuts actions. Built only into signed apps (scripts/build-app.sh sets LOGIJUICE_APP_INTENTS): macOS runs
+// App Intents only for an app with a Team ID, and rejects an ad-hoc-signed one (`requiresValidatedBundle`), so an
+// unsigned build would list actions that always fail.
+#if LOGIJUICE_APP_INTENTS
 import AppIntents
 import JuiceCore
 import JuiceStore
@@ -65,3 +69,4 @@ struct LogiJuiceShortcuts: AppShortcutsProvider {
                 shortTitle: "Lowest Battery", systemImageName: "battery.25percent")
   }
 }
+#endif

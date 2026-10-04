@@ -39,7 +39,7 @@
 - Small and medium widgets work on the desktop and in Notification Center.
 - Readings sync through your own iCloud Drive, so a Mac without the receiver still shows recent values. Only the Mac that has the receiver sends alerts.
 - logijuice reads battery information and never changes a device setting, so it runs alongside Logi Options+.
-- For scripts there are `logijuice status --json` and two Shortcuts actions, Get Device Battery and Get Lowest Battery.
+- For scripts there is `logijuice status --json`. In Shortcuts, run it from a Run Shell Script action.
 
 ## Supported hardware
 

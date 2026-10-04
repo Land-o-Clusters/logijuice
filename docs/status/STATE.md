@@ -56,8 +56,9 @@ unsigned (owner reconfirmed).
 **Shortcuts actions can't run while unsigned.** Running "Get Lowest Battery" fails with "Shortcuts couldn't
 communicate with the app". `linkd` logs `Unable to get teamId` and then `Rejecting invalid client due to
 requiresValidatedBundle`. App Intents need a Team ID, which ad-hoc signing lacks. Task 18 only checked that the
-actions appear. Owner decision pending: drop the actions from unsigned builds and point the README at
-`logijuice status --json` in a Run Shell Script action, until signing exists. The owner's test shortcut "LogiJuice
+actions appear. The owner chose to drop the actions from unsigned builds, and that's done (README, spec and
+LAWS updated). An unsigned build has no intents or metadata, and a forced build (`LOGIJUICE_APP_INTENTS=1`) still
+produces them. The release 0.1.0 zip still contains the broken actions, so a 0.1.1 release would remove them. The owner's test shortcut "LogiJuice
 test" is still in Shortcuts.
 
 **Next action:**

@@ -54,8 +54,12 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   never reaches the gallery. `scripts/build-app.sh` refuses to package one that doesn't.
 - **App Intents only run in an app with a Team ID.** `linkd` rejects an ad-hoc-signed app (`requiresValidatedBundle`),
   so the actions appear in Shortcuts but fail to run. A Shortcuts check must run an action, not just find it.
+- **Shortcuts actions are built only into signed apps** (owner, 2026-10-04). `App/ShortcutsIntents.swift` compiles under
+  `LOGIJUICE_APP_INTENTS`, which `build-app.sh` sets when `SIGNING_IDENTITY` is set (`LOGIJUICE_APP_INTENTS=1`
+  forces it). An unsigned build that still contains the intents is refused (exit 68).
 - **App Intents metadata is built outside Xcode:** the App target's release flags emit Swift const values, and
-  `build-app.sh` runs `appintentsmetadataprocessor`, refusing to package without `GetLowestBatteryIntent`.
+  `build-app.sh` runs `appintentsmetadataprocessor` when intents are on, refusing to package without
+  `GetLowestBatteryIntent`.
 - **Releases are ad-hoc signed** (owner, 2026-10-04). The owner's personal name and RoleGauge are never used to
   sign. Developer ID signing waits until the owner settles a neutral signing entity, and `SIGNING_IDENTITY` switches
   to it then. Going public doesn't depend on it. `scripts/release.sh` builds the zip and publishes nothing.

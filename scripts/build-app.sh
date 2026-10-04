@@ -10,6 +10,11 @@ VERSION="${LOGIJUICE_VERSION:-0.1.0}"
 BUILD_NUMBER="${LOGIJUICE_BUILD_NUMBER:-1}"
 SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
 ARCH_FLAGS=(--arch arm64 --arch x86_64)
+# Shortcuts actions only run in an app with a Team ID, so they're built only into signed apps.
+# LOGIJUICE_APP_INTENTS=1 forces them on (to exercise the metadata step in an unsigned build).
+if [[ "$SIGNING_IDENTITY" != "-" ]]; then APP_INTENTS="${LOGIJUICE_APP_INTENTS:-1}"; else APP_INTENTS="${LOGIJUICE_APP_INTENTS:-0}"; fi
+APP_FLAGS=()
+[[ "$APP_INTENTS" == 1 ]] && APP_FLAGS=(-Xswiftc -DLOGIJUICE_APP_INTENTS)
 APP="$ROOT/dist/LogiJuice.app"
 
 sign() {
@@ -20,7 +25,7 @@ sign() {
   fi
 }
 
-swift build -c release "${ARCH_FLAGS[@]}" --product LogiJuice
+swift build -c release "${ARCH_FLAGS[@]}" ${APP_FLAGS[@]+"${APP_FLAGS[@]}"} --product LogiJuice
 swift build -c release "${ARCH_FLAGS[@]}" --product logijuice-cli
 HAS_WIDGET=0
 if [[ -d WidgetExtension ]]; then
@@ -33,17 +38,22 @@ BIN="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)"
 # release flags emit .build/LogiJuice.swiftconstvalues and this compiles it into Metadata.appintents.
 AI="$ROOT/.build/appintents"
 rm -rf "$AI" && mkdir -p "$AI/out"
-ls "$ROOT"/App/*.swift > "$AI/sources.txt"
-echo "$ROOT/.build/LogiJuice.swiftconstvalues" > "$AI/constvals.txt"
-xcrun appintentsmetadataprocessor --output "$AI/out" \
-  --toolchain-dir "$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain" --module-name LogiJuice \
-  --sdk-root "$(xcrun --sdk macosx --show-sdk-path)" \
-  --xcode-version "$(xcodebuild -version | awk '/Build version/{print $3}')" \
-  --platform-family macOS --deployment-target 14.0 --target-triple arm64-apple-macos14.0 \
-  --source-file-list "$AI/sources.txt" --swift-const-vals-list "$AI/constvals.txt" --force >/dev/null
-if ! grep -q GetLowestBatteryIntent "$AI/out/Metadata.appintents/extract.actionsdata" 2>/dev/null; then
-  printf 'App Intents metadata missing or empty; Shortcuts actions would not appear.\n' >&2
-  exit 67
+if [[ "$APP_INTENTS" == 1 ]]; then
+  ls "$ROOT"/App/*.swift > "$AI/sources.txt"
+  echo "$ROOT/.build/LogiJuice.swiftconstvalues" > "$AI/constvals.txt"
+  xcrun appintentsmetadataprocessor --output "$AI/out" \
+    --toolchain-dir "$DEVELOPER_DIR/Toolchains/XcodeDefault.xctoolchain" --module-name LogiJuice \
+    --sdk-root "$(xcrun --sdk macosx --show-sdk-path)" \
+    --xcode-version "$(xcodebuild -version | awk '/Build version/{print $3}')" \
+    --platform-family macOS --deployment-target 14.0 --target-triple arm64-apple-macos14.0 \
+    --source-file-list "$AI/sources.txt" --swift-const-vals-list "$AI/constvals.txt" --force >/dev/null
+  if ! grep -q GetLowestBatteryIntent "$AI/out/Metadata.appintents/extract.actionsdata" 2>/dev/null; then
+    printf 'App Intents metadata missing or empty; Shortcuts actions would not appear.\n' >&2
+    exit 67
+  fi
+elif nm "$BIN/LogiJuice" > "$AI/symbols.txt" && grep -q GetLowestBatteryIntent "$AI/symbols.txt"; then
+  printf 'Unsigned build contains the Shortcuts actions, which macOS would refuse to run; refusing to package.\n' >&2
+  exit 68
 fi
 
 # An app extension must enter through _NSExtensionMain (Xcode links with `-e _NSExtensionMain`).
@@ -61,7 +71,7 @@ cp "$BIN/logijuice-cli" "$APP/Contents/Resources/bin/logijuice"
 chmod 0755 "$APP/Contents/Resources/bin/logijuice"
 cp LICENSE "$APP/Contents/Resources/LICENSE"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
-cp -R "$AI/out/Metadata.appintents" "$APP/Contents/Resources/Metadata.appintents"  # regenerate: swift scripts/make-icon.swift
+[[ "$APP_INTENTS" == 1 ]] && cp -R "$AI/out/Metadata.appintents" "$APP/Contents/Resources/Metadata.appintents"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

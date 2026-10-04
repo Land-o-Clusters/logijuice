@@ -260,6 +260,10 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 ### Shortcuts (App Intents)
 
+Amended 2026-10-04 (owner): these actions are built only into signed apps, because macOS runs App Intents only
+for an app with a Team ID. Unsigned releases leave them out, and the README points to `logijuice status --json`
+in a Run Shell Script action.
+
 - **Get Device Battery** (parameter: device) returns percent or word, charging, and days left.
 - **Get Lowest Battery** returns device and level.
 
