@@ -2,84 +2,67 @@
 
 What is true NOW. Replace §0 in place and never stack banners. Rules that hold always are in `LAWS.md`.
 
-## §0 Current state (2026-10-04 01:15 UTC)
+## §0 Current state (2026-10-04 03:30 UTC, flushed for a clear)
 
-**Public, with release 0.1.0 (owner said "run it", 2026-10-04).** `Land-o-Clusters/logijuice` was deleted and
-recreated from history rewritten to author `penguinspecz` (no legal name). Before the push, a scan of all 66 commits
-found zero serials, unit IDs, hardware UUID, computer name, home path, legal name or personal email. The same scan
-found them in the pre-scrub bundle, which proves it works. The repo is public with `scripts/github-settings.sh` applied
-(private vulnerability reporting on, `main` protected). Release
-[v0.1.0](https://github.com/Land-o-Clusters/logijuice/releases/tag/v0.1.0) has the ad-hoc signed zip (sha256
-`03748718…f14d`). The downloaded asset matches the cask, `brew fetch` verified it through a tap of this repo, and
-`brew audit --cask` is clean.
+**Phase:** v1 is feature-complete, public and released. The plan's last open steps are Task 19 Step 3 (manual
+checklist) and Step 4 (final commit). They close when the Monday rows (#4, #5, #6, #15) and the charge rows (#7
+follow-up, #8) pass. No code work is pending.
 
-**Phase:** v1 feature-complete and released. Plan Task 19 Step 3 (manual checklist) is open until the Monday rows
-and the charge rows pass. Signing waits for the owner's neutral entity (LAWS).
+**Release:** [v0.1.1](https://github.com/Land-o-Clusters/logijuice/releases/tag/v0.1.1) is the latest (build 2, ad-hoc
+signed, sha256 `00514f1b…2a65`, published 2026-10-04 with the owner's yes). It removed the Shortcuts actions, which
+were broken in 0.1.0. The downloaded asset matches `Casks/logijuice.rb`, and `brew fetch` and `brew audit --cask` pass
+through a tap of this repo. v0.1.0 is still listed as an older release.
 
-**Verified:**
-- `swift test` at `fd57212` (the release commit) exits 0 with **155 of 155 passing** (Store 10, HID 34, Core 101,
-  CLI 10), run by `scripts/release.sh`.
-- **Installed:** `/Applications/LogiJuice.app` runs the same app code as 0.1.0 (built at `191bad6`; later commits only
-  touch docs, scripts and the cask).
-- Widget fix (`811426d`) and capture redaction (`191bad6`) were verified on hardware.
-- The README header follows sleight's layout and was checked on the GitHub page. Its centered app icon is
-  `docs/assets/logijuice-icon-*.png`, exported from `Resources/AppIcon.icns`. Below it are the menu and widget screenshots
-  (`docs/assets/menu.png`, `widgets.png`, cropped from owner screenshots with the debug rows removed).
-- The repo's social preview is `docs/assets/social-preview.png` (1280×640), uploaded through Helium with sleight on
-  2026-10-04. GraphQL `usesCustomOpenGraphImage` is true. GitHub has no API to set it.
-- Owner-verified on hardware earlier: receiver and both devices, notifications, the Low nudge waiting for a lock, the
-  widget gallery, Shortcuts, icon, Options+ button, menu bar gauges, hover feedback and the glass settings window.
-- Key commits (post-rewrite): spec `48eeb46`, plan `03289df`, bring-up `c68e66c`, app `a987c91`, widget gallery fix
-  `b4aff59`, Lightspeed/voltage/headset `201ee79` (untested on hardware), battery health `e7ee17c`, charging `67c5d51`.
+**Verified (2026-10-04):**
+- `swift test` exits 0 with **155 of 155 passing** (Store 10, HID 34, Core 101, CLI 10) at `9e2b1f8`, the code
+  commit 0.1.1 was built from (run by `scripts/release.sh`). CI run 37173333170 on `9e2b1f8` passed both jobs
+  (build, prose). Later commits only touch docs, the cask and version defaults.
+- **Installed:** `/Applications/LogiJuice.app` is 0.1.1, running; `logijuice status` shows the mouse at 70% and the
+  keyboard at 90%, both learning.
+- On hardware: the widget fix (`811426d`), capture redaction (`191bad6`, no real IDs in a probe capture) and the
+  download path (Gatekeeper blocks until Open Anyway, then the bundled CLI runs).
+- Shortcuts actions fail in any ad-hoc build: `linkd` logs `Unable to get teamId`, then `Rejecting invalid client
+  due to requiresValidatedBundle`. Unsigned builds now leave them out (LAWS). The README points to
+  `logijuice status --json` in a Run Shell Script action.
+- GitHub: public, `scripts/github-settings.sh` applied (private vulnerability reporting on, `main` protected, topics,
+  `hardware` label). The README has the icon header, screenshots and badges. The social preview image is set. The
+  history was rewritten before going public: all commits are by `penguinspecz`, and a scan didn't find any serials, unit
+  IDs, hardware UUID, computer name, home path, legal name or personal email. The pre-scrub bundle is deleted.
+- Every Markdown file passes Vale (`vale README.md .github docs`, 0 findings).
 - Checklist **passed** #1, #2, #7, #9 to #14. #3 can't be tested because Options+ is a KeepAlive agent.
+- Key commits: spec `48eeb46`, plan `03289df`, bring-up `c68e66c`, app `a987c91`, battery health `e7ee17c`,
+  charging `67c5d51`, Lightspeed/voltage/headset `201ee79` (untested on hardware), CI `9178a6e`.
 
 **In flight:**
-- Branch `main` = `origin/main`, HEAD = the commit adding this banner. juice-arch works in the app-made worktree
-  `claude/boot-juice-arch-*` and fast-forwards `main`. The repo's git config sets `user.name penguinspecz`.
-- Local branch `ci` (`9f805ee`) holds the CI workflow, unpushed until the owner lifts the org `.yml` ruleset.
-- **Real IDs still on disk:** the old pre-scrub bundle in an old session scratchpad
-  (`logijuice-pre-scrub.bundle`). Deleting it is the owner's call. This session's scratch copies were deleted.
-- **Background jobs:** none of ours. A `log stream` with a display/powerd predicate belongs to another session, so
-  leave it alone.
-- **sleight** (owner's tool, `~/Projects/sleight`, owned by the "sleight arch" session) is installed for Claude Code at
-  user scope, version 0.1.1. It asks for approval through its own macOS panel (Allow / Don't Allow, 5-minute timeout).
-  An upgrade takes a **new session**, because `/reload-plugins` doesn't respawn its MCP server.
-- Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05, and health
-  shows after 3 full charges.
-
-**Codex results (2026-10-04, verified by juice-arch where possible).** The pre-scrub bundle is deleted (Spotlight
-doesn't find another copy). CI is live: `9178a6e`, `5542c52` and an empty trigger commit `da6ce00` are on `main`, run
-37170563500 passed both jobs, Actions is enabled for the repo, and ruleset 22105960 is back to `active`. The browser
-download was blocked until Open Anyway, after which the bundled `logijuice status` returned rc 0. Signing stays
-unsigned (owner reconfirmed).
-
-**Shortcuts actions can't run while unsigned.** Running "Get Lowest Battery" fails with "Shortcuts couldn't
-communicate with the app". `linkd` logs `Unable to get teamId` and then `Rejecting invalid client due to
-requiresValidatedBundle`. App Intents need a Team ID, which ad-hoc signing lacks. Task 18 only checked that the
-actions appear. The owner chose to drop the actions from unsigned builds, and that's done (README, spec and
-LAWS updated). An unsigned build has no intents or metadata, and a forced build (`LOGIJUICE_APP_INTENTS=1`) still
-produces them. Release [v0.1.1](https://github.com/Land-o-Clusters/logijuice/releases/tag/v0.1.1) (owner approved) removes them: build 2,
-sha256 `00514f1b…2a65`, downloaded asset matches the cask, `brew fetch` and `brew audit` pass, and it's installed here. The owner's test shortcut "LogiJuice
-test" is still in Shortcuts.
+- Branch `main` = `origin/main` (0 ahead, 0 behind), HEAD = the commit adding this banner, clean (`git status
+  --porcelain` empty). Worktrees: the main checkout and the app-made `.claude/worktrees/boot-juice-arch-3eb485`
+  (branch `claude/boot-juice-arch-3eb485`, fast-forwarded to `main`). The local `ci` branch was deleted; its commit
+  is on `main` as `9178a6e`.
+- The repo's own git config sets `user.name penguinspecz`.
+- **Background jobs:** none of ours. A `log stream` (pid 84839, kernel/display predicate) belongs to another session;
+  leave it.
+- The owner's test shortcut "LogiJuice test" in Shortcuts no longer has a working action. The owner can delete it.
+- Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05. Battery
+  health needs 3 full charges, and its trend needs 6.
 
 **Next action:**
-1. Owner: lift the org `.yml` ruleset, then juice-arch pushes `ci` and watches the first run.
-2. Owner, optional: download the zip in a browser and approve it with Open Anyway, then run `logijuice status` from
-   the bundle. This confirms the CLI runs once the app is approved (not yet seen). Quit the installed app first.
-3. Owner, optional: run Shortcuts "Get Lowest Battery" once (same snapshot as the widget, not seen since the fix).
-4. On the next real charge, confirm the fill rises (log line `charging: re-reading every 60 s`), then #8.
-5. Mon 2026-10-05: #4, #5, #6, #15 with the owner. Then tick plan Task 19 Steps 3 and 4.
+1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),
+   #6 (sleep/wake) and #15 (second Mac: synced readings, only the receiver's Mac alerts). If that Mac runs without
+   Options+, also check whether a freshly powered receiver sends events.
+2. On the owner's next real charge: the fill rises (log line `charging: re-reading every 60 s`), then #8 (one
+   "Fully charged" notification).
+3. When those pass: record them in `docs/manual-checklist.md`, then tick plan Task 19 Steps 3 and 4.
 
 **Open owner decisions:**
-- Signing entity: the owner may give the planned RoleGauge LLC a neutral legal name so open-source projects can sign
-  under it (to check with their advisor). Until then, releases stay ad-hoc signed.
-- Whether to delete the pre-scrub bundle.
+- Signing entity: releases stay ad-hoc signed (owner reconfirmed 2026-10-04) until the owner settles a neutral entity,
+  possibly a neutrally named RoleGauge LLC. Signing brings back the Shortcuts actions.
 - Spec adjustments 1 to 9 (plan header) stand. They were presented 2026-10-03 and the owner proceeded.
-- Untested: a freshly powered receiver on a Mac without Options+ may not send events. The 30-minute re-read covers it.
+
+**Blockers:** none.
 
 ## Reading List
 - `docs/superpowers/specs/2026-10-03-logijuice-design.md`: the spec (what and why).
-- `docs/superpowers/plans/2026-10-03-logijuice.md`: the plan (tasks, code, tests, Codex-ready/hardware labels).
+- `docs/superpowers/plans/2026-10-03-logijuice.md`: the plan (Task 19 is the open one).
 - `docs/bringup-notes.md`: real receiver behavior and byte layouts from Task 0.
 - `docs/status/LAWS.md`: what is true always.
 - `docs/manual-checklist.md`: the owner-run hardware checklist (#4, #5, #6, #15 on Monday, #8 on a full charge).

@@ -77,8 +77,13 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   otherwise falls back to the macOS account's full name). The owner's legal name never goes into a commit.
 - **The public history is never rewritten.** `main` is protected against force-push. The one rewrite happened before
   the repo went public (2026-10-04: scrubbed IDs, author name).
-- **The org ruleset blocks pushing any `*.yml`/`*.yaml`.** Issue templates are Markdown. CI waits on the local `ci`
-  branch until the owner lifts the ruleset.
+- **The org ruleset blocks pushing any `*.yml`/`*.yaml`.** Issue templates are Markdown. Changing a workflow needs the
+  owner's yes to set ruleset 22105960 to `disabled`, push, and set it back to `active` right away (verify with
+  `gh api orgs/Land-o-Clusters/rulesets/22105960 --jq .enforcement`). CI runs `swift test`, `build-app.sh` and Vale.
+- **Releasing:** bump the version and build-number defaults in `build-app.sh` and `release.sh`, run
+  `scripts/release.sh`, and put the printed sha256 and version in `Casks/logijuice.rb`. Publishing a release needs the
+  owner's yes. After publishing, check that the downloaded asset matches the cask, then `brew tap` this repo, run
+  `brew fetch --cask` and `brew audit --cask`, and untap. Release notes pass Vale (`vale --config .vale.ini`).
 
 ## Method
 - **Verify instead of trusting:** "done" means the tests were re-run and their output read, and hardware claims need
