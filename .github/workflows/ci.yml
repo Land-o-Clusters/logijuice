@@ -34,4 +34,4 @@ jobs:
       - name: Prose lint
         run: |
           vale sync
-          vale README.md .github
+          vale README.md .github docs
