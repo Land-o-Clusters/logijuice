@@ -5554,5 +5554,5 @@ git commit -m "Add README, Homebrew cask and completed manual checklist" -- READ
 
 ## After the plan
 
-- Creating `Land-o-Clusters/logijuice` (private) on GitHub and pushing are **owner decisions**. Ask before running `gh repo create`.
-- Developer ID signing and notarization, the official Homebrew tap, and battery health stay in the spec's "Later" list.
+- The owner created `Land-o-Clusters/logijuice` (private). Recreating it and making it public are still **owner decisions**.
+- Developer ID signing, notarization and the official Homebrew tap stay in the spec's "Later" list. Battery health is part of v1.

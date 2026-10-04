@@ -56,12 +56,11 @@ bolt green and re-reads it every 60 s, which still needs a real charge to verify
 
 **Go-public checklist** (on the recreated repo):
 - Run `scripts/github-settings.sh`. Private vulnerability reporting is the step that only works once the repo is public.
-- CI: the owner lifts the org ruleset for `.yml`, then push branch `ci` (or cherry-pick `e61cdfc`). Public repos get
-  free macOS minutes, so turning it on after going public doesn't cost anything.
+- CI (owner decided 2026-10-04 to wait until public, when macOS minutes are free): the owner lifts the org ruleset
+  for `.yml`, then push branch `ci` (or cherry-pick `e61cdfc`).
 
 **Open owner decisions:**
 - Going public needs the Apple membership, then an explicit yes to delete, recreate and flip visibility.
-- The org ruleset blocks `.yml` pushes. Lifting it (even briefly) is needed for CI.
 - Spec adjustments 1 to 9 (plan header) stand. They were presented 2026-10-03 and the owner proceeded.
 - Untested: a freshly powered receiver on a Mac without Options+ may not send events. The 30-minute re-read covers it.
 

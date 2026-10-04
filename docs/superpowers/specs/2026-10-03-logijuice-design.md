@@ -1,7 +1,7 @@
 # logijuice design spec
 
 - **Date:** 2026-10-03
-- **Status:** draft, awaiting owner review
+- **Status:** accepted 2026-10-03, with dated amendments in the text and the plan's adjustments 1 to 9
 - **Repo:** `~/Projects/logijuice` → later `Land-o-Clusters/logijuice` (private first)
 - **Platform:** macOS 14+ on Apple Silicon and Intel, as a Swift package laid out like Puddle
 
@@ -315,7 +315,9 @@ The plan tags each task:
 
 ## 11. Later (explicitly out of v1)
 
-- Developer ID signing and notarization (when the repo goes public; the build script is ready for it)
+- Developer ID signing and notarization, when the repo goes public. `build-app.sh` already takes `SIGNING_IDENTITY`,
+  but notarization and the release zip still have to be added.
 - Official Homebrew cask (requires notarization); v1 uses a cask in the repo, like Puddle
-- Battery health over time (capacity fade across charge cycles)
 - Native-Bluetooth Logitech devices
+
+Battery health moved into v1 on 2026-10-03 as an estimate from charge runtimes (see LAWS).
