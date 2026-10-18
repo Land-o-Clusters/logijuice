@@ -12,6 +12,15 @@ final class SettingsTests: XCTestCase {
     XCTAssertFalse(back.alertsMuted(for: .serial("TESTKEYS0001")))
   }
 
+  func testForgettingADeviceRemovesItsPinAndMute() {
+    var s = Settings()
+    s.pinnedDevices = [.serial("TESTMOUSE001"), .serial("TESTKEYS0001")]
+    s.mutedDevices = [.serial("TESTMOUSE001")]
+    s.forget(.serial("TESTMOUSE001"))
+    XCTAssertEqual(s.pinnedDevices, [.serial("TESTKEYS0001")])
+    XCTAssertEqual(s.mutedDevices, [])
+  }
+
   func testOlderSettingsFileWithoutMutedDevicesLoads() throws {
     let old = Data(#"{"pinnedDevices":["sn:TESTKEYS0001"],"syncEnabled":true}"#.utf8)
     let s = try JSONDecoder().decode(Settings.self, from: old)

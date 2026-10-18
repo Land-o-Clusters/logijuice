@@ -216,7 +216,7 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
 
 - Folder: `~/Library/Mobile Documents/com~apple~CloudDocs/logijuice/`
 - One file per Mac: `<hardware-UUID>.json` = `{ schema: 1, macName, updatedAt, devices: [{ id, name,
-  kind, nickname?, readings: [...] }] }`. Each Mac writes **only its own file**, so there are no write
+  kind, nickname?, readings: [...] }], forgotten?: { <id>: <date> } }`. Each Mac writes **only its own file**, so there are no write
   conflicts by construction.
 - Write: throttled to at most once per 5 min, plus immediately on sleep and on receiver departure.
   Written atomically (temp file + rename).
@@ -224,6 +224,16 @@ receiver moves with the hub. Nicknames and per-device overrides are keyed by `De
   the union of readings by `(device, observedAt)` and the newest name/nickname by `updatedAt`.
 - Nicknames and alert overrides also live in the per-Mac file. Merge takes the newest by `updatedAt`, so
   renaming a device on one Mac renames it everywhere.
+- **Forgetting a device** (amended 2026-10-18, owner asked for per-device options). Settings offers Forget for a
+  device that isn't connected to this Mac, after a confirmation. Each file has an optional `forgotten` object, device
+  ID → forgotten-at time. It lists this Mac's forgets and the ones it learned from other files, and the newest time
+  per device wins. A merge drops the device's readings up to that time. It also drops a nickname or alert override set
+  before then, and a health log started before then. With nothing newer, the device disappears on every Mac. Once any
+  Mac reads it again, it comes back with only the newer data. Each Mac also purges its own copy, which keeps the old
+  data out of its file. The forgetting Mac drops its own pin, mute and alert state too. Forgets expire after two years,
+  the health retention. The key is additive and the schema number is unchanged at 1, which keeps v0.1.1 reading the
+  files. A v0.1.1 Mac doesn't honor forgets: it keeps showing the device, but newer Macs filter out the old data it
+  writes.
 - Toggle in settings (default **on** if iCloud Drive exists). If the folder is unavailable the setting
   shows "Sync off: iCloud Drive not enabled".
 

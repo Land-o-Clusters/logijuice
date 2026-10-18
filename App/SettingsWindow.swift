@@ -247,6 +247,7 @@ struct DeviceSettingsRow: View {
   let device: SnapshotDevice
   @Binding var showDetails: Bool
   @State private var nickname = ""
+  @State private var confirmingForget = false
   @FocusState private var editingName: Bool
 
   private var pinned: Binding<Bool> {
@@ -321,6 +322,13 @@ struct DeviceSettingsRow: View {
         Toggle("Alerts", isOn: alertsOn).toggleStyle(ChipToggleStyle())
         Toggle("Custom alerts", isOn: custom).toggleStyle(ChipToggleStyle())
           .disabled(!alertsOn.wrappedValue)
+        if !device.live {
+          Button { confirmingForget = true } label: { Image(systemName: "trash").font(.system(size: 14)) }
+            .buttonStyle(.borderless)
+            .foregroundStyle(.secondary)
+            .help("Forget this device")
+            .accessibilityLabel("Forget \(device.displayName)")
+        }
         Button { toggleDetails() } label: {
           Image(systemName: showDetails ? "info.circle.fill" : "info.circle").font(.system(size: 15))
         }
@@ -358,5 +366,12 @@ struct DeviceSettingsRow: View {
     }
     .onAppear { nickname = device.displayName }
     .onChange(of: editingName) { _, editing in if !editing { commitName() } }
+    .confirmationDialog("Forget \(device.displayName)?", isPresented: $confirmingForget) {
+      Button("Forget", role: .destructive) { model.forget(device.id) }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("Its battery history, health estimate, name and alert settings are removed from this Mac and from every Mac "
+        + "that syncs with it. This can't be undone. If it connects again, it starts fresh.")
+    }
   }
 }

@@ -63,9 +63,23 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Device coverage (owner asked): receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct
   pairing (out of scope in LAWS) is the large gap, so that's the owner's call.
 
+**2026-10-18, branch `claude/jovial-cerf-69ac40` (Forget a device; on top of the branch above, not merged):**
+- Settings shows a trash button on a device that isn't connected here. After a confirmation it forgets the device's
+  history, health, name, alert override and alert state, plus this Mac's pin and mute. The sync
+  file's optional `forgotten` map (device ID → forgotten-at, schema still 1) makes every Mac's `SyncMerge` drop
+  older data. Spec §6 and LAWS record the design.
+- Verified: `swift test` exit 0, 182 tests (Core 128, with 11 in `ForgetTests`); `build-app.sh` exit 0; Vale 0
+  findings. Via sleight on `dist/LogiJuice.app`: the button shows only on an offline fake `debug:test-mouse`
+  (added to `state.json` while the app was quit; backup in the session scratchpad), Cancel keeps it, Forget removes
+  it, and this Mac's iCloud file was rewritten with both real devices and no `debug:` forget.
+- **Not verified:** a second Mac dropping a device forgotten on this one. Add it to the #15 run.
+- This branch's `dist/` build now runs in place of the earlier branch's (it contains that branch's dropdown resize,
+  so the owner's click test still applies). `state.json` keeps a harmless `debug:test-mouse` forget.
+
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),
-   #6 (sleep/wake; also confirm the menu bar icon stays on screen, see the 2026-10-18 note) and #15 (second Mac: synced readings, only the receiver's Mac alerts). If that Mac runs without
+   #6 (sleep/wake; also confirm the menu bar icon stays on screen, see the 2026-10-18 note) and #15 (second Mac: synced readings, only the receiver's Mac alerts; with the Forget branch, also that a device
+   forgotten on one Mac disappears on the other). If that Mac runs without
    Options+, also check whether a freshly powered receiver sends events.
 2. On the owner's next real charge: the fill rises (log line `charging: re-reading every 60 s`), then #8 (one
    "Fully charged" notification).

@@ -34,6 +34,12 @@ public struct Settings: Hashable, Sendable, Codable {
 
   public func alertsMuted(for id: DeviceID) -> Bool { mutedDevices.contains(id) }
 
+  /// A forgotten device leaves no pin or mute behind on this Mac.
+  public mutating func forget(_ id: DeviceID) {
+    pinnedDevices.removeAll { $0 == id }
+    mutedDevices.removeAll { $0 == id }
+  }
+
   private enum CodingKeys: String, CodingKey {
     case profile, pinnedDevices, showAlertingInMenuBar, percentDisplay, fullyChargedEnabled, endOfDayHour,
       endOfDayMinute, maxWaitHours, syncEnabled, drainAlertEnabled, mutedDevices
