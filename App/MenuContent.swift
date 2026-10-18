@@ -133,7 +133,7 @@ struct MenuContent: View {
       }
       ForEach(model.snapshot.devices) { d in
         Button {
-          expanded = expanded == d.id ? nil : d.id
+          withAnimation(.easeInOut(duration: MenuPanel.resizeDuration)) { expanded = expanded == d.id ? nil : d.id }
         } label: {
           DeviceRow(device: d, now: Date(), expanded: expanded == d.id)
         }
@@ -144,6 +144,7 @@ struct MenuContent: View {
             .padding(.trailing, MenuMetrics.rowInset)
             .padding(.top, 1)
             .padding(.bottom, 7)
+            .transition(.opacity)
         }
       }
       if !model.receiverPresent && !model.snapshot.devices.isEmpty {
@@ -176,6 +177,8 @@ struct MenuContent: View {
     .onPreferenceChange(MenuHeightKey.self) { height in
       DispatchQueue.main.async { MenuPanel.shared.fit(contentHeight: height) }
     }
+    // Pinned to the top while the window animates: growing reveals rows downward, shrinking slides the bottom up.
+    .frame(maxHeight: .infinity, alignment: .top)
   }
 
   private func note(_ text: String) -> some View {

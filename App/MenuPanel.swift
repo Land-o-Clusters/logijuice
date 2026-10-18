@@ -33,8 +33,16 @@ final class MenuPanel {
     var content = current
     content.origin.y += current.height - height
     content.size.height = height
-    window.setFrame(window.frameRect(forContentRect: content), display: true)
+    let frame = window.frameRect(forContentRect: content)
+    NSAnimationContext.runAnimationGroup { context in
+      context.duration = Self.resizeDuration
+      context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+      window.animator().setFrame(frame, display: true)
+    }
   }
+
+  /// Shared with the SwiftUI fade on the details so the window and its content move together.
+  static let resizeDuration: TimeInterval = 0.2
 
   func close() {
     guard let window, window.isVisible else { return }
