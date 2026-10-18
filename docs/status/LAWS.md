@@ -29,6 +29,11 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   `Format.details` only (no new HID requests): battery, forecast, health, cycles, connection, tracked since, ID.
 - **The dropdown closes when another LogiJuice window takes focus** and before Settings opens. MenuBarExtra alone
   closes it only when another app takes focus.
+- **A device's alerts can be turned off per Mac** (owner, 2026-10-18): `Settings.mutedDevices`. Its level,
+  fully-charged and drain alerts are dropped at delivery, and the alert engine still tracks levels, so turning
+  alerts back on doesn't replay old ones. Its battery still shows everywhere.
+- **The app sizes the dropdown itself.** MenuBarExtra doesn't resize its panel when the content changes height, so
+  `MenuPanel.fit(contentHeight:)` animates the window to the measured content, with the content pinned to the top.
 - **The app re-adds its menu bar item when macOS parks it off-screen** (`StatusItemWatchdog`), at most once per
   10 minutes so a cause that re-adding can't fix doesn't churn the menu bar.
 - **Untested hardware is labelled untested** in the receiver catalog (`verified: false`) and in the README until a
@@ -95,6 +100,8 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   `scripts/release.sh`, and put the printed sha256 and version in `Casks/logijuice.rb`. Publishing a release needs the
   owner's yes. After publishing, check that the downloaded asset matches the cask, then `brew tap` this repo, run
   `brew fetch --cask` and `brew audit --cask`, and untap. Release notes pass Vale (`vale --config .vale.ini`).
+  `gh release create --target` takes a branch name or a full SHA, never a short SHA. Upload exactly the zip whose
+  hash is in the cask: rebuilding changes the hash.
 
 ## Method
 - **Verify instead of trusting:** "done" means the tests were re-run and their output read, and hardware claims need
@@ -117,6 +124,10 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
   columns.
 - **Never fade the window's blur by more than ~5%** (`NSVisualEffectView.alphaValue`). Fading cuts holes and the sharp
   desktop shows through. For more translucency, change the material.
+- **In a worktree, run Vale with the main checkout's config** (`vale --config ~/Projects/logijuice/.vale.ini …`):
+  `.vale/styles` is synced only there.
+- **The shell is zsh, which has no `PIPESTATUS`.** Capture a check's exit code by running it bare with output
+  redirected to a file, never through a pipe.
 - **Run checks bare, capture the exit code, commit only on 0.** Never `check | tail && git commit`: the `&&` reads the
   pipe's status, not the check's.
 - **Commit with the pathspec on the commit:** `git commit -m "…" -- <paths>`. Use `git add -- <path>` only for a file
