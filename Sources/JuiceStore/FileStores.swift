@@ -41,6 +41,8 @@ public struct LocalState: Hashable, Sendable, Codable {
   public var scheduler = NudgeScheduler(maxWait: 8 * 3600)
   /// Run start of the last drain alert per device (optional so older state files still decode).
   public var drainAlertedRuns: [DeviceID: Date]?
+  /// When each forgotten device was forgotten, this Mac's own and other Macs' (optional for older state files).
+  public var forgotten: [DeviceID: Date]?
 
   public init() {}
 }

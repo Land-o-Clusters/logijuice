@@ -37,7 +37,8 @@ final class SyncCoordinator {
     onRemoteFiles?(store.isAvailable ? store.readOthers() : [])
   }
 
-  func write(records: [DeviceRecord], force: Bool, now: Date = Date()) {
+  /// `forgotten` includes forgets learned from other Macs, so a forget survives even if its Mac's file goes away.
+  func write(records: [DeviceRecord], forgotten: [DeviceID: Date], force: Bool, now: Date = Date()) {
     guard store.isAvailable, force || now.timeIntervalSince(lastWrite) >= Self.writeInterval else { return }
     // Debug devices ("debug:…") are local test fixtures and never leave this Mac.
     let own = records.filter { !$0.info.id.rawValue.hasPrefix("debug:") }.map { record -> DeviceRecord in
@@ -45,8 +46,10 @@ final class SyncCoordinator {
       copy.readings = record.readings.filter { $0.source == .local }
       return copy
     }
+    let forgets = forgotten.filter { !$0.key.rawValue.hasPrefix("debug:") }
     do {
-      try store.writeOwn(SyncFile(macID: store.macID, macName: MacIdentity.name(), updatedAt: now, devices: own))
+      try store.writeOwn(SyncFile(macID: store.macID, macName: MacIdentity.name(), updatedAt: now, devices: own,
+                                  forgotten: forgets.isEmpty ? nil : forgets))
       lastWrite = now
     } catch {
       log.error("sync write failed: \(error.localizedDescription, privacy: .public)")

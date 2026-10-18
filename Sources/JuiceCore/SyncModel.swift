@@ -35,24 +35,31 @@ public struct SyncFile: Hashable, Sendable, Codable {
   public var macName: String
   public var updatedAt: Date
   public var devices: [DeviceRecord]
+  /// When each forgotten device was forgotten, as this Mac knows it (its own forgets and other Macs').
+  /// Optional and additive, so the schema stays 1 and older Macs still read the file (they ignore the key).
+  public var forgotten: [DeviceID: Date]?
 
   public init(schema: Int = SyncFile.currentSchema, macID: String, macName: String, updatedAt: Date,
-              devices: [DeviceRecord]) {
+              devices: [DeviceRecord], forgotten: [DeviceID: Date]? = nil) {
     self.schema = schema
     self.macID = macID
     self.macName = macName
     self.updatedAt = updatedAt
     self.devices = devices
+    self.forgotten = forgotten
   }
 }
 
 public enum SyncMerge {
-  public static func merge(local: [DeviceRecord], remotes: [SyncFile], now: Date) -> [DeviceRecord] {
+  /// `forgotten` is this Mac's own list; the other Macs' lists come from their files.
+  public static func merge(local: [DeviceRecord], remotes: [SyncFile], forgotten: [DeviceID: Date] = [:],
+                           now: Date) -> [DeviceRecord] {
+    let forgotten = self.forgotten(local: forgotten, remotes: remotes, now: now)
     var byID: [DeviceID: DeviceRecord] = [:]
-    for record in local { byID[record.info.id] = record }
+    for record in applyForgotten(forgotten, to: local) { byID[record.info.id] = record }
 
     for file in remotes where file.schema <= SyncFile.currentSchema {
-      for remote in file.devices {
+      for remote in applyForgotten(forgotten, to: file.devices) {
         let retagged = remote.readings.filter { $0.source == .local }.map { r -> Reading in
           var copy = r
           copy.source = .synced(macID: file.macID)
@@ -81,6 +88,39 @@ public enum SyncMerge {
       copy.readings = History.trim(copy.readings, now: now)
       return copy
     }.sorted { $0.info.id < $1.info.id }
+  }
+
+  /// A forget is kept as long as health runs are, so a Mac that comes back after months can't bring old data back.
+  public static let forgetRetention = HealthTracker.retention
+
+  /// The newest forget per device across this Mac and the others. Forgets older than `forgetRetention` are dropped.
+  public static func forgotten(local: [DeviceID: Date], remotes: [SyncFile], now: Date) -> [DeviceID: Date] {
+    var out: [DeviceID: Date] = [:]
+    let lists = [local] + remotes.filter { $0.schema <= SyncFile.currentSchema }.compactMap(\.forgotten)
+    for list in lists {
+      for (id, at) in list where now.timeIntervalSince(at) < forgetRetention {
+        out[id] = max(out[id] ?? at, at)
+      }
+    }
+    return out
+  }
+
+  /// Drops everything known about a device up to its forget: readings, a name or alert override set before it, and a
+  /// health log started before it. A device with nothing newer disappears; one seen again keeps only the newer data.
+  public static func applyForgotten(_ forgotten: [DeviceID: Date], to records: [DeviceRecord]) -> [DeviceRecord] {
+    guard !forgotten.isEmpty else { return records }
+    return records.compactMap { record -> DeviceRecord? in
+      guard let at = forgotten[record.id] else { return record }
+      var copy = record
+      copy.readings = record.readings.filter { $0.observedAt > at }
+      if record.metaUpdatedAt <= at {
+        copy.nickname = nil
+        copy.alertOverride = nil
+        copy.metaUpdatedAt = .distantPast
+      }
+      if let health = record.health, (health.since ?? .distantPast) <= at { copy.health = nil }
+      return copy.readings.isEmpty && copy.health == nil ? nil : copy
+    }
   }
 
   /// Union keyed by whole second; a local reading wins over a synced one at the same second.

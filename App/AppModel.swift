@@ -94,8 +94,11 @@ final class AppModel: ObservableObject {
   }
 
   var mergedRecords: [DeviceRecord] {
-    SyncMerge.merge(local: state.records, remotes: settings.syncEnabled ? remoteFiles : [], now: Date())
+    SyncMerge.merge(local: state.records, remotes: settings.syncEnabled ? remoteFiles : [], forgotten: forgotten,
+                    now: Date())
   }
+
+  var forgotten: [DeviceID: Date] { state.forgotten ?? [:] }
 
   func start() {
     if !UserDefaults.standard.bool(forKey: "registeredLoginItem") {
@@ -111,10 +114,12 @@ final class AppModel: ObservableObject {
     hid.start()
     sync.onRemoteFiles = { [weak self] files in
       self?.remoteFiles = files
+      self?.absorbForgotten()
       self?.publish()
     }
     if settings.syncEnabled { sync.start() }
     migrateLegacyMenuBarMode()
+    absorbForgotten()
     tickTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated { self?.handleTick() }
     }
@@ -146,7 +151,7 @@ final class AppModel: ObservableObject {
     for decision in decisions { deliver(state.scheduler.schedule(decision, now: now)) }
     if let record { checkDrain(record, reading: reading, now: now) }
     saveSoon()
-    if settings.syncEnabled { sync.write(records: state.records, force: false) }
+    writeSync(force: false)
   }
 
   /// Opt-in alert when a device drains about twice as fast as its own history; at most once per discharge run.
@@ -179,7 +184,7 @@ final class AppModel: ObservableObject {
     deliver(state.scheduler.onMoment(moment, now: Date()))
     if moment == .willSleep || moment == .receiverDeparted {
       saveNow()
-      if settings.syncEnabled { sync.write(records: state.records, force: true) }
+      writeSync(force: true)
     } else {
       saveSoon()
     }
@@ -238,6 +243,44 @@ final class AppModel: ObservableObject {
   func setNickname(_ name: String, for id: DeviceID) {
     let trimmed = name.trimmingCharacters(in: .whitespaces)
     mutateMeta(id) { $0.nickname = trimmed.isEmpty ? nil : trimmed }
+  }
+
+  /// Only a device that isn't connected here can be forgotten; a connected one would come straight back.
+  func canForget(_ id: DeviceID) -> Bool { !liveDevices.contains(id) }
+
+  /// Forgets a device on every Mac that syncs: its history, health, name, alert override and alert state, plus this
+  /// Mac's pin and mute. Other Macs drop it on their next poll. It comes back, fresh, if it's seen again.
+  func forget(_ id: DeviceID) {
+    guard canForget(id) else { return }
+    var list = forgotten
+    list[id] = Date()
+    state.forgotten = list
+    state.records = SyncMerge.applyForgotten(list, to: state.records)
+    dropAlertState(for: id)
+    settings.forget(id)
+    publish()
+    saveNow()
+    writeSync(force: true)
+  }
+
+  /// Takes in forgets from other Macs' files (and drops expired ones), then drops this Mac's own data they cover.
+  private func absorbForgotten() {
+    let combined = SyncMerge.forgotten(local: forgotten, remotes: settings.syncEnabled ? remoteFiles : [], now: Date())
+    guard combined != forgotten else { return }
+    state.forgotten = combined.isEmpty ? nil : combined
+    state.records = SyncMerge.applyForgotten(combined, to: state.records)
+    for id in combined.keys where !state.records.contains(where: { $0.id == id }) { dropAlertState(for: id) }
+    saveSoon()
+  }
+
+  private func dropAlertState(for id: DeviceID) {
+    state.alertStates[id] = nil
+    state.drainAlertedRuns?[id] = nil
+    state.scheduler.dropPending(for: id)
+  }
+
+  private func writeSync(force: Bool) {
+    if settings.syncEnabled { sync.write(records: state.records, forgotten: forgotten, force: force) }
   }
 
   /// Debug aid (enable with `defaults write com.penguinspecz.logijuice debugMenu -bool true`).
@@ -299,6 +342,6 @@ final class AppModel: ObservableObject {
     state.records[i].metaUpdatedAt = Date()
     publish()
     saveSoon()
-    if settings.syncEnabled { sync.write(records: state.records, force: true) }
+    writeSync(force: true)
   }
 }

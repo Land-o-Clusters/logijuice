@@ -34,6 +34,11 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **Untested hardware is labelled untested** in the receiver catalog (`verified: false`) and in the README until a
   hardware run proves it.
 - **Only `.local` readings fire alerts.** Synced readings update displays and forecasts only.
+- **A forget is synced and honored by every Mac** (owner asked, 2026-10-18, spec §6). The sync file's optional
+  `forgotten` map (device ID → forgotten-at) makes `SyncMerge` drop all data from before that time. Another Mac's
+  file can't bring the device back. Only data newer than the forget, from the device being seen again, brings it
+  back. Only a device that isn't connected here can be forgotten. New sync keys must be optional, with the schema
+  number unchanged at 1. Older Macs then read new files and ignore the new keys.
 - **The only data that leaves the Mac is the owner's own iCloud Drive file** (`iCloud Drive/logijuice/<hardware-UUID>.json`,
   one per Mac, each Mac writes only its own). There is no telemetry and no network code.
 - **No personal identifiers in the repo.** Never commit device serials, unit IDs, hardware UUIDs, Mac names or home
