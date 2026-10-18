@@ -60,6 +60,10 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
   a second click on a Settings gauge hide its details. Tests exit 0 (170), build exit 0, and the gauge toggle
   passed via sleight. **The dropdown resize still needs the owner's click test.** The `dist/` build is running.
   Afterwards, relaunch `/Applications/LogiJuice.app` (or install this build).
+- Owner-checked: the dropdown resize works. The next commit animates it (0.2 s window resize plus a fade on the
+  details), which needs the owner's look. **Release (owner, 2026-10-18):** once this branch and the forget-device
+  session's branch are merged into `main`, cut 0.1.2 per LAWS → Releasing. Confirm with the owner just before
+  publishing.
 - Device coverage (owner asked): receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct
   pairing (out of scope in LAWS) is the large gap. The owner asked for a scoping plan:
   `docs/superpowers/plans/2026-10-18-bluetooth-direct.md`. The spec is unchanged until the owner rules.
