@@ -1,6 +1,6 @@
 cask "logijuice" do
-  version "0.1.1"
-  sha256 "00514f1b9fcca55f2b7fcc095d952f649559ac4ee7f4763369b8148b9d002a65"
+  version "0.1.2"
+  sha256 "ada6e69f57c0f79bda6ae01b2c19f3d5f16a0e40a14814efe9130700a21c5386"
 
   url "https://github.com/Land-o-Clusters/logijuice/releases/download/v#{version}/LogiJuice-#{version}.zip"
   name "LogiJuice"

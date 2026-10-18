@@ -45,41 +45,28 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05. Battery
   health needs 3 full charges, and its trend needs 6.
 
-**2026-10-18, branch `claude/logijuice-menubar-missing-03d620` (not merged, not released):**
-- The menu bar icon disappeared while the app ran healthy (up 4 days, devices live, no crash): its status item
-  sat off-screen at (-1, 1428) top-left. A relaunch fixed it. Cause unknown (suspect display or wake change).
-- `da11b10` (owner asked): `StatusItemWatchdog` re-adds the item when it sits off-screen (launch +5 s, display change, wake, every
-  5 min; at most once per 10 min); the dropdown closes when it loses focus and before Settings opens; clicking a
-  device (dropdown row, Settings gauge or info button) shows details. The dropdown uses tighter menu metrics.
-- Verified: `swift test` exit 0, 168 tests (Core 114); `build-app.sh` exit 0; Settings details on screen via
-  sleight; the watchdog sees the real item at (1926, 1409) with replicas parked at (0, -33) and (5120, 1407),
-  not off-screen.
-- Owner-checked on `da11b10`: the dropdown closes over Settings and reopens on one click, and the spacing reads
-  well. The inline details clipped, because MenuBarExtra didn't resize the panel. `debugMenu` is off again.
-- The next commit fits the panel to its content, adds a per-device Alerts chip (`Settings.mutedDevices`) and makes
-  a second click on a Settings gauge hide its details. Tests exit 0 (170), build exit 0, and the gauge toggle
-  passed via sleight. **The dropdown resize still needs the owner's click test.** The `dist/` build is running.
-  Afterwards, relaunch `/Applications/LogiJuice.app` (or install this build).
-- Owner-checked: the dropdown resize works. `97b3dec` animates it (0.2 s window resize plus a fade on the
-  details), and the owner confirmed it looks smooth. **Release (owner, 2026-10-18):** once this branch and the forget-device
-  session's branch are merged into `main`, cut 0.1.2 per LAWS → Releasing. Confirm with the owner just before
-  publishing.
-- Device coverage (owner asked): receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct
-  pairing (out of scope in LAWS) is the large gap. The owner asked for a scoping plan:
-  `docs/superpowers/plans/2026-10-18-bluetooth-direct.md`. The spec is unchanged until the owner rules.
-
-**2026-10-18, branch `claude/jovial-cerf-69ac40` (Forget a device; on top of the branch above, not merged):**
-- Settings shows a trash button on a device that isn't connected here. After a confirmation it forgets the device's
-  history, health, name, alert override and alert state, plus this Mac's pin and mute. The sync
-  file's optional `forgotten` map (device ID → forgotten-at, schema still 1) makes every Mac's `SyncMerge` drop
-  older data. Spec §6 and LAWS record the design.
-- Verified: `swift test` exit 0, 182 tests (Core 128, with 11 in `ForgetTests`); `build-app.sh` exit 0; Vale 0
-  findings. Via sleight on `dist/LogiJuice.app`: the button shows only on an offline fake `debug:test-mouse`
-  (added to `state.json` while the app was quit; backup in the session scratchpad), Cancel keeps it, Forget removes
-  it, and this Mac's iCloud file was rewritten with both real devices and no `debug:` forget.
-- **Not verified:** a second Mac dropping a device forgotten on this one. Add it to the #15 run.
-- This branch's `dist/` build now runs in place of the earlier branch's (it contains that branch's dropdown resize,
-  so the owner's click test still applies). `state.json` keeps a harmless `debug:test-mouse` forget.
+**0.1.2 prepared, not published (2026-10-18).** Branch `claude/logijuice-menubar-missing-03d620` contains all of
+it, with `refs/heads/claude/jovial-cerf-69ac40` (Forget, `7ac5808`) merged in. It isn't on `main` yet.
+- What's in it: `StatusItemWatchdog` re-adds the menu bar item when macOS parks it off-screen (seen 2026-10-18 at
+  (-1, 1428) after 4 days up, and a relaunch fixed it then). The dropdown closes over Settings and other LogiJuice
+  windows. Its height now fits the content and animates, with tighter metrics. Clicking a device (dropdown row, Settings gauge
+  or info button) toggles its details. Each device has an Alerts chip (`Settings.mutedDevices`). Settings can
+  forget a device that isn't connected, synced as a `forgotten` map in the sync file (schema still 1).
+- Verified on the merged tree: `swift test` 182 of 182, `build-app.sh` exit 0, `release.sh` exit 0. The owner
+  checked the dropdown on hardware. It closes over Settings and reopens on one click. The details fit, and the
+  animation is smooth. sleight checked the Settings details, the gauge toggle and Forget. The watchdog sees the
+  real item at (1926, 1409) and reports it on screen.
+- **Not verified:** a forgotten device dropping on a second Mac (add to #15); a real off-screen item being re-added (only
+  the unit tests and the debug-menu re-add exercise it).
+- Release artifacts: `dist/LogiJuice-0.1.2.zip` (build 3, ad-hoc), sha256 `ada6e69f…5386`, already in
+  `Casks/logijuice.rb`. Don't rebuild before uploading, or the hash changes. Notes: `dist/release-notes-0.1.2.md`
+  (Vale 0, not committed because `dist/` is ignored).
+- **To publish (owner's yes needed):** merge the branch into `main`, push, `gh release create v0.1.2` with the zip
+  and notes, then run the LAWS → Releasing checks (download matches the cask, `brew fetch`, `brew audit`).
+- The `dist/` build runs in place of `/Applications/LogiJuice.app` (0.1.1). `state.json` keeps a harmless
+  `debug:test-mouse` forget from the Forget session's test.
+- Device coverage: receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct devices are the
+  gap, scoped in `docs/superpowers/plans/2026-10-18-bluetooth-direct.md` (awaiting the owner's probe).
 
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),

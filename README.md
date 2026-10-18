@@ -34,6 +34,7 @@
 
 - The menu bar icon is the outline of your lowest device, a mouse or a keyboard, filled to its battery level. By default it shows up only while a battery is low or charging. Pin a device in Settings to keep it in the menu bar.
 - Alerts escalate, and you can rename, retime or turn off each level. Low (20%) waits up to 8 hours for a natural break like a screen lock or sleep, and also alerts at the end of your day or when your hub moves to another Mac ("Leaving this desk?"). Very low (10%) and Critical (5%) alert right away, and Critical repeats daily until you charge.
+- Click a device in the menu or in Settings for its details: time left, health, charge cycles and serial number. In Settings you can turn off one device's alerts, or forget a device you no longer use (on every Mac that syncs).
 - The forecast learns how fast each device drains and shows the time left, such as "~9 days". The first estimate takes about two days of use.
 - Because the receiver doesn't report capacity or charge cycles, logijuice estimates battery health from how long each charge lasts and shows it in Settings after three full charges.
 - Small and medium widgets work on the desktop and in Notification Center.
