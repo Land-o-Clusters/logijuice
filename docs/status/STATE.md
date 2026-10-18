@@ -54,10 +54,14 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Verified: `swift test` exit 0, 168 tests (Core 114); `build-app.sh` exit 0; Settings details on screen via
   sleight; the watchdog sees the real item at (1926, 1409) with replicas parked at (0, -33) and (5120, 1407),
   not off-screen.
-- **Not verified:** the dropdown closing over Settings, reopening on one click after that, the inline device
-  details and the new spacing. None of these can be driven by automation (LAWS). The `dist/` build is running with
-  `debugMenu` on for the owner to test. Afterwards, `defaults delete com.penguinspecz.logijuice debugMenu` and
-  relaunch `/Applications/LogiJuice.app`.
+- Owner-checked on `da11b10`: the dropdown closes over Settings and reopens on one click, and the spacing reads
+  well. The inline details clipped, because MenuBarExtra didn't resize the panel. `debugMenu` is off again.
+- The next commit fits the panel to its content, adds a per-device Alerts chip (`Settings.mutedDevices`) and makes
+  a second click on a Settings gauge hide its details. Tests exit 0 (170), build exit 0, and the gauge toggle
+  passed via sleight. **The dropdown resize still needs the owner's click test.** The `dist/` build is running.
+  Afterwards, relaunch `/Applications/LogiJuice.app` (or install this build).
+- Device coverage (owner asked): receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct
+  pairing (out of scope in LAWS) is the large gap, so that's the owner's call.
 
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),
