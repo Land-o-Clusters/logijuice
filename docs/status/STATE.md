@@ -61,7 +61,8 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
   passed via sleight. **The dropdown resize still needs the owner's click test.** The `dist/` build is running.
   Afterwards, relaunch `/Applications/LogiJuice.app` (or install this build).
 - Device coverage (owner asked): receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct
-  pairing (out of scope in LAWS) is the large gap, so that's the owner's call.
+  pairing (out of scope in LAWS) is the large gap. The owner asked for a scoping plan:
+  `docs/superpowers/plans/2026-10-18-bluetooth-direct.md`. The spec is unchanged until the owner rules.
 
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),
@@ -72,6 +73,9 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 3. When those pass: record them in `docs/manual-checklist.md`, then tick plan Task 19 Steps 3 and 4.
 
 **Open owner decisions:**
+- Bluetooth-direct devices (plan 2026-10-18): run the phase 0 probe (owner pairs the MX Master 3S over Bluetooth),
+  then path A (HID++ over BLE, needs Input Monitoring, opt-in) and/or path B (IORegistry, no permission, if it
+  exists for Logitech).
 - Signing entity: releases stay ad-hoc signed (owner reconfirmed 2026-10-04) until the owner settles a neutral entity,
   possibly a neutrally named RoleGauge LLC. Signing brings back the Shortcuts actions.
 - Spec adjustments 1 to 9 (plan header) stand. They were presented 2026-10-03 and the owner proceeded.
@@ -83,5 +87,6 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - `docs/superpowers/plans/2026-10-03-logijuice.md`: the plan (Task 19 is the open one).
 - `docs/bringup-notes.md`: real receiver behavior and byte layouts from Task 0.
 - `docs/status/LAWS.md`: what is true always.
+- `docs/superpowers/plans/2026-10-18-bluetooth-direct.md`: the scoping plan for Bluetooth-direct devices (awaiting the owner).
 - `docs/manual-checklist.md`: the owner-run hardware checklist (#4, #5, #6, #15 on Monday, #8 on a full charge).
 - `README.md`: the user-facing summary and install instructions.
