@@ -45,8 +45,11 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05. Battery
   health needs 3 full charges, and its trend needs 6.
 
-**0.1.2 prepared, not published (2026-10-18).** Branch `claude/logijuice-menubar-missing-03d620` contains all of
-it, with `refs/heads/claude/jovial-cerf-69ac40` (Forget, `7ac5808`) merged in. It isn't on `main` yet.
+**0.1.2 published (2026-10-18, owner's yes).** [v0.1.2](https://github.com/Land-o-Clusters/logijuice/releases/tag/v0.1.2)
+is tagged at `6b3ce32` on `main` (fast-forwarded from `claude/logijuice-menubar-missing-03d620`, which includes
+`refs/heads/claude/jovial-cerf-69ac40`). The downloaded asset matches the cask (sha256 `ada6e69f…5386`), and `brew
+fetch` and `brew audit --cask` pass through a tap of this repo (untapped after). `/Applications/LogiJuice.app` is
+0.1.2 from the downloaded zip, running, with its menu bar item at (1853, 2), and `logijuice status` reads both devices.
 - What's in it: `StatusItemWatchdog` re-adds the menu bar item when macOS parks it off-screen (seen 2026-10-18 at
   (-1, 1428) after 4 days up, and a relaunch fixed it then). The dropdown closes over Settings and other LogiJuice
   windows. Its height now fits the content and animates, with tighter metrics. Clicking a device (dropdown row, Settings gauge
@@ -58,13 +61,7 @@ it, with `refs/heads/claude/jovial-cerf-69ac40` (Forget, `7ac5808`) merged in. I
   real item at (1926, 1409) and reports it on screen.
 - **Not verified:** a forgotten device dropping on a second Mac (add to #15); a real off-screen item being re-added (only
   the unit tests and the debug-menu re-add exercise it).
-- Release artifacts: `dist/LogiJuice-0.1.2.zip` (build 3, ad-hoc), sha256 `ada6e69f…5386`, already in
-  `Casks/logijuice.rb`. Don't rebuild before uploading, or the hash changes. Notes: `dist/release-notes-0.1.2.md`
-  (Vale 0, not committed because `dist/` is ignored).
-- **To publish (owner's yes needed):** merge the branch into `main`, push, `gh release create v0.1.2` with the zip
-  and notes, then run the LAWS → Releasing checks (download matches the cask, `brew fetch`, `brew audit`).
-- The `dist/` build runs in place of `/Applications/LogiJuice.app` (0.1.1). `state.json` keeps a harmless
-  `debug:test-mouse` forget from the Forget session's test.
+- `state.json` keeps a harmless `debug:test-mouse` forget from the Forget session's test.
 - Device coverage: receiver devices with 0x1004, 0x1000 or 0x1001 are covered. Bluetooth-direct devices are the
   gap, scoped in `docs/superpowers/plans/2026-10-18-bluetooth-direct.md` (awaiting the owner's probe).
 
