@@ -12,6 +12,16 @@ public struct NotificationText: Hashable, Sendable {
   }
 }
 
+public struct DetailRow: Hashable, Sendable {
+  public var label: String
+  public var value: String
+
+  public init(_ label: String, _ value: String) {
+    self.label = label
+    self.value = value
+  }
+}
+
 public enum Format {
   public static func level(_ level: BatteryLevel) -> String {
     switch level {
@@ -132,6 +142,63 @@ public enum Format {
       title: "\(displayName) is draining fast",
       body: "About \(Int(ratio.rounded()))× faster than usual. A charge usually lasts ~\(Int(typicalDays.rounded())) days.",
       identifier: "\(device.rawValue).drain")
+  }
+
+  /// The rows shown when a device is clicked in the menu or in Settings.
+  public static func details(_ d: SnapshotDevice, now: Date, timeZone: TimeZone = .current) -> [DetailRow] {
+    func date(_ format: String, _ value: Date) -> String {
+      let f = DateFormatter()
+      f.locale = Locale(identifier: "en_US_POSIX")
+      f.timeZone = timeZone
+      f.dateFormat = format
+      return f.string(from: value)
+    }
+
+    var rows: [DetailRow] = []
+    if d.nickname?.trimmingCharacters(in: .whitespaces).isEmpty == false { rows.append(.init("Model", d.name)) }
+    rows.append(.init("Battery", (d.level.map(level) ?? "Unknown") + (d.charging ? ", charging" : "")))
+    if let p = d.learning {
+      rows.append(.init("Lasts", learning(p)))
+    } else {
+      switch d.forecast {
+      case .learning: rows.append(.init("Lasts", "learning…"))
+      case .estimate(let days, let emptyAt):
+        rows.append(.init("Lasts", "~\(duration(days: days)), until about \(date("MMM d", emptyAt))"))
+      case .unavailable: break
+      }
+    }
+    if let h = d.health {
+      if h.ready, let days = h.daysPerCharge {
+        var value = "A charge lasts ~\(Int(days.rounded())) days"
+        if let change = h.changePercent, let base = h.baselineDate {
+          let n = Int(change.rounded())
+          value += ", \(n < 0 ? "−" : "+")\(abs(n))% since \(date("MMM", base))"
+        }
+        rows.append(.init("Health", value))
+      } else {
+        let left = HealthReport.runsNeeded - h.completedRuns
+        rows.append(.init("Health", "Ready after \(left) more full \(left == 1 ? "charge" : "charges")"))
+      }
+      rows.append(.init("Charge cycles", h.cycles < 1 ? "Less than 1" : "About \(Int(h.cycles.rounded()))"))
+    }
+    rows.append(.init("Connection", d.live ? "Connected" : {
+      let s = seen(d.lastSeen, now: now)
+      return s.prefix(1).uppercased() + s.dropFirst()
+    }()))
+    if let since = d.health?.since { rows.append(.init("Tracked since", date("MMM d, yyyy", since))) }
+    rows.append(contentsOf: identityRows(d.id))
+    return rows
+  }
+
+  static func identityRows(_ id: DeviceID) -> [DetailRow] {
+    let raw = id.rawValue
+    if raw.hasPrefix("sn:") { return [.init("Serial number", String(raw.dropFirst(3)))] }
+    if raw.hasPrefix("unit:") { return [.init("Unit ID", String(raw.dropFirst(5)))] }
+    let parts = raw.split(separator: ":")
+    if parts.count == 4, parts[0] == "wpid", parts[2] == "slot" {
+      return [.init("Receiver slot", "\(parts[3]) (product \(parts[1]))")]
+    }
+    return []
   }
 
   public static func batterySymbol(percent: Int?) -> String {

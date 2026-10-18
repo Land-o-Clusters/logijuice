@@ -38,70 +38,140 @@ extension MenuBarIcon {
   }
 }
 
-/// Native-menu-like feedback: highlight on hover, darker while pressed.
+/// Native-menu-like feedback: a soft highlight on hover, firmer while pressed.
 struct MenuRowButtonStyle: ButtonStyle {
+  var verticalPadding: CGFloat = 3
   @State private var hovering = false
 
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.vertical, 4)
-      .padding(.horizontal, 8)
+      .padding(.vertical, verticalPadding)
+      .padding(.horizontal, 9)
       .background(
-        RoundedRectangle(cornerRadius: 5)
-          .fill(Color.accentColor.opacity(configuration.isPressed ? 0.45 : hovering ? 0.25 : 0)))
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+          .fill(Color.primary.opacity(configuration.isPressed ? 0.16 : hovering ? 0.09 : 0)))
       .contentShape(Rectangle())
       .onHover { hovering = $0 }
   }
 }
 
+/// Menu metrics: 13 pt rows, 5 pt panel inset, 9 pt row inset (as macOS menus).
+private enum MenuMetrics {
+  static let inset: CGFloat = 5
+  static let rowInset: CGFloat = 9
+  static let icon: CGFloat = 26
+  static let iconGap: CGFloat = 9
+}
+
 struct DeviceRow: View {
   let device: SnapshotDevice
   let now: Date
+  let expanded: Bool
 
   var body: some View {
-    HStack(spacing: 10) {
-      Image(systemName: device.kind.symbolName).frame(width: 22)
-      VStack(alignment: .leading, spacing: 2) {
-        Text(device.displayName).font(.headline)
+    HStack(spacing: MenuMetrics.iconGap) {
+      Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 15))
+        .foregroundStyle(.primary)
+        .frame(width: MenuMetrics.icon)
+      VStack(alignment: .leading, spacing: 1) {
+        Text(device.displayName).font(.system(size: 13, weight: .medium)).lineLimit(1)
         let sub = Format.subtitle(device, now: now)
-        if !sub.isEmpty { Text(sub).font(.caption).foregroundStyle(.secondary) }
+        if !sub.isEmpty { Text(sub).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1) }
       }
-      Spacer()
-      if device.charging { Image(systemName: "bolt.fill").foregroundStyle(Color(nsColor: MenuBarIcon.chargingColor)) }
+      Spacer(minLength: 6)
+      if device.charging {
+        Image(systemName: "bolt.fill").font(.system(size: 10))
+          .foregroundStyle(Color(nsColor: MenuBarIcon.chargingColor))
+      }
       Text(device.level.map(Format.level) ?? "—")
+        .font(.system(size: 13, weight: .semibold, design: .rounded))
         .monospacedDigit()
         .foregroundStyle(device.tint.color ?? Color.primary)
+      Image(systemName: "chevron.right")
+        .font(.system(size: 9, weight: .semibold))
+        .foregroundStyle(.tertiary)
+        .rotationEffect(.degrees(expanded ? 90 : 0))
     }
+    .accessibilityElement(children: .combine)
+    .accessibilityHint(expanded ? "Hides details" : "Shows details")
+  }
+}
+
+/// The rows from `Format.details`, label column muted. Values are selectable so a serial can be copied.
+struct DeviceDetails: View {
+  let device: SnapshotDevice
+  var compact = false
+
+  var body: some View {
+    Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: compact ? 3 : 6) {
+      ForEach(Format.details(device, now: Date()), id: \.label) { row in
+        GridRow {
+          Text(row.label).foregroundStyle(.secondary)
+          Text(row.value).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+        }
+      }
+    }
+    .font(compact ? .system(size: 11) : .callout)
   }
 }
 
 struct MenuContent: View {
   @ObservedObject var model: AppModel
+  @State private var expanded: DeviceID?
   private var debugMenu: Bool { UserDefaults.standard.bool(forKey: "debugMenu") }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
+    VStack(alignment: .leading, spacing: 0) {
       if model.snapshot.devices.isEmpty {
-        Text(model.receiverPresent ? "Waiting for a device to wake up…" : "Plug in your Logi Bolt receiver.")
-          .foregroundStyle(.secondary)
+        note(model.receiverPresent ? "Waiting for a device to wake up…" : "Plug in your Logi Bolt receiver.")
       }
-      ForEach(model.snapshot.devices) { DeviceRow(device: $0, now: Date()) }
+      ForEach(model.snapshot.devices) { d in
+        Button {
+          withAnimation(.snappy(duration: 0.22)) { expanded = expanded == d.id ? nil : d.id }
+        } label: {
+          DeviceRow(device: d, now: Date(), expanded: expanded == d.id)
+        }
+        .buttonStyle(MenuRowButtonStyle(verticalPadding: 5))
+        if expanded == d.id {
+          DeviceDetails(device: d, compact: true)
+            .padding(.leading, MenuMetrics.rowInset + MenuMetrics.icon + MenuMetrics.iconGap)
+            .padding(.trailing, MenuMetrics.rowInset)
+            .padding(.top, 1)
+            .padding(.bottom, 7)
+            .transition(.opacity)
+        }
+      }
       if !model.receiverPresent && !model.snapshot.devices.isEmpty {
-        Text("Receiver not connected to this Mac").font(.caption).foregroundStyle(.secondary)
+        note("Receiver not connected to this Mac")
       }
-      Divider()
-      Button("Settings…") { SettingsWindowController.shared.show() }
-      if OptionsPlus.isInstalled { Button("Open Logi Options+") { OptionsPlus.open() } }
-      if debugMenu {
-        Button("Debug: simulate 18% Test Mouse (Low, waits for a moment)") { model.simulateLowBattery(percent: 18) }
-        Button("Debug: simulate 8% Test Mouse (Very low, immediate)") { model.simulateLowBattery(percent: 8) }
-        Button("Debug: forget Test Mouse") { model.forgetTestDevice() }
+      Divider().padding(.horizontal, MenuMetrics.rowInset).padding(.vertical, 5)
+      Group {
+        Button("Settings…") { SettingsWindowController.shared.show() }
+        if OptionsPlus.isInstalled { Button("Open Logi Options+") { MenuPanel.shared.close(); OptionsPlus.open() } }
+        if debugMenu {
+          Button("Debug: simulate 18% Test Mouse (Low, waits for a moment)") { model.simulateLowBattery(percent: 18) }
+          Button("Debug: simulate 8% Test Mouse (Very low, immediate)") { model.simulateLowBattery(percent: 8) }
+          Button("Debug: forget Test Mouse") { model.forgetTestDevice() }
+          Button("Debug: re-add the menu bar item") {
+            NotificationCenter.default.post(name: StatusItemWatchdog.forceReinsert, object: nil)
+          }
+        }
+        Button("Quit LogiJuice") { NSApp.terminate(nil) }
       }
-      Button("Quit LogiJuice") { NSApp.terminate(nil) }
+      .font(.system(size: 13))
+      .buttonStyle(MenuRowButtonStyle())
     }
-    .buttonStyle(MenuRowButtonStyle())
-    .padding(10)
-    .frame(width: 300)
+    .padding(MenuMetrics.inset)
+    .frame(width: 280)
+    .background(MenuPanelAnchor())
+  }
+
+  private func note(_ text: String) -> some View {
+    Text(text)
+      .font(.system(size: 11))
+      .foregroundStyle(.secondary)
+      .padding(.horizontal, MenuMetrics.rowInset)
+      .padding(.vertical, 4)
   }
 }

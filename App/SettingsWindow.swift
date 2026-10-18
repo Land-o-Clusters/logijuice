@@ -8,6 +8,7 @@ final class SettingsWindowController {
   private var window: NSWindow?
 
   func show() {
+    MenuPanel.shared.close()
     if window == nil {
       let model = AppModel.shared
       let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 700, height: 780),
@@ -53,6 +54,7 @@ struct SettingsView: View {
   @ObservedObject var notifier: Notifier
   @State private var showAdvanced = false
   @State private var launchAtLogin = LoginItem.isEnabled
+  @State private var openDetails: Set<DeviceID> = []
 
   private var endOfDay: Binding<Date> {
     Binding(
@@ -72,17 +74,24 @@ struct SettingsView: View {
   var body: some View {
     ZStack {
       WindowBackdrop().ignoresSafeArea()
-      ScrollView {
-        VStack(alignment: .leading, spacing: 24) {
-          hero
-          devicesSection
-          menuBarSection
-          alertsSection
-          generalSection
+      ScrollViewReader { scroller in
+        ScrollView {
+          VStack(alignment: .leading, spacing: 24) {
+            hero { id in
+              withAnimation(.snappy(duration: 0.25)) {
+                openDetails.insert(id)
+                scroller.scrollTo(id, anchor: .center)
+              }
+            }
+            devicesSection
+            menuBarSection
+            alertsSection
+            generalSection
+          }
+          .padding(.horizontal, 26)
+          .padding(.top, 6)
+          .padding(.bottom, 26)
         }
-        .padding(.horizontal, 26)
-        .padding(.top, 6)
-        .padding(.bottom, 26)
       }
     }
     .frame(minWidth: 640, idealWidth: 700, maxWidth: .infinity, minHeight: 560, idealHeight: 780, maxHeight: .infinity)
@@ -90,7 +99,7 @@ struct SettingsView: View {
 
   // MARK: Hero — the window opens on your batteries.
 
-  private var hero: some View {
+  private func hero(showDetails: @escaping (DeviceID) -> Void) -> some View {
     HStack(alignment: .bottom, spacing: 34) {
       if devices.isEmpty {
         Text("Plug in your Logi Bolt receiver and wake a device.")
@@ -98,16 +107,22 @@ struct SettingsView: View {
           .foregroundStyle(.secondary)
       }
       ForEach(devices) { d in
-        VStack(spacing: 6) {
-          Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: d, text: nil)], pointSize: 40))
-            .foregroundStyle(.primary)
-          Text(d.level.map(Format.level) ?? "—")
-            .font(.system(size: 26, weight: .semibold, design: .rounded))
-            .monospacedDigit()
-            .foregroundStyle(d.tint.color ?? Color.primary)
-          Text(d.displayName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        Button { showDetails(d.id) } label: {
+          VStack(spacing: 6) {
+            Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: d, text: nil)], pointSize: 40))
+              .foregroundStyle(.primary)
+            Text(d.level.map(Format.level) ?? "—")
+              .font(.system(size: 26, weight: .semibold, design: .rounded))
+              .monospacedDigit()
+              .foregroundStyle(d.tint.color ?? Color.primary)
+            Text(d.displayName).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+          }
+          .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .help("Show details")
         .accessibilityElement(children: .combine)
+        .accessibilityHint("Shows details")
       }
       Spacer(minLength: 0)
     }
@@ -124,9 +139,14 @@ struct SettingsView: View {
       }
       ForEach(Array(devices.enumerated()), id: \.element.id) { index, device in
         if index > 0 { GlassDivider() }
-        DeviceSettingsRow(model: model, device: device)
+        DeviceSettingsRow(model: model, device: device, showDetails: detailsBinding(device.id))
+          .id(device.id)
       }
     }
+  }
+
+  private func detailsBinding(_ id: DeviceID) -> Binding<Bool> {
+    Binding(get: { openDetails.contains(id) }, set: { if $0 { openDetails.insert(id) } else { openDetails.remove(id) } })
   }
 
   private var menuBarSection: some View {
@@ -223,6 +243,7 @@ struct SettingsView: View {
 struct DeviceSettingsRow: View {
   @ObservedObject var model: AppModel
   let device: SnapshotDevice
+  @Binding var showDetails: Bool
   @State private var nickname = ""
   @FocusState private var editingName: Bool
 
@@ -242,6 +263,10 @@ struct DeviceSettingsRow: View {
     return parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
   }
 
+  private func toggleDetails() {
+    withAnimation(.snappy(duration: 0.25)) { showDetails.toggle() }
+  }
+
   /// The field shows the display name; saving the hardware name back means "no nickname".
   private func commitName() {
     let trimmed = nickname.trimmingCharacters(in: .whitespaces)
@@ -253,9 +278,14 @@ struct DeviceSettingsRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 12) {
-        Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 22))
-          .foregroundStyle(.primary)
-          .frame(width: 30)
+        Button { toggleDetails() } label: {
+          Image(nsImage: MenuBarIcon.render([MenuBarIcon.gauge(for: device, text: nil)], pointSize: 22))
+            .foregroundStyle(.primary)
+            .frame(width: 30)
+        }
+        .buttonStyle(.plain)
+        .help(showDetails ? "Hide details" : "Show details")
+        .accessibilityLabel("\(showDetails ? "Hide" : "Show") details for \(device.displayName)")
         VStack(alignment: .leading, spacing: 2) {
           HStack(spacing: 4) {
             TextField("Name", text: $nickname, prompt: Text(device.name))
@@ -283,6 +313,27 @@ struct DeviceSettingsRow: View {
         Spacer(minLength: 8)
         Toggle("In menu bar", isOn: pinned).toggleStyle(ChipToggleStyle())
         Toggle("Custom alerts", isOn: custom).toggleStyle(ChipToggleStyle())
+        Button { toggleDetails() } label: {
+          Image(systemName: showDetails ? "info.circle.fill" : "info.circle").font(.system(size: 15))
+        }
+        .buttonStyle(.borderless)
+        .foregroundStyle(showDetails ? Color.accentColor : Color.secondary)
+        .help(showDetails ? "Hide details" : "Show details")
+        .accessibilityLabel("Details for \(device.displayName)")
+      }
+      if showDetails {
+        VStack(alignment: .leading, spacing: 12) {
+          DeviceDetails(device: device)
+          if let h = device.health, h.series.count >= 2 {
+            Sparkline(values: h.series).frame(height: 40)
+            Text("Days per full charge, one point per charge.").font(.caption).foregroundStyle(.secondary)
+          }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .glassPanel(cornerRadius: 14)
+        .padding(.leading, 42)
+        .transition(.opacity)
       }
       if let override = model.alertOverride(for: device.id) {
         VStack(alignment: .leading, spacing: 10) {

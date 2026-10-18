@@ -58,6 +58,8 @@ final class AppModel: ObservableObject {
                                  showAlerting: settings.showAlertingInMenuBar)
   }
   var menuBarVisible: Bool { !menuBarDevices.isEmpty }
+  /// Briefly true while `StatusItemWatchdog` takes the menu bar item out and puts it back.
+  @Published var reinsertingMenuBarItem = false
   var syncAvailable: Bool { sync.isAvailable }
 
   func isPinned(_ id: DeviceID) -> Bool { settings.pinnedDevices.contains(id) }
