@@ -45,9 +45,15 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05. Battery
   health needs 3 full charges, and its trend needs 6.
 
+**Observed 2026-10-18:** the menu bar icon went missing while the app ran healthy (up since boot 4 days earlier,
+both devices live and pinned, no crash). System Events placed its status item off-screen at (-1, 1428), at its
+normal 61×24 size. A relaunch brought it back at (1848, 2). Cause unknown: suspect a display or sleep/wake change
+stranding it. If it recurs, record what changed (displays, sleep) and consider re-showing the item on
+`didChangeScreenParametersNotification`.
+
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),
-   #6 (sleep/wake) and #15 (second Mac: synced readings, only the receiver's Mac alerts). If that Mac runs without
+   #6 (sleep/wake; also confirm the menu bar icon stays on screen, see the 2026-10-18 note) and #15 (second Mac: synced readings, only the receiver's Mac alerts). If that Mac runs without
    Options+, also check whether a freshly powered receiver sends events.
 2. On the owner's next real charge: the fill rises (log line `charging: re-reading every 60 s`), then #8 (one
    "Fully charged" notification).
