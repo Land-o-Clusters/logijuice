@@ -64,6 +64,14 @@ final class AppModel: ObservableObject {
 
   func isPinned(_ id: DeviceID) -> Bool { settings.pinnedDevices.contains(id) }
 
+  func setAlertsOn(_ on: Bool, for id: DeviceID) {
+    if on {
+      settings.mutedDevices.removeAll { $0 == id }
+    } else if !settings.mutedDevices.contains(id) {
+      settings.mutedDevices.append(id)
+    }
+  }
+
   func setPinned(_ pinned: Bool, for id: DeviceID) {
     if pinned {
       if !settings.pinnedDevices.contains(id) { settings.pinnedDevices.append(id) }
@@ -143,7 +151,8 @@ final class AppModel: ObservableObject {
 
   /// Opt-in alert when a device drains about twice as fast as its own history; at most once per discharge run.
   private func checkDrain(_ record: DeviceRecord, reading: Reading, now: Date) {
-    guard settings.drainAlertEnabled, reading.source == .local, !reading.charging,
+    guard settings.drainAlertEnabled, !settings.alertsMuted(for: reading.device), reading.source == .local,
+      !reading.charging,
       let ratio = HealthTracker.drainRatio(record.health, history: record.readings, now: now),
       ratio >= HealthTracker.drainAlertRatio,
       let runStart = HealthTracker.currentRunStart(record.readings),
@@ -158,7 +167,7 @@ final class AppModel: ObservableObject {
   }
 
   func deliver(_ deliveries: [Delivery]) {
-    for delivery in deliveries {
+    for delivery in deliveries where !settings.alertsMuted(for: delivery.decision.device) {
       let device = snapshot.devices.first { $0.id == delivery.decision.device }
       let text = Format.notification(for: delivery, displayName: device?.displayName ?? "Logitech device",
                                      forecast: device?.forecast ?? .learning)

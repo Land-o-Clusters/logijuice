@@ -116,6 +116,11 @@ struct DeviceDetails: View {
   }
 }
 
+private struct MenuHeightKey: PreferenceKey {
+  static let defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
 struct MenuContent: View {
   @ObservedObject var model: AppModel
   @State private var expanded: DeviceID?
@@ -128,7 +133,7 @@ struct MenuContent: View {
       }
       ForEach(model.snapshot.devices) { d in
         Button {
-          withAnimation(.snappy(duration: 0.22)) { expanded = expanded == d.id ? nil : d.id }
+          expanded = expanded == d.id ? nil : d.id
         } label: {
           DeviceRow(device: d, now: Date(), expanded: expanded == d.id)
         }
@@ -139,7 +144,6 @@ struct MenuContent: View {
             .padding(.trailing, MenuMetrics.rowInset)
             .padding(.top, 1)
             .padding(.bottom, 7)
-            .transition(.opacity)
         }
       }
       if !model.receiverPresent && !model.snapshot.devices.isEmpty {
@@ -164,7 +168,14 @@ struct MenuContent: View {
     }
     .padding(MenuMetrics.inset)
     .frame(width: 280)
+    .fixedSize(horizontal: false, vertical: true)
     .background(MenuPanelAnchor())
+    .background(GeometryReader { geo in
+      Color.clear.preference(key: MenuHeightKey.self, value: geo.size.height)
+    })
+    .onPreferenceChange(MenuHeightKey.self) { height in
+      DispatchQueue.main.async { MenuPanel.shared.fit(contentHeight: height) }
+    }
   }
 
   private func note(_ text: String) -> some View {

@@ -25,14 +25,18 @@ public struct Settings: Hashable, Sendable, Codable {
   public var syncEnabled = true
   /// Notify when a device drains about twice as fast as its own history (owner: in, off by default).
   public var drainAlertEnabled = false
+  /// Devices whose alerts are off on this Mac (owner, 2026-10-18). Their battery still shows everywhere.
+  public var mutedDevices: [DeviceID] = []
   /// Set only when an old settings file had `menuBarMode`; the app migrates it once, then it disappears.
   public var legacyMenuBarMode: MenuBarMode?
 
   public init() {}
 
+  public func alertsMuted(for id: DeviceID) -> Bool { mutedDevices.contains(id) }
+
   private enum CodingKeys: String, CodingKey {
     case profile, pinnedDevices, showAlertingInMenuBar, percentDisplay, fullyChargedEnabled, endOfDayHour,
-      endOfDayMinute, maxWaitHours, syncEnabled, drainAlertEnabled
+      endOfDayMinute, maxWaitHours, syncEnabled, drainAlertEnabled, mutedDevices
     case menuBarMode  // legacy, read only
   }
 
@@ -52,6 +56,7 @@ public struct Settings: Hashable, Sendable, Codable {
     maxWaitHours = try c.decodeIfPresent(Int.self, forKey: .maxWaitHours) ?? d.maxWaitHours
     syncEnabled = try c.decodeIfPresent(Bool.self, forKey: .syncEnabled) ?? d.syncEnabled
     drainAlertEnabled = try c.decodeIfPresent(Bool.self, forKey: .drainAlertEnabled) ?? d.drainAlertEnabled
+    mutedDevices = try c.decodeIfPresent([DeviceID].self, forKey: .mutedDevices) ?? d.mutedDevices
     legacyMenuBarMode = try c.decodeIfPresent(MenuBarMode.self, forKey: .menuBarMode)
   }
 
@@ -67,5 +72,6 @@ public struct Settings: Hashable, Sendable, Codable {
     try c.encode(maxWaitHours, forKey: .maxWaitHours)
     try c.encode(syncEnabled, forKey: .syncEnabled)
     try c.encode(drainAlertEnabled, forKey: .drainAlertEnabled)
+    try c.encode(mutedDevices, forKey: .mutedDevices)
   }
 }

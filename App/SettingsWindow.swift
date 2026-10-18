@@ -79,8 +79,10 @@ struct SettingsView: View {
           VStack(alignment: .leading, spacing: 24) {
             hero { id in
               withAnimation(.snappy(duration: 0.25)) {
-                openDetails.insert(id)
-                scroller.scrollTo(id, anchor: .center)
+                if openDetails.remove(id) == nil {
+                  openDetails.insert(id)
+                  scroller.scrollTo(id, anchor: .center)
+                }
               }
             }
             devicesSection
@@ -120,9 +122,9 @@ struct SettingsView: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help("Show details")
+        .help(openDetails.contains(d.id) ? "Hide details" : "Show details")
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Shows details")
+        .accessibilityHint(openDetails.contains(d.id) ? "Hides details" : "Shows details")
       }
       Spacer(minLength: 0)
     }
@@ -251,6 +253,10 @@ struct DeviceSettingsRow: View {
     Binding(get: { model.isPinned(device.id) }, set: { model.setPinned($0, for: device.id) })
   }
 
+  private var alertsOn: Binding<Bool> {
+    Binding(get: { !model.settings.alertsMuted(for: device.id) }, set: { model.setAlertsOn($0, for: device.id) })
+  }
+
   private var custom: Binding<Bool> {
     Binding(
       get: { model.alertOverride(for: device.id) != nil },
@@ -312,7 +318,9 @@ struct DeviceSettingsRow: View {
         }
         Spacer(minLength: 8)
         Toggle("In menu bar", isOn: pinned).toggleStyle(ChipToggleStyle())
+        Toggle("Alerts", isOn: alertsOn).toggleStyle(ChipToggleStyle())
         Toggle("Custom alerts", isOn: custom).toggleStyle(ChipToggleStyle())
+          .disabled(!alertsOn.wrappedValue)
         Button { toggleDetails() } label: {
           Image(systemName: showDetails ? "info.circle.fill" : "info.circle").font(.system(size: 15))
         }

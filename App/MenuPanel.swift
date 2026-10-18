@@ -24,6 +24,18 @@ final class MenuPanel {
     }
   }
 
+  /// MenuBarExtra doesn't resize its panel when the content changes height while open, which clipped the
+  /// expanded device details. This fits the panel to the content, keeping its top edge under the menu bar.
+  func fit(contentHeight height: CGFloat) {
+    guard let window, window.isVisible, height > 0 else { return }
+    let current = window.contentRect(forFrameRect: window.frame)
+    guard abs(current.height - height) > 0.5 else { return }
+    var content = current
+    content.origin.y += current.height - height
+    content.size.height = height
+    window.setFrame(window.frameRect(forContentRect: content), display: true)
+  }
+
   func close() {
     guard let window, window.isVisible else { return }
     log.debug("closing the dropdown")
