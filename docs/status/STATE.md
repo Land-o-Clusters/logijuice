@@ -45,11 +45,19 @@ through a tap of this repo. v0.1.0 is still listed as an older release.
 - Health tracking started 2026-10-03 22:24 UTC. The forecast should leave "learning" around Mon 2026-10-05. Battery
   health needs 3 full charges, and its trend needs 6.
 
-**Observed 2026-10-18:** the menu bar icon went missing while the app ran healthy (up since boot 4 days earlier,
-both devices live and pinned, no crash). System Events placed its status item off-screen at (-1, 1428), at its
-normal 61×24 size. A relaunch brought it back at (1848, 2). Cause unknown: suspect a display or sleep/wake change
-stranding it. If it recurs, record what changed (displays, sleep) and consider re-showing the item on
-`didChangeScreenParametersNotification`.
+**2026-10-18, branch `claude/logijuice-menubar-missing-03d620` (not merged, not released):**
+- The menu bar icon disappeared while the app ran healthy (up 4 days, devices live, no crash): its status item
+  sat off-screen at (-1, 1428) top-left. A relaunch fixed it. Cause unknown (suspect display or wake change).
+- `da11b10` (owner asked): `StatusItemWatchdog` re-adds the item when it sits off-screen (launch +5 s, display change, wake, every
+  5 min; at most once per 10 min); the dropdown closes when it loses focus and before Settings opens; clicking a
+  device (dropdown row, Settings gauge or info button) shows details. The dropdown uses tighter menu metrics.
+- Verified: `swift test` exit 0, 168 tests (Core 114); `build-app.sh` exit 0; Settings details on screen via
+  sleight; the watchdog sees the real item at (1926, 1409) with replicas parked at (0, -33) and (5120, 1407),
+  not off-screen.
+- **Not verified:** the dropdown closing over Settings, reopening on one click after that, the inline device
+  details and the new spacing. None of these can be driven by automation (LAWS). The `dist/` build is running with
+  `debugMenu` on for the owner to test. Afterwards, `defaults delete com.penguinspecz.logijuice debugMenu` and
+  relaunch `/Applications/LogiJuice.app`.
 
 **Next action:**
 1. Mon 2026-10-05, with the owner: checklist #4 and #5 (hub away and back, including the "Leaving this desk?" nudge),

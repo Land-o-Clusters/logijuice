@@ -25,6 +25,12 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **Battery health is an estimate and says so.** It's inferred from runs and charge gains, because the protocol reports
   no capacity or cycles. It's shown only after 3 full charges, and the trend only after 6. The drain alert is opt-in
   and off by default.
+- **Clicking a device shows its details** (owner, 2026-10-18), in the dropdown and in Settings, from
+  `Format.details` only (no new HID requests): battery, forecast, health, cycles, connection, tracked since, ID.
+- **The dropdown closes when another LogiJuice window takes focus** and before Settings opens. MenuBarExtra alone
+  closes it only when another app takes focus.
+- **The app re-adds its menu bar item when macOS parks it off-screen** (`StatusItemWatchdog`), at most once per
+  10 minutes so a cause that re-adding can't fix doesn't churn the menu bar.
 - **Untested hardware is labelled untested** in the receiver catalog (`verified: false`) and in the README until a
   hardware run proves it.
 - **Only `.local` readings fire alerts.** Synced readings update displays and forecasts only.
@@ -99,7 +105,9 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 - **A missing banner is not a missing alert.** macOS hides banners (e.g. "display shared" while the screen is
   captured) after the app posted correctly. Judge alerts by `usernoted` logs ("Delivering … req:<device>.<level>") and
   `state.json`, not by what appeared on screen. sleight reaches LogiJuice's windows only, not its status item or
-  Notification Center, so dropdown and notification-action steps are owner-driven.
+  Notification Center, so dropdown and notification-action steps are owner-driven. The MenuBarExtra dropdown opens
+  only on a real click: AXPress, `performClick` on the status button and events posted in-process all do nothing,
+  so code must never close it by "clicking" the button. It closes the panel window directly.
 - **Settings uses a custom glass layout.** On macOS 27 a grouped `Form` needs ≥ ~744pt, and its rows grow label
   columns.
 - **Never fade the window's blur by more than ~5%** (`NSVisualEffectView.alphaValue`). Fading cuts holes and the sharp
