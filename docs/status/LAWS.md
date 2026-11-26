@@ -85,7 +85,7 @@ What is true ALWAYS. A line belongs here only if it would change when we were **
 
 ## Repo
 - **Docs pass Vale.** `.vale.ini` uses the `ai-tells` pack pinned like sleight's. Run `vale sync` once, then
-  `vale README.md .github docs`, and fix prose with the humanizer skill (`.claude/skills/humanizer`) rather than
+  `vale README.md .github docs`, and fix prose with the humanizer skill (`~/.claude/skills/humanizer`) rather than
   word swaps. User-facing text is written to pass before it's committed.
 - **GitHub settings come from `scripts/github-settings.sh`**, re-run on any recreated repo. Community files (code of
   conduct, contributing, security, PR template) come from the org `.github` repo, so they aren't duplicated here.
